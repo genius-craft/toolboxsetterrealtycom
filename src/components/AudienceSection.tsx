@@ -11,8 +11,6 @@ const audiences = [
       "Análise de cenários (pessimista, realista, otimista)",
       "Comparativo de investimentos",
     ],
-    gradient: "from-blue-500/10 to-blue-600/10",
-    iconBg: "bg-blue-500",
   },
   {
     icon: Users,
@@ -24,8 +22,6 @@ const audiences = [
       "Dados que convencem clientes",
       "Fechamento mais rápido",
     ],
-    gradient: "from-emerald-500/10 to-emerald-600/10",
-    iconBg: "bg-emerald-500",
   },
   {
     icon: Home,
@@ -37,8 +33,6 @@ const audiences = [
       "Comparativo venda vs. permuta",
       "Potencial de valorização",
     ],
-    gradient: "from-amber-500/10 to-amber-600/10",
-    iconBg: "bg-amber-500",
   },
 ];
 
@@ -48,7 +42,7 @@ const AudienceSection = () => {
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-accent/10 text-accent text-sm font-semibold mb-4">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-accent/10 text-accent text-sm font-semibold mb-4 uppercase tracking-wider">
             Para Quem
           </span>
           <h2 className="section-title mb-4">
@@ -65,21 +59,19 @@ const AudienceSection = () => {
           {audiences.map((audience, index) => (
             <div
               key={index}
-              className={`relative rounded-2xl p-8 bg-gradient-to-br ${audience.gradient} border border-border overflow-hidden animate-fade-up`}
+              className="relative rounded-lg p-8 bg-card border border-border shadow-card overflow-hidden animate-fade-up"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               {/* Icon */}
-              <div
-                className={`inline-flex items-center justify-center w-14 h-14 rounded-xl ${audience.iconBg} mb-6`}
-              >
-                <audience.icon className="w-7 h-7 text-primary-foreground" />
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-lg bg-primary mb-6">
+                <audience.icon className="w-7 h-7 text-accent" strokeWidth={1.5} />
               </div>
 
               {/* Content */}
-              <h3 className="text-2xl font-bold text-foreground mb-3">
+              <h3 className="text-2xl font-bold text-foreground mb-3 font-serif">
                 {audience.title}
               </h3>
-              <p className="text-muted-foreground mb-6">{audience.description}</p>
+              <p className="text-muted-foreground mb-6 leading-relaxed">{audience.description}</p>
 
               {/* Benefits */}
               <ul className="space-y-3">
@@ -88,7 +80,7 @@ const AudienceSection = () => {
                     key={bIndex}
                     className="flex items-start gap-3 text-sm text-foreground"
                   >
-                    <div className="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                       <div className="w-2 h-2 rounded-full bg-accent" />
                     </div>
                     {benefit}

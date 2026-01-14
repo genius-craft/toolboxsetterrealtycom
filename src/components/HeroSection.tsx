@@ -4,8 +4,8 @@ import { ArrowRight, TrendingUp, Shield, Zap } from "lucide-react";
 const HeroSection = () => {
   return (
     <section className="relative gradient-hero min-h-[90vh] flex items-center overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
+      {/* Subtle Background Pattern */}
+      <div className="absolute inset-0 opacity-5">
         <div className="absolute top-20 left-10 w-72 h-72 bg-accent/30 rounded-full blur-3xl" />
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/20 rounded-full blur-3xl" />
       </div>
@@ -13,22 +13,22 @@ const HeroSection = () => {
       <div className="container mx-auto px-4 py-24 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 mb-8 animate-fade-up">
-            <Zap className="w-4 h-4 text-accent" />
-            <span className="text-sm font-medium text-accent">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-foreground/5 border border-primary-foreground/10 mb-8 animate-fade-up">
+            <Zap className="w-4 h-4 text-accent" strokeWidth={1.5} />
+            <span className="text-sm font-medium text-primary-foreground/80 tracking-wide">
               Plataforma Profissional de Análise Imobiliária
             </span>
           </div>
 
-          {/* Main Heading */}
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary-foreground mb-6 leading-tight animate-fade-up delay-100">
+          {/* Main Heading - Serif font */}
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold text-primary-foreground mb-6 leading-tight animate-fade-up delay-100 font-serif">
             Seu Cockpit de{" "}
-            <span className="text-gradient-gold">Decisão</span> para
+            <span className="text-accent">Decisão</span> para
             Investimentos Imobiliários
           </h1>
 
           {/* Subtitle */}
-          <p className="text-lg md:text-xl text-primary-foreground/70 mb-10 max-w-2xl mx-auto animate-fade-up delay-200">
+          <p className="text-lg md:text-xl text-primary-foreground/60 mb-10 max-w-2xl mx-auto animate-fade-up delay-200 leading-relaxed">
             Substitua planilhas fragmentadas por calculadoras profissionais
             integradas. Análises padronizadas, validadas matematicamente e
             prontas para apresentação.
@@ -45,32 +45,32 @@ const HeroSection = () => {
             </Button>
           </div>
 
-          {/* Stats */}
+          {/* Stats - Monospace numbers */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-fade-up delay-400">
-            <div className="flex flex-col items-center p-6 rounded-2xl bg-primary-foreground/5 border border-primary-foreground/10">
-              <TrendingUp className="w-8 h-8 text-accent mb-3" />
-              <span className="text-3xl font-bold text-primary-foreground mb-1">
+            <div className="flex flex-col items-center p-6 rounded-lg bg-primary-foreground/5 border border-primary-foreground/10">
+              <TrendingUp className="w-7 h-7 text-accent mb-3" strokeWidth={1.5} />
+              <span className="text-3xl font-semibold text-primary-foreground mb-1 font-mono">
                 4
               </span>
-              <span className="text-sm text-primary-foreground/60">
+              <span className="text-sm text-primary-foreground/50 tracking-wide">
                 Ferramentas Profissionais
               </span>
             </div>
-            <div className="flex flex-col items-center p-6 rounded-2xl bg-primary-foreground/5 border border-primary-foreground/10">
-              <Shield className="w-8 h-8 text-accent mb-3" />
-              <span className="text-3xl font-bold text-primary-foreground mb-1">
+            <div className="flex flex-col items-center p-6 rounded-lg bg-primary-foreground/5 border border-primary-foreground/10">
+              <Shield className="w-7 h-7 text-accent mb-3" strokeWidth={1.5} />
+              <span className="text-3xl font-semibold text-primary-foreground mb-1 font-mono">
                 100%
               </span>
-              <span className="text-sm text-primary-foreground/60">
+              <span className="text-sm text-primary-foreground/50 tracking-wide">
                 Análises Validadas
               </span>
             </div>
-            <div className="flex flex-col items-center p-6 rounded-2xl bg-primary-foreground/5 border border-primary-foreground/10">
-              <Zap className="w-8 h-8 text-accent mb-3" />
-              <span className="text-3xl font-bold text-primary-foreground mb-1">
+            <div className="flex flex-col items-center p-6 rounded-lg bg-primary-foreground/5 border border-primary-foreground/10">
+              <Zap className="w-7 h-7 text-accent mb-3" strokeWidth={1.5} />
+              <span className="text-3xl font-semibold text-primary-foreground mb-1 font-mono">
                 10x
               </span>
-              <span className="text-sm text-primary-foreground/60">
+              <span className="text-sm text-primary-foreground/50 tracking-wide">
                 Mais Rápido
               </span>
             </div>
