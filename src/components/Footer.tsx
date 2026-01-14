@@ -8,14 +8,14 @@ const Footer = () => {
           {/* Logo & Description */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 rounded-lg gradient-gold flex items-center justify-center">
-                <Calculator className="w-5 h-5 text-primary" />
+              <div className="w-9 h-9 rounded-md bg-accent flex items-center justify-center">
+                <Calculator className="w-5 h-5 text-accent-foreground" strokeWidth={1.5} />
               </div>
               <span className="text-xl font-bold text-primary-foreground">
                 Setter<span className="text-accent">Toolbox</span>
               </span>
             </div>
-            <p className="text-primary-foreground/60 max-w-md">
+            <p className="text-primary-foreground/50 max-w-md leading-relaxed">
               Plataforma proprietária de ferramentas de análise para
               investimentos imobiliários. Substitua planilhas fragmentadas por
               calculadoras profissionais integradas.
@@ -24,14 +24,14 @@ const Footer = () => {
 
           {/* Ferramentas */}
           <div>
-            <h4 className="font-semibold text-primary-foreground mb-4">
+            <h4 className="font-semibold text-primary-foreground mb-4 uppercase tracking-wider text-sm">
               Ferramentas
             </h4>
             <ul className="space-y-3">
               <li>
                 <a
                   href="/simulador"
-                  className="text-primary-foreground/60 hover:text-accent transition-colors"
+                  className="text-primary-foreground/50 hover:text-accent transition-colors"
                 >
                   Simulador de Viabilidade
                 </a>
@@ -39,7 +39,7 @@ const Footer = () => {
               <li>
                 <a
                   href="/permuta"
-                  className="text-primary-foreground/60 hover:text-accent transition-colors"
+                  className="text-primary-foreground/50 hover:text-accent transition-colors"
                 >
                   Calculadora de Permuta
                 </a>
@@ -47,7 +47,7 @@ const Footer = () => {
               <li>
                 <a
                   href="/highest-best-use"
-                  className="text-primary-foreground/60 hover:text-accent transition-colors"
+                  className="text-primary-foreground/50 hover:text-accent transition-colors"
                 >
                   Highest & Best Use
                 </a>
@@ -55,7 +55,7 @@ const Footer = () => {
               <li>
                 <a
                   href="/decisor"
-                  className="text-primary-foreground/60 hover:text-accent transition-colors"
+                  className="text-primary-foreground/50 hover:text-accent transition-colors"
                 >
                   Decisor Go/No-Go
                 </a>
@@ -65,14 +65,14 @@ const Footer = () => {
 
           {/* Links */}
           <div>
-            <h4 className="font-semibold text-primary-foreground mb-4">
+            <h4 className="font-semibold text-primary-foreground mb-4 uppercase tracking-wider text-sm">
               Links
             </h4>
             <ul className="space-y-3">
               <li>
                 <a
                   href="#"
-                  className="text-primary-foreground/60 hover:text-accent transition-colors"
+                  className="text-primary-foreground/50 hover:text-accent transition-colors"
                 >
                   Sobre Nós
                 </a>
@@ -80,7 +80,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-primary-foreground/60 hover:text-accent transition-colors"
+                  className="text-primary-foreground/50 hover:text-accent transition-colors"
                 >
                   Blog
                 </a>
@@ -88,7 +88,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-primary-foreground/60 hover:text-accent transition-colors"
+                  className="text-primary-foreground/50 hover:text-accent transition-colors"
                 >
                   Termos de Uso
                 </a>
@@ -96,7 +96,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-primary-foreground/60 hover:text-accent transition-colors"
+                  className="text-primary-foreground/50 hover:text-accent transition-colors"
                 >
                   Política de Privacidade
                 </a>
@@ -107,7 +107,7 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="border-t border-primary-foreground/10 mt-12 pt-8 text-center">
-          <p className="text-primary-foreground/40 text-sm">
+          <p className="text-primary-foreground/30 text-sm">
             © {new Date().getFullYear()} Setter Toolbox. Todos os direitos
             reservados.
           </p>

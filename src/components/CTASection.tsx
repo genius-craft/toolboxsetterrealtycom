@@ -7,17 +7,17 @@ const CTASection = () => {
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
           {/* Main CTA Card */}
-          <div className="relative gradient-hero rounded-3xl p-12 md:p-16 overflow-hidden">
-            {/* Background Elements */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-accent/20 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent/10 rounded-full blur-3xl" />
+          <div className="relative gradient-hero rounded-lg p-12 md:p-16 overflow-hidden">
+            {/* Subtle Background Elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent/5 rounded-full blur-3xl" />
 
             <div className="relative z-10 text-center">
-              <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
+              <h2 className="text-3xl md:text-4xl font-semibold text-primary-foreground mb-4 font-serif">
                 Pronto Para Tomar Decisões com{" "}
-                <span className="text-gradient-gold">Confiança?</span>
+                <span className="text-accent">Confiança?</span>
               </h2>
-              <p className="text-lg text-primary-foreground/70 mb-10 max-w-2xl mx-auto">
+              <p className="text-lg text-primary-foreground/60 mb-10 max-w-2xl mx-auto leading-relaxed">
                 Comece a usar o Setter Toolbox gratuitamente ou fale com um
                 especialista para validar suas análises.
               </p>
@@ -28,7 +28,7 @@ const CTASection = () => {
                   <ArrowRight className="w-5 h-5" />
                 </Button>
                 <Button variant="heroOutline" size="xl">
-                  <MessageCircle className="w-5 h-5" />
+                  <MessageCircle className="w-5 h-5" strokeWidth={1.5} />
                   Falar com Especialista
                 </Button>
               </div>
@@ -38,8 +38,8 @@ const CTASection = () => {
           {/* Secondary CTAs */}
           <div className="grid md:grid-cols-2 gap-6 mt-8">
             <div className="tool-card flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
-                <FileText className="w-6 h-6 text-accent" />
+              <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+                <FileText className="w-6 h-6 text-accent" strokeWidth={1.5} />
               </div>
               <div>
                 <h3 className="font-semibold text-foreground mb-1">
@@ -52,8 +52,8 @@ const CTASection = () => {
             </div>
 
             <div className="tool-card flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
-                <MessageCircle className="w-6 h-6 text-accent" />
+              <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+                <MessageCircle className="w-6 h-6 text-accent" strokeWidth={1.5} />
               </div>
               <div>
                 <h3 className="font-semibold text-foreground mb-1">

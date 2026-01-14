@@ -14,7 +14,6 @@ const tools = [
       "Múltiplas unidades",
       "Veredito automático",
     ],
-    color: "from-blue-500 to-blue-600",
     delay: "delay-100",
   },
   {
@@ -29,7 +28,6 @@ const tools = [
       "Deal Score (-100 a +100)",
       "Comparativo visual",
     ],
-    color: "from-emerald-500 to-emerald-600",
     delay: "delay-200",
   },
   {
@@ -44,7 +42,6 @@ const tools = [
       "Score de viabilidade",
       "Recomendação técnica",
     ],
-    color: "from-violet-500 to-violet-600",
     delay: "delay-300",
   },
   {
@@ -59,7 +56,6 @@ const tools = [
       "Análise de parceria",
       "Score de aprovação",
     ],
-    color: "from-amber-500 to-amber-600",
     delay: "delay-400",
   },
 ];
@@ -70,7 +66,7 @@ const ToolsSection = () => {
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-accent/10 text-accent text-sm font-semibold mb-4">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-accent/10 text-accent text-sm font-semibold mb-4 uppercase tracking-wider">
             Ferramentas
           </span>
           <h2 className="section-title mb-4">
@@ -90,18 +86,16 @@ const ToolsSection = () => {
               key={index}
               className={`tool-card group animate-fade-up ${tool.delay}`}
             >
-              {/* Icon */}
-              <div
-                className={`inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br ${tool.color} mb-5`}
-              >
-                <tool.icon className="w-7 h-7 text-primary-foreground" />
+              {/* Icon - Monochromatic */}
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-lg bg-primary mb-5">
+                <tool.icon className="w-7 h-7 text-primary-foreground" strokeWidth={1.5} />
               </div>
 
               {/* Title & Description */}
               <h3 className="text-xl font-bold text-foreground mb-2">
                 {tool.title}
               </h3>
-              <p className="text-muted-foreground mb-5">{tool.description}</p>
+              <p className="text-muted-foreground mb-5 leading-relaxed">{tool.description}</p>
 
               {/* Features List */}
               <ul className="space-y-2 mb-6">
@@ -117,7 +111,7 @@ const ToolsSection = () => {
               </ul>
 
               {/* CTA */}
-              <Button variant="ghost" className="group/btn p-0 h-auto font-semibold text-foreground">
+              <Button variant="ghost" className="group/btn p-0 h-auto font-semibold text-foreground hover:text-accent hover:bg-transparent">
                 Acessar Ferramenta
                 <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
               </Button>
