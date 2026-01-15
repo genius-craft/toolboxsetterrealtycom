@@ -1,9 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, TrendingUp, Shield, Zap } from "lucide-react";
-
 const HeroSection = () => {
-  return (
-    <section className="relative gradient-hero min-h-[90vh] flex items-center overflow-hidden">
+  return <section className="relative gradient-hero min-h-[90vh] flex items-center overflow-hidden">
       {/* Subtle Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-20 left-10 w-72 h-72 bg-accent/30 rounded-full blur-3xl" />
@@ -13,12 +11,7 @@ const HeroSection = () => {
       <div className="container mx-auto px-4 py-24 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-foreground/5 border border-primary-foreground/10 mb-8 animate-fade-up">
-            <Zap className="w-4 h-4 text-accent" strokeWidth={1.5} />
-            <span className="text-sm font-medium text-primary-foreground/80 tracking-wide">
-              Plataforma Profissional de Análise Imobiliária
-            </span>
-          </div>
+          
 
           {/* Main Heading - Serif font */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold text-primary-foreground mb-6 leading-tight animate-fade-up delay-100 font-serif">
@@ -80,20 +73,10 @@ const HeroSection = () => {
 
       {/* Bottom Wave */}
       <div className="absolute bottom-0 left-0 right-0">
-        <svg
-          viewBox="0 0 1440 120"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-auto"
-        >
-          <path
-            d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z"
-            fill="hsl(var(--background))"
-          />
+        <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
+          <path d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="hsl(var(--background))" />
         </svg>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default HeroSection;
