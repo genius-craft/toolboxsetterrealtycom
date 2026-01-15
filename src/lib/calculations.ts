@@ -407,3 +407,162 @@ export function generateSensitivityMatrix(
     });
   });
 }
+
+/**
+ * HBU v2 - Three Business Models Comparison
+ */
+
+// Incorporar Residencial (Build & Sell)
+export interface IncorporarParams {
+  landArea: number;
+  far: number;
+  landCost: number;
+  pricePerSqm: number;
+  constructionCostPerSqm: number;
+  efficiency: number; // % of sellable area
+  totalMonths: number; // construction + sales period
+  discountRate: number; // annual
+}
+
+export interface IncorporarResult {
+  buildableArea: number;
+  sellableArea: number;
+  vgv: number;
+  constructionCost: number;
+  totalCost: number;
+  grossProfit: number;
+  margin: number;
+  npv: number;
+}
+
+export function calculateIncorporar(params: IncorporarParams): IncorporarResult {
+  const { landArea, far, landCost, pricePerSqm, constructionCostPerSqm, efficiency, totalMonths, discountRate } = params;
+  
+  const buildableArea = landArea * far;
+  const sellableArea = buildableArea * efficiency;
+  const vgv = sellableArea * pricePerSqm;
+  const constructionCost = buildableArea * constructionCostPerSqm;
+  const totalCost = landCost + constructionCost;
+  const grossProfit = vgv - totalCost;
+  const margin = vgv > 0 ? grossProfit / vgv : 0;
+  
+  // NPV: profit received at end of project
+  const years = totalMonths / 12;
+  const npv = grossProfit / Math.pow(1 + discountRate, years);
+  
+  return {
+    buildableArea,
+    sellableArea,
+    vgv,
+    constructionCost,
+    totalCost,
+    grossProfit,
+    margin,
+    npv,
+  };
+}
+
+// Alugar Como Está (Rent Existing)
+export interface AlugarParams {
+  landCost: number;
+  rentableArea: number; // existing rentable area
+  rentPerSqmMonthly: number;
+  vacancy: number; // as decimal
+  capRate: number; // exit cap rate
+  discountRate: number; // annual
+}
+
+export interface AlugarResult {
+  annualNOI: number;
+  assetValue: number;
+  annualReturn: number;
+  paybackYears: number;
+  valueCreated: number;
+  npv: number;
+}
+
+export function calculateAlugar(params: AlugarParams): AlugarResult {
+  const { landCost, rentableArea, rentPerSqmMonthly, vacancy, capRate, discountRate } = params;
+  
+  const annualGrossRent = rentableArea * rentPerSqmMonthly * 12;
+  const annualNOI = annualGrossRent * (1 - vacancy);
+  const assetValue = capRate > 0 ? annualNOI / capRate : 0;
+  const annualReturn = landCost > 0 ? annualNOI / landCost : 0;
+  const paybackYears = annualNOI > 0 ? landCost / annualNOI : Infinity;
+  const valueCreated = assetValue - landCost;
+  
+  // NPV: perpetuity value (NOI / discount rate) - land cost
+  // This represents the present value of holding forever
+  const perpetuityValue = discountRate > 0 ? annualNOI / discountRate : 0;
+  const npv = perpetuityValue - landCost;
+  
+  return {
+    annualNOI,
+    assetValue,
+    annualReturn,
+    paybackYears,
+    valueCreated,
+    npv,
+  };
+}
+
+// Build-to-Suit (Build to Rent)
+export interface BTSParams {
+  landArea: number;
+  far: number;
+  landCost: number;
+  constructionCostPerSqm: number;
+  efficiency: number;
+  rentPerSqmMonthly: number;
+  vacancy: number;
+  capRate: number;
+  constructionMonths: number;
+  discountRate: number;
+}
+
+export interface BTSResult {
+  buildableArea: number;
+  rentableArea: number;
+  totalInvestment: number;
+  annualNOI: number;
+  stabilizedValue: number;
+  valueCreated: number;
+  npv: number;
+}
+
+export function calculateBTS(params: BTSParams): BTSResult {
+  const { landArea, far, landCost, constructionCostPerSqm, efficiency, rentPerSqmMonthly, vacancy, capRate, constructionMonths, discountRate } = params;
+  
+  const buildableArea = landArea * far;
+  const rentableArea = buildableArea * efficiency;
+  const constructionCost = buildableArea * constructionCostPerSqm;
+  const totalInvestment = landCost + constructionCost;
+  
+  const annualGrossRent = rentableArea * rentPerSqmMonthly * 12;
+  const annualNOI = annualGrossRent * (1 - vacancy);
+  const stabilizedValue = capRate > 0 ? annualNOI / capRate : 0;
+  const valueCreated = stabilizedValue - totalInvestment;
+  
+  // NPV: stabilized value at end of construction, discounted back
+  const constructionYears = constructionMonths / 12;
+  const npv = stabilizedValue / Math.pow(1 + discountRate, constructionYears) - totalInvestment;
+  
+  return {
+    buildableArea,
+    rentableArea,
+    totalInvestment,
+    annualNOI,
+    stabilizedValue,
+    valueCreated,
+    npv,
+  };
+}
+
+// Combined HBU v2 Result for comparison
+export interface HBUv2ComparisonResult {
+  incorporar: IncorporarResult & { type: 'incorporar' };
+  alugar: AlugarResult & { type: 'alugar' };
+  bts: BTSResult & { type: 'bts' };
+  winner: 'incorporar' | 'alugar' | 'bts';
+  maxNPV: number;
+}
