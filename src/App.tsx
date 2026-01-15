@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { AppLayout } from "@/components/layout/AppLayout";
 import Index from "./pages/Index";
 import Simulador from "./pages/Simulador";
 import Permuta from "./pages/Permuta";
@@ -24,15 +25,39 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Public routes without sidebar */}
             <Route path="/" element={<Index />} />
-            <Route path="/simulador" element={<Simulador />} />
-            <Route path="/permuta" element={<Permuta />} />
-            <Route path="/highest-best-use" element={<HighestBestUse />} />
-            <Route path="/decisor" element={<Decisor />} />
-            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/privacidade" element={<PrivacyPolicy />} />
             <Route path="/termos" element={<TermsOfUse />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            
+            {/* Tool routes with sidebar */}
+            <Route path="/simulador" element={
+              <AppLayout title="Simulador de Incorporação">
+                <Simulador />
+              </AppLayout>
+            } />
+            <Route path="/permuta" element={
+              <AppLayout title="Calculadora de Permuta">
+                <Permuta />
+              </AppLayout>
+            } />
+            <Route path="/highest-best-use" element={
+              <AppLayout title="Highest & Best Use">
+                <HighestBestUse />
+              </AppLayout>
+            } />
+            <Route path="/decisor" element={
+              <AppLayout title="Decisor Go/No-Go">
+                <Decisor />
+              </AppLayout>
+            } />
+            <Route path="/dashboard" element={
+              <AppLayout title="Dashboard">
+                <Dashboard />
+              </AppLayout>
+            } />
+            
+            {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ToolNavbar } from '@/components/tools/ToolNavbar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProjects, useDeleteProject, ProjectType } from '@/hooks/useProjects';
@@ -77,7 +76,6 @@ export default function Dashboard() {
   if (!user) {
     return (
       <div className="min-h-screen bg-background">
-        <ToolNavbar title="Meus Projetos" />
         <div className="flex flex-col items-center justify-center py-20 px-4">
           <AlertCircle className="h-16 w-16 text-muted-foreground mb-4" />
           <h2 className="font-serif text-2xl mb-2">Acesso Restrito</h2>
@@ -95,7 +93,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <ToolNavbar title="Meus Projetos" />
 
       <div className="max-w-6xl mx-auto p-6 lg:p-8">
         {/* Header */}
