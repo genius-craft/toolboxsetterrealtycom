@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { ToolLayout } from "@/components/tools/ToolLayout";
 import { CurrencyInput } from "@/components/tools/CurrencyInput";
-import { PercentageSlider } from "@/components/tools/PercentageSlider";
 import { PermutaTimelineSliders } from "@/components/tools/PermutaTimelineSliders";
 import { PermutaCarryingCosts } from "@/components/tools/PermutaCarryingCosts";
 import { PermutaTimeline } from "@/components/tools/PermutaTimeline";
@@ -11,6 +10,7 @@ import { GlossaryTooltip } from "@/components/tools/InfoTooltip";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import { Banknote, Building2, RefreshCcw, Save, FileDown, AlertTriangle } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import { useAuth } from "@/contexts/AuthContext";
@@ -127,12 +127,21 @@ export default function Permuta() {
             </div>
             <div className="space-y-4">
               <CurrencyInput label="Valor do Imóvel" value={valorImovelParceria} onChange={setValorImovelParceria} tooltip="permuta" />
-              <div className="space-y-2">
-                <div className="flex items-center gap-1.5">
-                  <Label className="text-sm font-medium">% em Unidades</Label>
-                  <GlossaryTooltip term="percentualUnidades" />
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Label className="text-sm font-medium">% em Unidades</Label>
+                    <GlossaryTooltip term="percentualUnidades" />
+                  </div>
+                  <span className="font-mono text-sm font-medium text-accent">{percentualUnidades}%</span>
                 </div>
-                <PercentageSlider label="" value={percentualUnidades} onChange={setPercentualUnidades} min={0} max={100} showValue={true} />
+                <Slider
+                  value={[percentualUnidades]}
+                  onValueChange={([v]) => setPercentualUnidades(v)}
+                  min={0}
+                  max={100}
+                  step={1}
+                />
               </div>
               <div className="bg-blue-100/50 dark:bg-blue-900/20 rounded-lg p-3 space-y-1 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Unidades:</span><span className="font-medium">{formatCurrency(calculations.valorUnidades)}</span></div>

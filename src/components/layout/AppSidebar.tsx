@@ -54,11 +54,11 @@ export function AppSidebar() {
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
             <div className="h-8 w-8 rounded-lg bg-sidebar-primary flex items-center justify-center text-sidebar-primary-foreground font-bold text-sm">
-              T
+              S
             </div>
             {!isCollapsed && (
               <span className="font-display text-lg text-sidebar-foreground group-hover:text-sidebar-primary transition-colors">
-                Terracap
+                Setter
               </span>
             )}
           </Link>

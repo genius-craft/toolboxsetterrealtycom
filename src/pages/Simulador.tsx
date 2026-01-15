@@ -65,6 +65,7 @@ export default function Simulador() {
   // Exit
   const [holdingPeriod, setHoldingPeriod] = useState(10);
   const [exitCapRate, setExitCapRate] = useState(0.07); // 7%
+  const [discountRate, setDiscountRate] = useState(0.12); // 12% custo de oportunidade
 
   // Calculate total rent and effective rent growth
   const totalMonthlyRent = useMemo(() => {
@@ -93,6 +94,7 @@ export default function Simulador() {
     managementFee,
     holdingPeriod,
     exitCapRate,
+    discountRate,
   }), [
     purchasePrice,
     closingCosts,
@@ -105,7 +107,13 @@ export default function Simulador() {
     managementFee,
     holdingPeriod,
     exitCapRate,
+    discountRate,
   ]);
+
+  // Calculate NPV
+  const calculateNPV = (cashFlows: number[], rate: number): number => {
+    return cashFlows.reduce((npv, cf, i) => npv + cf / Math.pow(1 + rate, i), 0);
+  };
 
   // Calculations
   const calculations = useMemo(() => {
@@ -129,6 +137,7 @@ export default function Simulador() {
     });
 
     const irr = calculateIRR(cashFlows);
+    const npv = calculateNPV(cashFlows, discountRate);
     const totalDistributions = cashFlows.slice(1).reduce((sum, cf) => sum + cf, 0);
     const equityMultiple = calculateEquityMultiple(totalDistributions, totalInvestment);
 
@@ -149,6 +158,7 @@ export default function Simulador() {
       noi,
       entryCapRate,
       irr,
+      npv,
       equityMultiple,
       chartData,
       verdict,
@@ -165,6 +175,7 @@ export default function Simulador() {
     managementFee,
     holdingPeriod,
     exitCapRate,
+    discountRate,
   ]);
 
   // Calculate scenarios
@@ -197,12 +208,14 @@ export default function Simulador() {
         managementFee,
         holdingPeriod,
         exitCapRate,
+        discountRate,
       },
       results: {
         totalInvestment: calculations.totalInvestment,
         noi: calculations.noi,
         entryCapRate: calculations.entryCapRate,
         irr: calculations.irr,
+        npv: calculations.npv,
         equityMultiple: calculations.equityMultiple,
         verdict: calculations.verdict,
       },
@@ -213,7 +226,7 @@ export default function Simulador() {
   const Dashboard = (
     <div className="space-y-6">
       {/* KPIs Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <KPICard
           label="Cap Rate Entrada"
           value={formatPercentage(calculations.entryCapRate)}
@@ -231,6 +244,19 @@ export default function Simulador() {
                 ? 'success'
                 : calculations.irr >= 0.1
                 ? 'warning'
+                : 'danger'
+            }
+          />
+        </SoftLockOverlay>
+
+        <SoftLockOverlay featureName="o VPL">
+          <KPICard
+            label="VPL"
+            value={formatCurrency(calculations.npv)}
+            icon={BarChart3}
+            variant={
+              calculations.npv > 0
+                ? 'success'
                 : 'danger'
             }
           />
@@ -443,6 +469,15 @@ export default function Simulador() {
           max={0.12}
           step={0.005}
           tooltip="exitCapRate"
+        />
+        <PercentageSlider
+          label="Custo de Oportunidade"
+          value={discountRate}
+          onChange={setDiscountRate}
+          min={0.06}
+          max={0.20}
+          step={0.01}
+          tooltip="discountRate"
         />
       </CollapsibleInputCard>
     </ToolLayout>
