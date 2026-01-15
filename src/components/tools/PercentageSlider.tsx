@@ -2,6 +2,7 @@ import React from 'react';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { GlossaryTooltip, financialGlossary } from './InfoTooltip';
 
 interface PercentageSliderProps {
   label: string;
@@ -13,6 +14,7 @@ interface PercentageSliderProps {
   className?: string;
   helperText?: string;
   showValue?: boolean;
+  tooltip?: keyof typeof financialGlossary;
 }
 
 export function PercentageSlider({
@@ -25,13 +27,17 @@ export function PercentageSlider({
   className,
   helperText,
   showValue = true,
+  tooltip,
 }: PercentageSliderProps) {
   const displayValue = (value * 100).toFixed(1).replace('.', ',');
 
   return (
     <div className={cn('space-y-3', className)}>
       <div className="flex items-center justify-between">
-        <Label className="text-sm font-medium text-foreground">{label}</Label>
+        <div className="flex items-center gap-1.5">
+          <Label className="text-sm font-medium text-foreground">{label}</Label>
+          {tooltip && <GlossaryTooltip term={tooltip} />}
+        </div>
         {showValue && (
           <span className="font-mono text-sm text-accent font-medium">
             {displayValue}%

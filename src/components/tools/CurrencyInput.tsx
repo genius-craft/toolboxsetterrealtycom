@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { GlossaryTooltip, financialGlossary } from './InfoTooltip';
 
 interface CurrencyInputProps {
   label: string;
@@ -12,6 +13,7 @@ interface CurrencyInputProps {
   min?: number;
   max?: number;
   helperText?: string;
+  tooltip?: keyof typeof financialGlossary;
 }
 
 export function CurrencyInput({
@@ -23,6 +25,7 @@ export function CurrencyInput({
   min,
   max,
   helperText,
+  tooltip,
 }: CurrencyInputProps) {
   const [displayValue, setDisplayValue] = useState('');
 
@@ -75,7 +78,10 @@ export function CurrencyInput({
 
   return (
     <div className={cn('space-y-2', className)}>
-      <Label className="text-sm font-medium text-foreground">{label}</Label>
+      <div className="flex items-center gap-1.5">
+        <Label className="text-sm font-medium text-foreground">{label}</Label>
+        {tooltip && <GlossaryTooltip term={tooltip} />}
+      </div>
       <Input
         type="text"
         inputMode="numeric"

@@ -5,6 +5,7 @@ import { CurrencyInput } from '@/components/tools/CurrencyInput';
 import { PercentageSlider } from '@/components/tools/PercentageSlider';
 import { KPICard } from '@/components/tools/KPICard';
 import { SoftLockOverlay } from '@/components/tools/SoftLockOverlay';
+import { GlossaryTooltip } from '@/components/tools/InfoTooltip';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,19 +26,25 @@ import {
   Wrench,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { financialGlossary } from '@/components/tools/InfoTooltip';
 
 const StarRating = ({
   value,
   onChange,
   label,
+  tooltip,
 }: {
   value: number;
   onChange: (v: number) => void;
   label: string;
+  tooltip?: keyof typeof financialGlossary;
 }) => {
   return (
     <div className="space-y-2">
-      <Label className="text-sm font-medium">{label}</Label>
+      <div className="flex items-center gap-1.5">
+        <Label className="text-sm font-medium">{label}</Label>
+        {tooltip && <GlossaryTooltip term={tooltip} />}
+      </div>
       <div className="flex gap-1">
         {[1, 2, 3, 4, 5].map((star) => (
           <button
@@ -291,13 +298,13 @@ export default function Decisor() {
           label="Preço Pedido"
           value={askingPrice}
           onChange={setAskingPrice}
-          helperText="Valor de oferta do vendedor"
+          tooltip="purchasePrice"
         />
         <CurrencyInput
           label="NOI Anual"
           value={annualNOI}
           onChange={setAnnualNOI}
-          helperText="Receita Operacional Líquida"
+          tooltip="noi"
         />
         <PercentageSlider
           label="Cap Rate Alvo"
@@ -306,7 +313,7 @@ export default function Decisor() {
           min={0.05}
           max={0.15}
           step={0.005}
-          helperText="Retorno mínimo desejado"
+          tooltip="targetCapRate"
         />
       </CollapsibleInputCard>
 
@@ -316,21 +323,25 @@ export default function Decisor() {
           label="Qualidade da Localização"
           value={locationQuality}
           onChange={setLocationQuality}
+          tooltip="locationQuality"
         />
         <StarRating
           label="Risco do Inquilino"
           value={tenantRisk}
           onChange={setTenantRisk}
+          tooltip="tenantRisk"
         />
         <StarRating
           label="Liquidez Futura"
           value={futureLiquidity}
           onChange={setFutureLiquidity}
+          tooltip="futureLiquidity"
         />
         <StarRating
           label="Condição do Ativo"
           value={assetCondition}
           onChange={setAssetCondition}
+          tooltip="assetCondition"
         />
       </CollapsibleInputCard>
     </ToolLayout>
