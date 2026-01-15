@@ -33,9 +33,6 @@ const HeroSection = () => {
               Começar Agora
               <ArrowRight className="w-5 h-5" />
             </Button>
-            <Button variant="heroOutline" size="xl">
-              Ver Demonstração
-            </Button>
           </div>
 
           {/* Stats - Monospace numbers */}
