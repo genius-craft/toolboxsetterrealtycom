@@ -10,6 +10,7 @@ import { SoftLockOverlay } from '@/components/tools/SoftLockOverlay';
 import { ScenarioMatrix } from '@/components/tools/ScenarioMatrix';
 import { SensitivityHeatmap } from '@/components/tools/SensitivityHeatmap';
 import { ProjectHeader } from '@/components/tools/ProjectHeader';
+import { RentalUnitsCard, RentalUnit } from '@/components/tools/RentalUnitsCard';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
@@ -47,9 +48,12 @@ export default function Simulador() {
   const [closingCosts, setClosingCosts] = useState(0.03); // 3%
   const [renovationCost, setRenovationCost] = useState(100000);
 
-  // Revenue
-  const [monthlyRent, setMonthlyRent] = useState(15000);
-  const [rentGrowth, setRentGrowth] = useState(0.03); // 3% annual
+  // Revenue - Multiple Units
+  const [rentalUnits, setRentalUnits] = useState<RentalUnit[]>([
+    { id: '1', name: 'Loja 1', monthlyRent: 15000 },
+  ]);
+  const [adjustmentIndex, setAdjustmentIndex] = useState<'igpm' | 'ipca' | 'custom'>('igpm');
+  const [customIndexRate, setCustomIndexRate] = useState(0.05);
   const [vacancyRate, setVacancyRate] = useState(0.05); // 5%
 
   // Operating Expenses (OPEX)
@@ -61,13 +65,27 @@ export default function Simulador() {
   const [holdingPeriod, setHoldingPeriod] = useState(10);
   const [exitCapRate, setExitCapRate] = useState(0.07); // 7%
 
+  // Calculate total rent and effective rent growth
+  const totalMonthlyRent = useMemo(() => {
+    return rentalUnits.reduce((sum, unit) => sum + unit.monthlyRent, 0);
+  }, [rentalUnits]);
+
+  const effectiveRentGrowth = useMemo(() => {
+    const indexRates = {
+      igpm: 0.04,
+      ipca: 0.045,
+      custom: customIndexRate,
+    };
+    return indexRates[adjustmentIndex];
+  }, [adjustmentIndex, customIndexRate]);
+
   // Collect all inputs for scenario calculations
   const simuladorInputs = useMemo(() => ({
     purchasePrice,
     closingCosts,
     renovationCost,
-    monthlyRent,
-    rentGrowth,
+    monthlyRent: totalMonthlyRent,
+    rentGrowth: effectiveRentGrowth,
     vacancyRate,
     propertyTax,
     condoFee,
@@ -78,8 +96,8 @@ export default function Simulador() {
     purchasePrice,
     closingCosts,
     renovationCost,
-    monthlyRent,
-    rentGrowth,
+    totalMonthlyRent,
+    effectiveRentGrowth,
     vacancyRate,
     propertyTax,
     condoFee,
@@ -91,7 +109,7 @@ export default function Simulador() {
   // Calculations
   const calculations = useMemo(() => {
     const totalInvestment = purchasePrice * (1 + closingCosts) + renovationCost;
-    const annualRent = monthlyRent * 12;
+    const annualRent = totalMonthlyRent * 12;
     const annualManagement = annualRent * managementFee;
     const operatingExpenses = propertyTax + condoFee + annualManagement;
     const effectiveGrossIncome = annualRent * (1 - vacancyRate);
@@ -101,7 +119,7 @@ export default function Simulador() {
     const cashFlows = projectCashFlows({
       totalInvestment,
       annualRent,
-      rentGrowth,
+      rentGrowth: effectiveRentGrowth,
       vacancyRate,
       operatingExpenses,
       expenseGrowth: 0.02, // 2% expense growth
@@ -138,8 +156,8 @@ export default function Simulador() {
     purchasePrice,
     closingCosts,
     renovationCost,
-    monthlyRent,
-    rentGrowth,
+    totalMonthlyRent,
+    effectiveRentGrowth,
     vacancyRate,
     propertyTax,
     condoFee,
@@ -169,8 +187,9 @@ export default function Simulador() {
         purchasePrice,
         closingCosts,
         renovationCost,
-        monthlyRent,
-        rentGrowth,
+        rentalUnits,
+        adjustmentIndex,
+        customIndexRate,
         vacancyRate,
         propertyTax,
         condoFee,
@@ -285,7 +304,7 @@ export default function Simulador() {
       <SoftLockOverlay featureName="a análise de sensibilidade">
         <SensitivityHeatmap
           baseInvestment={calculations.totalInvestment}
-          baseRent={monthlyRent}
+          baseRent={totalMonthlyRent}
           calculateCapRate={sensitivityCapRateCalc}
         />
       </SoftLockOverlay>
@@ -347,23 +366,18 @@ export default function Simulador() {
         />
       </CollapsibleInputCard>
 
-      {/* Revenue Card */}
-      <CollapsibleInputCard title="Receita" icon={TrendingUp}>
-        <CurrencyInput
-          label="Aluguel Mensal"
-          value={monthlyRent}
-          onChange={setMonthlyRent}
-          helperText="Valor bruto mensal de locação"
-        />
-        <PercentageSlider
-          label="Crescimento Anual"
-          value={rentGrowth}
-          onChange={setRentGrowth}
-          min={0}
-          max={0.1}
-          step={0.005}
-          helperText="Projeção de reajuste anual"
-        />
+      {/* Revenue Card - Multiple Units */}
+      <RentalUnitsCard
+        units={rentalUnits}
+        onUnitsChange={setRentalUnits}
+        adjustmentIndex={adjustmentIndex}
+        onAdjustmentIndexChange={setAdjustmentIndex}
+        customIndexRate={customIndexRate}
+        onCustomIndexRateChange={setCustomIndexRate}
+      />
+
+      {/* Vacancy Rate */}
+      <CollapsibleInputCard title="Premissas de Vacância" icon={TrendingUp}>
         <PercentageSlider
           label="Taxa de Vacância"
           value={vacancyRate}
