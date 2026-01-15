@@ -179,6 +179,8 @@ export default function Permuta() {
   );
 
   return (
-    <ToolLayout title="Calculadora de Permuta" inputsPanel={InputsPanel} resultsPanel={ResultsPanel} />
+    <ToolLayout title="Calculadora de Permuta" rightPanel={ResultsPanel}>
+      {InputsPanel}
+    </ToolLayout>
   );
 }
