@@ -1,320 +1,184 @@
-import React, { useState, useMemo } from 'react';
-import { ToolLayout } from '@/components/tools/ToolLayout';
-import { CollapsibleInputCard } from '@/components/tools/CollapsibleInputCard';
-import { CurrencyInput } from '@/components/tools/CurrencyInput';
-import { PercentageSlider } from '@/components/tools/PercentageSlider';
-import { KPICard } from '@/components/tools/KPICard';
-import { VerdictBadge } from '@/components/tools/VerdictBadge';
-import { ComparisonChart } from '@/components/tools/ComparisonChart';
-import { SoftLockOverlay } from '@/components/tools/SoftLockOverlay';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { useAuth } from '@/contexts/AuthContext';
-import { useSaveProject } from '@/hooks/useProjects';
-import { calculateNPV } from '@/lib/calculations';
-import { formatCurrency, formatCompactCurrency, formatPercentage } from '@/lib/formatters';
-import {
-  Settings,
-  Banknote,
-  Repeat2,
-  Save,
-  Download,
-  Trophy,
-  TrendingUp,
-} from 'lucide-react';
+import { useState, useMemo } from "react";
+import { ToolLayout } from "@/components/tools/ToolLayout";
+import { CurrencyInput } from "@/components/tools/CurrencyInput";
+import { PercentageSlider } from "@/components/tools/PercentageSlider";
+import { PermutaTimelineSliders } from "@/components/tools/PermutaTimelineSliders";
+import { PermutaCarryingCosts } from "@/components/tools/PermutaCarryingCosts";
+import { PermutaTimeline } from "@/components/tools/PermutaTimeline";
+import { PermutaKPIGrid } from "@/components/tools/PermutaKPIGrid";
+import { PermutaVerdict } from "@/components/tools/PermutaVerdict";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Banknote, Building2, RefreshCcw, Save, FileDown, AlertTriangle } from "lucide-react";
+import { formatCurrency } from "@/lib/formatters";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSaveProject } from "@/hooks/useProjects";
+import { toast } from "sonner";
 
 export default function Permuta() {
   const { user } = useAuth();
   const saveProject = useSaveProject();
+  const isLocked = !user;
 
-  // Global Config
-  const [vgv, setVgv] = useState(10000000); // Valor Geral de Vendas
-  const [projectDuration, setProjectDuration] = useState(36); // months
-  const [monthlyDiscountRate, setMonthlyDiscountRate] = useState(0.01); // 1% monthly
+  // === Estados: Venda à Vista ===
+  const [vendaOferta, setVendaOferta] = useState(8000000);
 
-  // Cenário A: Venda à Vista
-  const [salePrice, setSalePrice] = useState(2000000);
-  const [downPayment, setDownPayment] = useState(500000);
-  const [installments, setInstallments] = useState(24);
+  // === Estados: Parceria ===
+  const [valorImovelParceria, setValorImovelParceria] = useState(12000000);
+  const [percentualUnidades, setPercentualUnidades] = useState(50);
+  const percentualDinheiro = 100 - percentualUnidades;
 
-  // Cenário B: Permuta
-  const [swapPercentage, setSwapPercentage] = useState(0.15); // 15% do VGV
-  const [torna, setTorna] = useState(200000); // Cash payment
-  const [deliveryMonth, setDeliveryMonth] = useState(36);
+  // === Estados: Timeline ===
+  const [aprovacaoMeses, setAprovacaoMeses] = useState(12);
+  const [construcaoMeses, setConstrucaoMeses] = useState(36);
+  const [vendaMeses, setVendaMeses] = useState(12);
+  const [taxaDesconto, setTaxaDesconto] = useState(12);
 
-  // Calculations
+  // === Estados: Custos de Carrego ===
+  const [precoUnidade, setPrecoUnidade] = useState(500000);
+  const [custoMensalUnidade, setCustoMensalUnidade] = useState(1500);
+
+  // === Cálculos ===
   const calculations = useMemo(() => {
-    // Venda - Cash flows
-    const installmentValue = (salePrice - downPayment) / installments;
-    const vendaCashFlows = [downPayment];
-    for (let i = 1; i <= installments; i++) {
-      vendaCashFlows.push(installmentValue);
-    }
-    const vendaNominal = salePrice;
-    const vendaNPV = calculateNPV(vendaCashFlows, monthlyDiscountRate);
-
-    // Permuta - Cash flows
-    const swapValue = vgv * swapPercentage;
-    const permutaCashFlows = Array(deliveryMonth + 1).fill(0);
-    permutaCashFlows[0] = torna;
-    permutaCashFlows[deliveryMonth] = swapValue;
-    const permutaNominal = torna + swapValue;
-    const permutaNPV = calculateNPV(permutaCashFlows, monthlyDiscountRate);
-
-    // Comparison
-    const difference = permutaNPV - vendaNPV;
-    const differencePercentage = vendaNPV > 0 ? difference / vendaNPV : 0;
-    const winner = permutaNPV > vendaNPV ? 'permuta' : 'venda';
-
-    // Chart data
-    const chartData = [
-      { name: 'Venda à Vista', nominal: vendaNominal, npv: vendaNPV },
-      { name: 'Permuta', nominal: permutaNominal, npv: permutaNPV },
-    ];
+    const valorUnidades = valorImovelParceria * (percentualUnidades / 100);
+    const valorDinheiro = valorImovelParceria * (percentualDinheiro / 100);
+    const totalNominal = valorUnidades + valorDinheiro;
+    const numeroUnidades = precoUnidade > 0 ? Math.round(valorUnidades / precoUnidade) : 0;
+    const prazoTotalMeses = aprovacaoMeses + construcaoMeses + vendaMeses;
+    const prazoTotalAnos = prazoTotalMeses / 12;
+    const mesesCarrego = construcaoMeses + vendaMeses;
+    const custoTotalCarrego = numeroUnidades * custoMensalUnidade * mesesCarrego;
+    const taxaMensal = Math.pow(1 + taxaDesconto / 100, 1 / 12) - 1;
+    const vpUnidades = valorUnidades / Math.pow(1 + taxaMensal, prazoTotalMeses);
+    const descontoTempo = vpUnidades - valorUnidades;
+    const permutaLiquida = vpUnidades - custoTotalCarrego;
+    const totalParceria = valorDinheiro + permutaLiquida;
+    const diferenca = totalParceria - vendaOferta;
+    const vencedor = diferenca > 0 ? "parceria" : "venda";
 
     return {
-      vendaNominal,
-      vendaNPV,
-      permutaNominal,
-      permutaNPV,
-      swapValue,
-      installmentValue,
-      difference,
-      differencePercentage,
-      winner,
-      chartData,
+      valorUnidades, valorDinheiro, totalNominal, numeroUnidades,
+      prazoTotalMeses, prazoTotalAnos, mesesCarrego, custoTotalCarrego,
+      vpUnidades, descontoTempo, permutaLiquida, totalParceria, diferenca, vencedor,
     };
-  }, [
-    vgv,
-    projectDuration,
-    monthlyDiscountRate,
-    salePrice,
-    downPayment,
-    installments,
-    swapPercentage,
-    torna,
-    deliveryMonth,
-  ]);
+  }, [vendaOferta, valorImovelParceria, percentualUnidades, percentualDinheiro,
+      aprovacaoMeses, construcaoMeses, vendaMeses, taxaDesconto, precoUnidade, custoMensalUnidade]);
 
-  const handleSave = () => {
-    saveProject.mutate({
-      project_type: 'permuta',
-      name: `Permuta ${new Date().toLocaleDateString('pt-BR')}`,
-      inputs: {
-        vgv,
-        projectDuration,
-        monthlyDiscountRate,
-        salePrice,
-        downPayment,
-        installments,
-        swapPercentage,
-        torna,
-        deliveryMonth,
-      },
-      results: {
-        vendaNominal: calculations.vendaNominal,
-        vendaNPV: calculations.vendaNPV,
-        permutaNominal: calculations.permutaNominal,
-        permutaNPV: calculations.permutaNPV,
-        winner: calculations.winner,
-        difference: calculations.difference,
-      },
-    });
+  const handleReset = () => {
+    setVendaOferta(8000000); setValorImovelParceria(12000000); setPercentualUnidades(50);
+    setAprovacaoMeses(12); setConstrucaoMeses(36); setVendaMeses(12); setTaxaDesconto(12);
+    setPrecoUnidade(500000); setCustoMensalUnidade(1500);
   };
 
-  const Dashboard = (
+  const handleSave = async () => {
+    if (!user) { toast.error("Faça login para salvar"); return; }
+    try {
+      await saveProject.mutateAsync({
+        name: `Permuta - ${new Date().toLocaleDateString("pt-BR")}`,
+        project_type: "permuta",
+        inputs: { vendaOferta, valorImovelParceria, percentualUnidades, aprovacaoMeses,
+                  construcaoMeses, vendaMeses, taxaDesconto, precoUnidade, custoMensalUnidade },
+        results: calculations,
+      });
+      toast.success("Projeto salvo!");
+    } catch { toast.error("Erro ao salvar"); }
+  };
+
+  const InputsPanel = (
     <div className="space-y-6">
-      {/* Winner Badge */}
-      <div className="bg-card rounded-lg border border-border p-6 shadow-card text-center">
-        <h3 className="font-serif text-lg mb-4">Melhor Opção</h3>
-        <SoftLockOverlay featureName="a análise de VPL">
-          <div className="flex flex-col items-center gap-3">
-            <div className="p-4 bg-accent/10 rounded-full">
-              <Trophy className="h-8 w-8 text-accent" />
-            </div>
-            <VerdictBadge
-              verdict={calculations.winner === 'permuta' ? 'excellent' : 'good'}
-              label={calculations.winner === 'permuta' ? 'Permuta' : 'Venda à Vista'}
-              size="lg"
-            />
-            <p className="text-sm text-muted-foreground">
-              Vantagem de{' '}
-              <span className="font-mono font-medium text-accent">
-                {formatPercentage(Math.abs(calculations.differencePercentage))}
-              </span>
-            </p>
+      <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-amber-700 dark:text-amber-300">
+            <p className="font-medium">Aviso</p>
+            <p className="mt-1">Esta calculadora é para fins educacionais. Não constitui recomendação de investimento.</p>
           </div>
-        </SoftLockOverlay>
-      </div>
-
-      {/* Comparison KPIs */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-card rounded-lg border border-border p-4 shadow-card">
-          <p className="text-xs text-muted-foreground font-medium tracking-premium uppercase mb-2">
-            Venda à Vista
-          </p>
-          <p className="font-mono text-lg font-medium mb-1">
-            {formatCompactCurrency(calculations.vendaNominal)}
-          </p>
-          <SoftLockOverlay featureName="o VPL">
-            <p className="text-xs text-muted-foreground">
-              VPL: <span className="font-mono text-accent">{formatCompactCurrency(calculations.vendaNPV)}</span>
-            </p>
-          </SoftLockOverlay>
-        </div>
-
-        <div className="bg-card rounded-lg border border-border p-4 shadow-card">
-          <p className="text-xs text-muted-foreground font-medium tracking-premium uppercase mb-2">
-            Permuta
-          </p>
-          <p className="font-mono text-lg font-medium mb-1">
-            {formatCompactCurrency(calculations.permutaNominal)}
-          </p>
-          <SoftLockOverlay featureName="o VPL">
-            <p className="text-xs text-muted-foreground">
-              VPL: <span className="font-mono text-accent">{formatCompactCurrency(calculations.permutaNPV)}</span>
-            </p>
-          </SoftLockOverlay>
         </div>
       </div>
 
-      {/* Comparison Chart */}
-      <div className="bg-card rounded-lg border border-border p-4 shadow-card">
-        <h3 className="font-serif text-lg mb-4">Comparativo</h3>
-        <SoftLockOverlay featureName="o gráfico comparativo">
-          <ComparisonChart data={calculations.chartData} />
-        </SoftLockOverlay>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="border-2 border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-900/10">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+                <Banknote className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">Vender Agora</h3>
+                <p className="text-xs text-muted-foreground">Dinheiro na mão HOJE</p>
+              </div>
+            </div>
+            <CurrencyInput label="Oferta em Dinheiro" value={vendaOferta} onChange={setVendaOferta} />
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-900/10">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <Building2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">Parceria</h3>
+                <p className="text-xs text-muted-foreground">Unidades + Dinheiro</p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <CurrencyInput label="Valor do Imóvel" value={valorImovelParceria} onChange={setValorImovelParceria} />
+              <PercentageSlider label="% em Unidades" value={percentualUnidades} onChange={setPercentualUnidades} min={0} max={100} />
+              <div className="bg-blue-100/50 dark:bg-blue-900/20 rounded-lg p-3 space-y-1 text-sm">
+                <div className="flex justify-between"><span className="text-muted-foreground">Unidades:</span><span className="font-medium">{formatCurrency(calculations.valorUnidades)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Dinheiro ({percentualDinheiro}%):</span><span className="font-medium">{formatCurrency(calculations.valorDinheiro)}</span></div>
+                <div className="flex justify-between font-semibold pt-1 border-t border-blue-200 dark:border-blue-700"><span>Total Nominal:</span><span>{formatCurrency(calculations.totalNominal)}</span></div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Difference */}
-      <SoftLockOverlay featureName="a diferença de VPL">
-        <KPICard
-          label="Diferença de VPL"
-          value={formatCompactCurrency(calculations.difference)}
-          subValue={`${calculations.difference > 0 ? '+' : ''}${formatPercentage(calculations.differencePercentage)}`}
-          icon={TrendingUp}
-          variant={calculations.difference > 0 ? 'success' : 'warning'}
-        />
-      </SoftLockOverlay>
-
-      {/* Action Buttons */}
-      <div className="flex gap-3">
-        <Button
-          variant="gold"
-          className="flex-1"
-          onClick={handleSave}
-          disabled={!user || saveProject.isPending}
-        >
-          <Save className="h-4 w-4 mr-2" />
-          {saveProject.isPending ? 'Salvando...' : 'Salvar'}
-        </Button>
-        <Button variant="outline" className="flex-1" disabled={!user}>
-          <Download className="h-4 w-4 mr-2" />
-          PDF
-        </Button>
+      <div className="flex justify-center -my-2">
+        <div className="bg-primary text-primary-foreground font-bold text-lg px-4 py-2 rounded-full shadow-lg">VS</div>
       </div>
+
+      <Card><CardContent className="pt-6">
+        <PermutaTimelineSliders aprovacaoMeses={aprovacaoMeses} setAprovacaoMeses={setAprovacaoMeses}
+          construcaoMeses={construcaoMeses} setConstrucaoMeses={setConstrucaoMeses}
+          vendaMeses={vendaMeses} setVendaMeses={setVendaMeses} taxaDesconto={taxaDesconto} setTaxaDesconto={setTaxaDesconto} />
+      </CardContent></Card>
+
+      <Card><CardContent className="pt-6">
+        <PermutaCarryingCosts numeroUnidades={calculations.numeroUnidades} precoUnidade={precoUnidade}
+          setPrecoUnidade={setPrecoUnidade} custoMensalUnidade={custoMensalUnidade}
+          setCustoMensalUnidade={setCustoMensalUnidade} mesesCarrego={calculations.mesesCarrego} />
+      </CardContent></Card>
+    </div>
+  );
+
+  const ResultsPanel = (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold">Resultados</h2>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleReset}><RefreshCcw className="h-4 w-4 mr-2" />Limpar</Button>
+          <Button variant="outline" size="sm" onClick={handleSave} disabled={isLocked}><Save className="h-4 w-4 mr-2" />Salvar</Button>
+          <Button variant="outline" size="sm" disabled><FileDown className="h-4 w-4 mr-2" />PDF</Button>
+        </div>
+      </div>
+
+      <PermutaKPIGrid prazoTotalAnos={calculations.prazoTotalAnos} descontoTempo={calculations.descontoTempo}
+        vpUnidades={calculations.vpUnidades} permutaLiquida={calculations.permutaLiquida}
+        totalParceria={calculations.totalParceria} locked={isLocked} />
+
+      <Card><CardContent className="pt-6">
+        <PermutaTimeline aprovacaoMeses={aprovacaoMeses} construcaoMeses={construcaoMeses}
+          vendaMeses={vendaMeses} numeroUnidades={calculations.numeroUnidades} custoMensalUnidade={custoMensalUnidade} />
+      </CardContent></Card>
+
+      <PermutaVerdict vendaValor={vendaOferta} parceriaValor={calculations.totalParceria} locked={isLocked} />
     </div>
   );
 
   return (
-    <ToolLayout title="Calculadora de Permuta" rightPanel={Dashboard}>
-      {/* Global Config */}
-      <CollapsibleInputCard title="Configuração Global" icon={Settings}>
-        <CurrencyInput
-          label="VGV do Empreendimento"
-          value={vgv}
-          onChange={setVgv}
-          helperText="Valor Geral de Vendas do projeto"
-        />
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">Prazo do Projeto</Label>
-            <span className="font-mono text-sm text-accent font-medium">
-              {projectDuration} meses
-            </span>
-          </div>
-          <Slider
-            value={[projectDuration]}
-            onValueChange={([v]) => setProjectDuration(v)}
-            min={12}
-            max={60}
-            step={6}
-          />
-        </div>
-        <PercentageSlider
-          label="Taxa de Desconto (mensal)"
-          value={monthlyDiscountRate}
-          onChange={setMonthlyDiscountRate}
-          min={0.005}
-          max={0.02}
-          step={0.001}
-          helperText="Taxa para cálculo do VPL"
-        />
-      </CollapsibleInputCard>
-
-      {/* Venda à Vista */}
-      <CollapsibleInputCard title="Cenário A: Venda à Vista" icon={Banknote}>
-        <CurrencyInput
-          label="Preço de Venda"
-          value={salePrice}
-          onChange={setSalePrice}
-        />
-        <CurrencyInput
-          label="Entrada"
-          value={downPayment}
-          onChange={setDownPayment}
-        />
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">Parcelas</Label>
-            <span className="font-mono text-sm text-accent font-medium">
-              {installments}x de {formatCurrency(calculations.installmentValue)}
-            </span>
-          </div>
-          <Slider
-            value={[installments]}
-            onValueChange={([v]) => setInstallments(v)}
-            min={1}
-            max={48}
-            step={1}
-          />
-        </div>
-      </CollapsibleInputCard>
-
-      {/* Permuta */}
-      <CollapsibleInputCard title="Cenário B: Permuta" icon={Repeat2}>
-        <PercentageSlider
-          label="Percentual do VGV"
-          value={swapPercentage}
-          onChange={setSwapPercentage}
-          min={0.05}
-          max={0.3}
-          step={0.01}
-          helperText={`Equivalente a ${formatCurrency(calculations.swapValue)} em unidades`}
-        />
-        <CurrencyInput
-          label="Torna (pagamento em dinheiro)"
-          value={torna}
-          onChange={setTorna}
-          helperText="Valor adicional recebido à vista"
-        />
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">Entrega das Unidades</Label>
-            <span className="font-mono text-sm text-accent font-medium">
-              Mês {deliveryMonth}
-            </span>
-          </div>
-          <Slider
-            value={[deliveryMonth]}
-            onValueChange={([v]) => setDeliveryMonth(v)}
-            min={12}
-            max={60}
-            step={6}
-          />
-        </div>
-      </CollapsibleInputCard>
-    </ToolLayout>
+    <ToolLayout title="Calculadora de Permuta" inputsPanel={InputsPanel} resultsPanel={ResultsPanel} />
   );
 }
