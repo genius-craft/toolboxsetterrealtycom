@@ -58,7 +58,7 @@ export function AppSidebar() {
             </div>
             {!isCollapsed && (
               <span className="font-display text-lg text-sidebar-foreground group-hover:text-sidebar-primary transition-colors">
-                Setter
+                Setter<span className="text-accent">Toolbox</span>
               </span>
             )}
           </Link>
