@@ -324,3 +324,86 @@ export function calculateGoNoGo(params: GoNoGoParams): GoNoGoResult {
     verdict,
   };
 }
+
+/**
+ * Calculate scenarios for sensitivity analysis
+ */
+export interface SimuladorInputs {
+  purchasePrice: number;
+  closingCosts: number;
+  renovationCost: number;
+  monthlyRent: number;
+  rentGrowth: number;
+  vacancyRate: number;
+  propertyTax: number;
+  condoFee: number;
+  managementFee: number;
+  holdingPeriod: number;
+  exitCapRate: number;
+}
+
+export interface ScenarioResult {
+  capRate: number;
+  noiMonthly: number;
+  paybackYears: number;
+  vacancyPremise: number;
+}
+
+export function calculateScenarioMetrics(
+  inputs: SimuladorInputs,
+  vacancyOverride?: number
+): ScenarioResult {
+  const vacancyRate = vacancyOverride !== undefined ? vacancyOverride : inputs.vacancyRate;
+  const totalInvestment = inputs.purchasePrice * (1 + inputs.closingCosts) + inputs.renovationCost;
+  const annualRent = inputs.monthlyRent * 12;
+  const annualManagement = annualRent * inputs.managementFee;
+  const operatingExpenses = inputs.propertyTax + inputs.condoFee + annualManagement;
+  const effectiveGrossIncome = annualRent * (1 - vacancyRate);
+  const noi = effectiveGrossIncome - operatingExpenses;
+  const capRate = calculateCapRate(noi, inputs.purchasePrice);
+  const noiMonthly = noi / 12;
+  const paybackYears = noi > 0 ? totalInvestment / noi : Infinity;
+
+  return {
+    capRate,
+    noiMonthly,
+    paybackYears,
+    vacancyPremise: vacancyRate,
+  };
+}
+
+export function calculateAllScenarios(inputs: SimuladorInputs): {
+  pessimistic: ScenarioResult;
+  realistic: ScenarioResult;
+  optimistic: ScenarioResult;
+} {
+  return {
+    pessimistic: calculateScenarioMetrics(inputs, 0.20), // 20% vacancy
+    realistic: calculateScenarioMetrics(inputs, 0.05),   // 5% vacancy
+    optimistic: calculateScenarioMetrics(inputs, 0),     // 0% vacancy
+  };
+}
+
+/**
+ * Generate sensitivity matrix data
+ */
+export function generateSensitivityMatrix(
+  baseInvestment: number,
+  baseRent: number,
+  variations: number[] = [-0.15, -0.10, -0.05, 0, 0.05, 0.10, 0.15]
+): { capRate: number; investment: number; rent: number; isBase: boolean }[][] {
+  return variations.map((rentVar) => {
+    return variations.map((invVar) => {
+      const adjustedInvestment = baseInvestment * (1 + invVar);
+      const adjustedRent = baseRent * (1 + rentVar);
+      const annualRent = adjustedRent * 12;
+      const capRate = annualRent / adjustedInvestment;
+      return {
+        capRate,
+        investment: adjustedInvestment,
+        rent: adjustedRent,
+        isBase: invVar === 0 && rentVar === 0,
+      };
+    });
+  });
+}

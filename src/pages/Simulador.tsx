@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { ToolLayout } from '@/components/tools/ToolLayout';
 import { CollapsibleInputCard } from '@/components/tools/CollapsibleInputCard';
 import { CurrencyInput } from '@/components/tools/CurrencyInput';
@@ -7,8 +7,10 @@ import { KPICard } from '@/components/tools/KPICard';
 import { VerdictBadge } from '@/components/tools/VerdictBadge';
 import { CashFlowChart } from '@/components/tools/CashFlowChart';
 import { SoftLockOverlay } from '@/components/tools/SoftLockOverlay';
+import { ScenarioMatrix } from '@/components/tools/ScenarioMatrix';
+import { SensitivityHeatmap } from '@/components/tools/SensitivityHeatmap';
+import { ProjectHeader } from '@/components/tools/ProjectHeader';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,6 +20,7 @@ import {
   calculateIRR,
   calculateCapRate,
   calculateEquityMultiple,
+  calculateAllScenarios,
 } from '@/lib/calculations';
 import { formatCurrency, formatPercentage, formatMultiple } from '@/lib/formatters';
 import {
@@ -26,15 +29,18 @@ import {
   Receipt,
   DoorOpen,
   Save,
-  Download,
-  Percent,
-  BarChart3,
+  FileText,
   Target,
+  BarChart3,
 } from 'lucide-react';
 
 export default function Simulador() {
   const { user } = useAuth();
   const saveProject = useSaveProject();
+
+  // Project Info
+  const [projectName, setProjectName] = useState('');
+  const [investmentType, setInvestmentType] = useState<'ready' | 'build-to-suit'>('ready');
 
   // Investment (CAPEX)
   const [purchasePrice, setPurchasePrice] = useState(2000000);
@@ -54,6 +60,33 @@ export default function Simulador() {
   // Exit
   const [holdingPeriod, setHoldingPeriod] = useState(10);
   const [exitCapRate, setExitCapRate] = useState(0.07); // 7%
+
+  // Collect all inputs for scenario calculations
+  const simuladorInputs = useMemo(() => ({
+    purchasePrice,
+    closingCosts,
+    renovationCost,
+    monthlyRent,
+    rentGrowth,
+    vacancyRate,
+    propertyTax,
+    condoFee,
+    managementFee,
+    holdingPeriod,
+    exitCapRate,
+  }), [
+    purchasePrice,
+    closingCosts,
+    renovationCost,
+    monthlyRent,
+    rentGrowth,
+    vacancyRate,
+    propertyTax,
+    condoFee,
+    managementFee,
+    holdingPeriod,
+    exitCapRate,
+  ]);
 
   // Calculations
   const calculations = useMemo(() => {
@@ -115,11 +148,24 @@ export default function Simulador() {
     exitCapRate,
   ]);
 
+  // Calculate scenarios
+  const scenarios = useMemo(() => {
+    return calculateAllScenarios(simuladorInputs);
+  }, [simuladorInputs]);
+
+  // Sensitivity heatmap calculation function
+  const sensitivityCapRateCalc = useCallback((investment: number, annualRent: number) => {
+    // Simplified: just rent / investment for sensitivity
+    return investment > 0 ? annualRent / investment : 0;
+  }, []);
+
   const handleSave = () => {
     saveProject.mutate({
       project_type: 'simulador',
-      name: `Simulação ${new Date().toLocaleDateString('pt-BR')}`,
+      name: projectName || `Simulação ${new Date().toLocaleDateString('pt-BR')}`,
       inputs: {
+        projectName,
+        investmentType,
         purchasePrice,
         closingCosts,
         renovationCost,
@@ -226,6 +272,24 @@ export default function Simulador() {
         </SoftLockOverlay>
       </div>
 
+      {/* Scenario Matrix */}
+      <SoftLockOverlay featureName="a matriz de cenários">
+        <ScenarioMatrix
+          pessimistic={scenarios.pessimistic}
+          realistic={scenarios.realistic}
+          optimistic={scenarios.optimistic}
+        />
+      </SoftLockOverlay>
+
+      {/* Sensitivity Heatmap */}
+      <SoftLockOverlay featureName="a análise de sensibilidade">
+        <SensitivityHeatmap
+          baseInvestment={calculations.totalInvestment}
+          baseRent={monthlyRent}
+          calculateCapRate={sensitivityCapRateCalc}
+        />
+      </SoftLockOverlay>
+
       {/* Action Buttons */}
       <div className="flex gap-3">
         <Button
@@ -237,9 +301,12 @@ export default function Simulador() {
           <Save className="h-4 w-4 mr-2" />
           {saveProject.isPending ? 'Salvando...' : 'Salvar'}
         </Button>
-        <Button variant="outline" className="flex-1" disabled={!user}>
-          <Download className="h-4 w-4 mr-2" />
-          Exportar PDF
+        <Button 
+          className="flex-1 bg-[#E85D3D] hover:bg-[#D14D2D] text-white shadow-lg"
+          disabled={!user}
+        >
+          <FileText className="h-4 w-4 mr-2" />
+          Exportar PDF Profissional
         </Button>
       </div>
     </div>
@@ -247,6 +314,14 @@ export default function Simulador() {
 
   return (
     <ToolLayout title="Simulador de Viabilidade" rightPanel={Dashboard}>
+      {/* Project Header */}
+      <ProjectHeader
+        projectName={projectName}
+        onProjectNameChange={setProjectName}
+        investmentType={investmentType}
+        onInvestmentTypeChange={setInvestmentType}
+      />
+
       {/* CAPEX Card */}
       <CollapsibleInputCard title="Investimento (CAPEX)" icon={Building2}>
         <CurrencyInput
