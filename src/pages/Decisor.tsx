@@ -1,0 +1,338 @@
+import React, { useState, useMemo } from 'react';
+import { ToolLayout } from '@/components/tools/ToolLayout';
+import { CollapsibleInputCard } from '@/components/tools/CollapsibleInputCard';
+import { CurrencyInput } from '@/components/tools/CurrencyInput';
+import { PercentageSlider } from '@/components/tools/PercentageSlider';
+import { KPICard } from '@/components/tools/KPICard';
+import { SoftLockOverlay } from '@/components/tools/SoftLockOverlay';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSaveProject } from '@/hooks/useProjects';
+import { calculateGoNoGo } from '@/lib/calculations';
+import { formatCurrency, formatCompactCurrency, formatPercentage } from '@/lib/formatters';
+import {
+  Calculator,
+  Star,
+  Save,
+  Download,
+  CheckCircle,
+  AlertTriangle,
+  XCircle,
+  MapPin,
+  Users,
+  TrendingUp,
+  Wrench,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+const StarRating = ({
+  value,
+  onChange,
+  label,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  label: string;
+}) => {
+  return (
+    <div className="space-y-2">
+      <Label className="text-sm font-medium">{label}</Label>
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type="button"
+            onClick={() => onChange(star)}
+            className="p-1 transition-transform hover:scale-110"
+          >
+            <Star
+              className={cn(
+                'h-6 w-6 transition-colors',
+                star <= value
+                  ? 'fill-accent text-accent'
+                  : 'text-muted-foreground'
+              )}
+            />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default function Decisor() {
+  const { user } = useAuth();
+  const saveProject = useSaveProject();
+
+  // Financial inputs
+  const [askingPrice, setAskingPrice] = useState(5000000);
+  const [annualNOI, setAnnualNOI] = useState(400000);
+  const [targetCapRate, setTargetCapRate] = useState(0.08); // 8%
+
+  // Qualitative inputs (1-5)
+  const [locationQuality, setLocationQuality] = useState(4);
+  const [tenantRisk, setTenantRisk] = useState(3);
+  const [futureLiquidity, setFutureLiquidity] = useState(3);
+  const [assetCondition, setAssetCondition] = useState(4);
+
+  // Calculations
+  const result = useMemo(() => {
+    return calculateGoNoGo({
+      askingPrice,
+      annualNOI,
+      targetCapRate,
+      locationQuality,
+      tenantRisk,
+      futureLiquidity,
+      assetCondition,
+    });
+  }, [
+    askingPrice,
+    annualNOI,
+    targetCapRate,
+    locationQuality,
+    tenantRisk,
+    futureLiquidity,
+    assetCondition,
+  ]);
+
+  const handleSave = () => {
+    saveProject.mutate({
+      project_type: 'decisor',
+      name: `Decisor ${new Date().toLocaleDateString('pt-BR')}`,
+      inputs: {
+        askingPrice,
+        annualNOI,
+        targetCapRate,
+        locationQuality,
+        tenantRisk,
+        futureLiquidity,
+        assetCondition,
+      },
+      results: {
+        maxStrikePrice: result.maxStrikePrice,
+        priceGap: result.priceGap,
+        qualityScore: result.qualityScore,
+        verdict: result.verdict,
+      },
+    });
+  };
+
+  const VerdictDisplay = () => {
+    const config = {
+      GO: {
+        icon: CheckCircle,
+        label: 'GO',
+        description: 'Avance com a negociação',
+        bgColor: 'bg-green-500/10',
+        borderColor: 'border-green-500/30',
+        textColor: 'text-green-600',
+        iconColor: 'text-green-500',
+      },
+      NEGOTIATE: {
+        icon: AlertTriangle,
+        label: 'NEGOCIAR',
+        description: 'Há espaço para negociação',
+        bgColor: 'bg-amber-500/10',
+        borderColor: 'border-amber-500/30',
+        textColor: 'text-amber-600',
+        iconColor: 'text-amber-500',
+      },
+      'NO-GO': {
+        icon: XCircle,
+        label: 'NO-GO',
+        description: 'Não recomendado',
+        bgColor: 'bg-red-500/10',
+        borderColor: 'border-red-500/30',
+        textColor: 'text-red-600',
+        iconColor: 'text-red-500',
+      },
+    };
+
+    const verdictConfig = config[result.verdict];
+    const Icon = verdictConfig.icon;
+
+    return (
+      <div
+        className={cn(
+          'rounded-xl border-2 p-8 text-center',
+          verdictConfig.bgColor,
+          verdictConfig.borderColor
+        )}
+      >
+        <Icon className={cn('h-16 w-16 mx-auto mb-4', verdictConfig.iconColor)} />
+        <h2 className={cn('font-serif text-3xl font-bold mb-2', verdictConfig.textColor)}>
+          {verdictConfig.label}
+        </h2>
+        <p className="text-muted-foreground">{verdictConfig.description}</p>
+      </div>
+    );
+  };
+
+  const Dashboard = (
+    <div className="space-y-6">
+      {/* Verdict Traffic Light */}
+      <SoftLockOverlay featureName="o veredicto">
+        <VerdictDisplay />
+      </SoftLockOverlay>
+
+      {/* Financial KPIs */}
+      <div className="grid grid-cols-2 gap-4">
+        <KPICard
+          label="Cap Rate Implícito"
+          value={formatPercentage(result.impliedCapRate)}
+          variant={result.impliedCapRate >= targetCapRate ? 'success' : 'warning'}
+        />
+        <KPICard
+          label="Score Qualitativo"
+          value={`${Math.round(result.qualityScore)}/100`}
+          variant={
+            result.qualityScore >= 70
+              ? 'success'
+              : result.qualityScore >= 50
+              ? 'warning'
+              : 'danger'
+          }
+        />
+      </div>
+
+      {/* Strike Price */}
+      <SoftLockOverlay featureName="o preço máximo">
+        <div className="bg-card rounded-lg border border-border p-4 shadow-card">
+          <h3 className="font-serif text-lg mb-3">Análise de Preço</h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Preço Pedido</span>
+              <span className="font-mono font-medium">
+                {formatCompactCurrency(askingPrice)}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Preço Máximo (Strike)</span>
+              <span className="font-mono font-medium text-accent">
+                {formatCompactCurrency(result.maxStrikePrice)}
+              </span>
+            </div>
+            <div className="h-px bg-border" />
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Gap</span>
+              <span
+                className={cn(
+                  'font-mono font-medium',
+                  result.priceGap >= 0 ? 'text-green-600' : 'text-red-600'
+                )}
+              >
+                {result.priceGap >= 0 ? '+' : ''}
+                {formatCompactCurrency(result.priceGap)} ({formatPercentage(result.priceGapPercentage)})
+              </span>
+            </div>
+          </div>
+        </div>
+      </SoftLockOverlay>
+
+      {/* Quality Score Breakdown */}
+      <div className="bg-card rounded-lg border border-border p-4 shadow-card">
+        <h3 className="font-serif text-lg mb-3">Avaliação Qualitativa</h3>
+        <div className="space-y-2">
+          {[
+            { label: 'Localização', value: locationQuality, icon: MapPin },
+            { label: 'Risco Inquilino', value: tenantRisk, icon: Users },
+            { label: 'Liquidez Futura', value: futureLiquidity, icon: TrendingUp },
+            { label: 'Condição do Ativo', value: assetCondition, icon: Wrench },
+          ].map((item) => (
+            <div key={item.label} className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <item.icon className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">{item.label}</span>
+              </div>
+              <div className="flex gap-0.5">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={cn(
+                      'h-4 w-4',
+                      star <= item.value
+                        ? 'fill-accent text-accent'
+                        : 'text-muted-foreground/30'
+                    )}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-3">
+        <Button
+          variant="gold"
+          className="flex-1"
+          onClick={handleSave}
+          disabled={!user || saveProject.isPending}
+        >
+          <Save className="h-4 w-4 mr-2" />
+          {saveProject.isPending ? 'Salvando...' : 'Salvar'}
+        </Button>
+        <Button variant="outline" className="flex-1" disabled={!user}>
+          <Download className="h-4 w-4 mr-2" />
+          PDF
+        </Button>
+      </div>
+    </div>
+  );
+
+  return (
+    <ToolLayout title="Decisor Go/No-Go" rightPanel={Dashboard}>
+      {/* Financial Inputs */}
+      <CollapsibleInputCard title="Dados Financeiros" icon={Calculator}>
+        <CurrencyInput
+          label="Preço Pedido"
+          value={askingPrice}
+          onChange={setAskingPrice}
+          helperText="Valor de oferta do vendedor"
+        />
+        <CurrencyInput
+          label="NOI Anual"
+          value={annualNOI}
+          onChange={setAnnualNOI}
+          helperText="Receita Operacional Líquida"
+        />
+        <PercentageSlider
+          label="Cap Rate Alvo"
+          value={targetCapRate}
+          onChange={setTargetCapRate}
+          min={0.05}
+          max={0.15}
+          step={0.005}
+          helperText="Retorno mínimo desejado"
+        />
+      </CollapsibleInputCard>
+
+      {/* Qualitative Inputs */}
+      <CollapsibleInputCard title="Avaliação Qualitativa" icon={Star}>
+        <StarRating
+          label="Qualidade da Localização"
+          value={locationQuality}
+          onChange={setLocationQuality}
+        />
+        <StarRating
+          label="Risco do Inquilino"
+          value={tenantRisk}
+          onChange={setTenantRisk}
+        />
+        <StarRating
+          label="Liquidez Futura"
+          value={futureLiquidity}
+          onChange={setFutureLiquidity}
+        />
+        <StarRating
+          label="Condição do Ativo"
+          value={assetCondition}
+          onChange={setAssetCondition}
+        />
+      </CollapsibleInputCard>
+    </ToolLayout>
+  );
+}
