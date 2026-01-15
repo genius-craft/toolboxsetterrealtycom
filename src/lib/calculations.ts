@@ -566,3 +566,246 @@ export interface HBUv2ComparisonResult {
   winner: 'incorporar' | 'alugar' | 'bts';
   maxNPV: number;
 }
+
+/**
+ * HBU v3 - Residencial vs Comercial vs Uso Misto
+ * Comparison with cash flow, IRR, NPV, Payback and Score system
+ */
+
+export interface HBUv3Params {
+  // Terreno
+  landArea: number;
+  far: number;
+  occupancyRate: number;
+  location: 'premium' | 'central' | 'periferia';
+  zoning: 'zm' | 'zc' | 'zr' | 'zeis';
+  
+  // Premissas Residencial
+  residencialPricePerSqm: number;
+  residencialCostPerSqm: number;
+  residencialAbsorptionMonths: number;
+  
+  // Premissas Comercial
+  comercialPricePerSqm: number;
+  comercialCostPerSqm: number;
+  comercialAbsorptionMonths: number;
+  
+  // Premissas Gerais
+  discountRate: number; // annual
+  constructionMonths: number;
+  landCostPremissa: number; // 0.15 = 15% of VGV
+}
+
+export interface HBUv3ScenarioResult {
+  name: string;
+  type: 'residencial' | 'comercial' | 'misto';
+  buildableArea: number;
+  vgv: number;
+  constructionCost: number;
+  landCost: number;
+  totalCost: number;
+  grossProfit: number;
+  margin: number;
+  cashFlows: number[];
+  npv: number;
+  irr: number;
+  paybackMonths: number;
+  score: number;
+}
+
+export interface HBUv3Result {
+  residencial: HBUv3ScenarioResult;
+  comercial: HBUv3ScenarioResult;
+  misto: HBUv3ScenarioResult;
+  winner: 'residencial' | 'comercial' | 'misto';
+  justification: string;
+}
+
+/**
+ * Generate monthly cash flows for HBU scenario
+ * Month 0: Land cost + 30% construction
+ * Months 1 to N (construction): 70% construction / N
+ * Months N+1 to N+absorption: VGV / absorption months
+ */
+function generateHBUCashFlows(
+  landCost: number,
+  constructionCost: number,
+  vgv: number,
+  constructionMonths: number,
+  absorptionMonths: number
+): number[] {
+  const cashFlows: number[] = [];
+  
+  // Month 0: Initial disbursement (land + 30% construction)
+  const initialDisbursement = -(landCost + constructionCost * 0.3);
+  cashFlows.push(initialDisbursement);
+  
+  // Construction period (70% of construction cost spread)
+  const monthlyConstruction = -(constructionCost * 0.7) / constructionMonths;
+  for (let m = 1; m <= constructionMonths; m++) {
+    cashFlows.push(monthlyConstruction);
+  }
+  
+  // Absorption/sales period (VGV spread)
+  const monthlyRevenue = vgv / absorptionMonths;
+  for (let m = 1; m <= absorptionMonths; m++) {
+    cashFlows.push(monthlyRevenue);
+  }
+  
+  return cashFlows;
+}
+
+/**
+ * Calculate payback month from cash flows
+ */
+function calculatePaybackMonths(cashFlows: number[]): number {
+  let cumulative = 0;
+  for (let i = 0; i < cashFlows.length; i++) {
+    cumulative += cashFlows[i];
+    if (cumulative >= 0) {
+      return i;
+    }
+  }
+  return cashFlows.length; // Never recovered
+}
+
+/**
+ * Calculate HBU v3 Score (0-100)
+ * - Margin: up to 40 points
+ * - NPV: up to 30 points
+ * - IRR: up to 30 points
+ */
+function calculateHBUScore(margin: number, npv: number, irr: number): number {
+  // Margin points: (margin / 0.30) * 40, capped at 40
+  const marginPoints = Math.min(40, (margin / 0.30) * 40);
+  
+  // NPV points: (npv / 10,000,000) * 30, capped at 30
+  const npvPoints = Math.min(30, Math.max(0, (npv / 10000000) * 30));
+  
+  // IRR points: (irr / 0.30) * 30, capped at 30
+  const irrPoints = Math.min(30, Math.max(0, (irr / 0.30) * 30));
+  
+  return Math.max(0, Math.round(marginPoints + npvPoints + irrPoints));
+}
+
+/**
+ * Calculate a single HBU v3 scenario
+ */
+function calculateHBUv3Scenario(
+  params: HBUv3Params,
+  type: 'residencial' | 'comercial' | 'misto'
+): HBUv3ScenarioResult {
+  const buildableArea = params.landArea * params.far;
+  
+  let vgv: number;
+  let constructionCost: number;
+  let absorptionMonths: number;
+  let name: string;
+  
+  if (type === 'residencial') {
+    name = 'Residencial';
+    vgv = buildableArea * params.residencialPricePerSqm;
+    constructionCost = buildableArea * params.residencialCostPerSqm;
+    absorptionMonths = params.residencialAbsorptionMonths;
+  } else if (type === 'comercial') {
+    name = 'Comercial';
+    vgv = buildableArea * params.comercialPricePerSqm;
+    constructionCost = buildableArea * params.comercialCostPerSqm;
+    absorptionMonths = params.comercialAbsorptionMonths;
+  } else {
+    // Misto: 60% residencial + 40% comercial
+    name = 'Uso Misto';
+    vgv = (buildableArea * params.residencialPricePerSqm * 0.6) + 
+          (buildableArea * params.comercialPricePerSqm * 0.4);
+    constructionCost = (buildableArea * params.residencialCostPerSqm * 0.6) + 
+                       (buildableArea * params.comercialCostPerSqm * 0.4);
+    // Weighted average absorption
+    absorptionMonths = Math.round(
+      params.residencialAbsorptionMonths * 0.6 + 
+      params.comercialAbsorptionMonths * 0.4
+    );
+  }
+  
+  // Land cost is 15% of VGV (or custom premissa)
+  const landCost = vgv * params.landCostPremissa;
+  const totalCost = landCost + constructionCost;
+  const grossProfit = vgv - totalCost;
+  const margin = vgv > 0 ? grossProfit / vgv : 0;
+  
+  // Generate cash flows
+  const cashFlows = generateHBUCashFlows(
+    landCost,
+    constructionCost,
+    vgv,
+    params.constructionMonths,
+    absorptionMonths
+  );
+  
+  // Calculate monthly discount rate from annual
+  const monthlyRate = Math.pow(1 + params.discountRate, 1/12) - 1;
+  
+  // Calculate NPV with monthly rate
+  const npv = calculateNPV(cashFlows, monthlyRate);
+  
+  // Calculate IRR (monthly) and annualize
+  const monthlyIRR = calculateIRR(cashFlows);
+  const irr = isNaN(monthlyIRR) ? 0 : Math.pow(1 + monthlyIRR, 12) - 1;
+  
+  // Calculate payback
+  const paybackMonths = calculatePaybackMonths(cashFlows);
+  
+  // Calculate score
+  const score = calculateHBUScore(margin, npv, irr);
+  
+  return {
+    name,
+    type,
+    buildableArea,
+    vgv,
+    constructionCost,
+    landCost,
+    totalCost,
+    grossProfit,
+    margin,
+    cashFlows,
+    npv,
+    irr,
+    paybackMonths,
+    score,
+  };
+}
+
+/**
+ * Calculate all three HBU v3 scenarios and determine winner
+ */
+export function calculateHBUv3(params: HBUv3Params): HBUv3Result {
+  const residencial = calculateHBUv3Scenario(params, 'residencial');
+  const comercial = calculateHBUv3Scenario(params, 'comercial');
+  const misto = calculateHBUv3Scenario(params, 'misto');
+  
+  // Determine winner by highest NPV
+  const scenarios = [
+    { result: residencial, type: 'residencial' as const },
+    { result: comercial, type: 'comercial' as const },
+    { result: misto, type: 'misto' as const },
+  ];
+  
+  const winner = scenarios.reduce((prev, curr) => 
+    curr.result.npv > prev.result.npv ? curr : prev
+  ).type;
+  
+  // Generate justification
+  const justifications: Record<typeof winner, string> = {
+    residencial: 'Melhor relação entre preço de venda e velocidade de absorção',
+    comercial: 'Maior valor por m² compensa o prazo maior de comercialização',
+    misto: 'Diversificação de risco e demanda equilibrada',
+  };
+  
+  return {
+    residencial,
+    comercial,
+    misto,
+    winner,
+    justification: justifications[winner],
+  };
+}
