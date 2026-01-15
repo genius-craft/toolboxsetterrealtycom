@@ -1,16 +1,20 @@
 import React from 'react';
-import { ToolNavbar } from './ToolNavbar';
 
 interface ToolLayoutProps {
-  title: string;
+  title?: string;
   children: React.ReactNode;
   rightPanel: React.ReactNode;
 }
 
 export function ToolLayout({ title, children, rightPanel }: ToolLayoutProps) {
   return (
-    <div className="min-h-screen bg-background">
-      <ToolNavbar title={title} />
+    <div className="min-h-[calc(100vh-56px)] lg:min-h-screen bg-background">
+      {/* Desktop Title - only shown on larger screens where sidebar is visible */}
+      {title && (
+        <div className="hidden lg:block px-6 lg:px-8 pt-6">
+          <h1 className="font-serif text-2xl text-foreground">{title}</h1>
+        </div>
+      )}
       
       <div className="flex flex-col lg:flex-row">
         {/* Left Panel - Inputs (Scrollable) */}
@@ -21,7 +25,7 @@ export function ToolLayout({ title, children, rightPanel }: ToolLayoutProps) {
         </div>
         
         {/* Right Panel - Dashboard (Sticky) */}
-        <div className="flex-1 bg-secondary/30 lg:sticky lg:top-16 lg:h-[calc(100vh-64px)] overflow-y-auto">
+        <div className="flex-1 bg-secondary/30 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <div className="p-6 lg:p-8">
             {rightPanel}
           </div>
