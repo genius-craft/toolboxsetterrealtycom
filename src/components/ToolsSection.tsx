@@ -1,4 +1,4 @@
-import { Calculator, ArrowRightLeft, Building2, CheckCircle, ArrowRight } from "lucide-react";
+import { Calculator, ArrowRightLeft, Building2, CheckCircle, ArrowRight, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
@@ -8,28 +8,28 @@ const tools = [
     title: "Simulador de Viabilidade",
     path: "/simulador",
     description:
-      "Análise completa de viabilidade financeira com TIR, Cap Rate, NOI, Payback e fluxo de caixa projetado para 10 anos.",
+      "Análise completa de viabilidade financeira com TIR, Cap Rate, NOI, Payback e fluxo de caixa projetado.",
     features: [
-      "3 cenários (Pessimista, Realista, Otimista)",
+      "3 cenários automáticos",
       "Matriz de sensibilidade",
       "Múltiplas unidades",
       "Veredito automático",
     ],
-    delay: "delay-100",
+    color: "from-amber-500/20 to-orange-500/10",
   },
   {
     icon: ArrowRightLeft,
     title: "Calculadora de Permuta",
     path: "/permuta",
     description:
-      "Compare vender terreno à vista vs. fazer permuta com incorporadora. Descubra o percentual justo e o Deal Score.",
+      "Compare vender terreno à vista vs. fazer permuta com incorporadora. Descubra o percentual justo.",
     features: [
       "VGV do empreendimento",
       "Valor presente descontado",
       "Deal Score (-100 a +100)",
       "Comparativo visual",
     ],
-    delay: "delay-200",
+    color: "from-blue-500/20 to-cyan-500/10",
   },
   {
     icon: Building2,
@@ -43,7 +43,7 @@ const tools = [
       "Score de viabilidade",
       "Recomendação técnica",
     ],
-    delay: "delay-300",
+    color: "from-emerald-500/20 to-green-500/10",
   },
   {
     icon: CheckCircle,
@@ -57,20 +57,27 @@ const tools = [
       "Análise de parceria",
       "Score de aprovação",
     ],
-    delay: "delay-400",
+    color: "from-purple-500/20 to-violet-500/10",
   },
 ];
 
 const ToolsSection = () => {
   return (
-    <section id="ferramentas" className="py-24 bg-background">
+    <section id="ferramentas" className="py-32 bg-background relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      
       <div className="container mx-auto px-4">
         {/* Section Header */}
-        <div className="text-center mb-16">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-accent/10 text-accent text-sm font-semibold mb-4 uppercase tracking-wider">
-            Ferramentas
-          </span>
-          <h2 className="section-title mb-4">
+        <div className="text-center mb-20">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-accent/20 bg-accent/5 mb-6">
+            <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+            <span className="text-sm font-medium text-accent tracking-wide uppercase">
+              Ferramentas
+            </span>
+          </div>
+          <h2 className="section-title mb-6">
             4 Calculadoras Profissionais
           </h2>
           <p className="section-subtitle mx-auto">
@@ -81,44 +88,48 @@ const ToolsSection = () => {
         </div>
 
         {/* Tools Grid */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {tools.map((tool, index) => (
-            <div
+            <Link
               key={index}
-              className={`tool-card group animate-fade-up ${tool.delay}`}
+              to={tool.path}
+              className="group"
             >
-              {/* Icon - Monochromatic */}
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-lg bg-primary mb-5">
-                <tool.icon className="w-7 h-7 text-primary-foreground" strokeWidth={1.5} />
+              <div className={`tool-card h-full relative overflow-hidden animate-fade-up`}
+                   style={{ animationDelay: `${index * 100}ms` }}>
+                {/* Gradient background on hover */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${tool.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                
+                <div className="relative z-10">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                      <tool.icon className="w-7 h-7 text-primary-foreground" strokeWidth={1.5} />
+                    </div>
+                    <ArrowUpRight className="w-5 h-5 text-muted-foreground group-hover:text-accent transition-colors" />
+                  </div>
+
+                  {/* Title & Description */}
+                  <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-accent transition-colors">
+                    {tool.title}
+                  </h3>
+                  <p className="text-muted-foreground mb-6 leading-relaxed">{tool.description}</p>
+
+                  {/* Features List */}
+                  <ul className="space-y-2.5">
+                    {tool.features.map((feature, fIndex) => (
+                      <li
+                        key={fIndex}
+                        className="flex items-center gap-3 text-sm text-muted-foreground"
+                      >
+                        <div className="w-1.5 h-1.5 rounded-full bg-accent flex-shrink-0" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
-
-              {/* Title & Description */}
-              <h3 className="text-xl font-bold text-foreground mb-2">
-                {tool.title}
-              </h3>
-              <p className="text-muted-foreground mb-5 leading-relaxed">{tool.description}</p>
-
-              {/* Features List */}
-              <ul className="space-y-2 mb-6">
-                {tool.features.map((feature, fIndex) => (
-                  <li
-                    key={fIndex}
-                    className="flex items-center gap-2 text-sm text-muted-foreground"
-                  >
-                    <div className="w-1.5 h-1.5 rounded-full bg-accent" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-
-              {/* CTA */}
-              <Link to={tool.path}>
-                <Button variant="ghost" className="group/btn p-0 h-auto font-semibold text-foreground hover:text-accent hover:bg-transparent">
-                  Acessar Ferramenta
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
-                </Button>
-              </Link>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

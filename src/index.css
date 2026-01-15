@@ -50,12 +50,14 @@
     --radius: 0.5rem;
 
     /* Custom Premium Properties */
-    --gradient-hero: linear-gradient(135deg, hsl(222, 47%, 11%) 0%, hsl(222, 47%, 15%) 50%, hsl(222, 47%, 11%) 100%);
-    --gradient-gold: linear-gradient(135deg, hsl(26, 90%, 37%) 0%, hsl(32, 90%, 45%) 100%);
+    --gradient-hero: linear-gradient(160deg, hsl(222, 47%, 8%) 0%, hsl(222, 47%, 14%) 50%, hsl(222, 47%, 8%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(26, 90%, 37%) 0%, hsl(38, 92%, 50%) 100%);
     --gradient-card: linear-gradient(180deg, hsl(0, 0%, 100%) 0%, hsl(210, 40%, 98%) 100%);
+    --gradient-premium: linear-gradient(135deg, hsl(222, 47%, 11%) 0%, hsl(222, 47%, 18%) 100%);
     --shadow-card: 0 1px 3px 0 hsl(222 47% 11% / 0.04), 0 1px 2px -1px hsl(222 47% 11% / 0.04);
-    --shadow-card-hover: 0 4px 6px -1px hsl(222 47% 11% / 0.05), 0 2px 4px -2px hsl(222 47% 11% / 0.05);
-    --shadow-gold: 0 4px 14px -3px hsl(26 90% 37% / 0.25);
+    --shadow-card-hover: 0 10px 40px -10px hsl(222 47% 11% / 0.15), 0 4px 6px -2px hsl(222 47% 11% / 0.05);
+    --shadow-gold: 0 4px 20px -4px hsl(26 90% 37% / 0.4);
+    --shadow-glow: 0 0 60px -12px hsl(26 90% 37% / 0.3);
 
     /* Sidebar */
     --sidebar-background: 222 47% 11%;
@@ -185,11 +187,34 @@
 
   /* Premium tool card */
   .tool-card {
-    @apply relative bg-card rounded-lg p-8 shadow-card transition-all duration-300 border border-border;
+    @apply relative bg-card rounded-xl p-8 shadow-card transition-all duration-500 border border-border;
+    background: linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%);
   }
 
   .tool-card:hover {
-    @apply shadow-card-hover;
+    @apply shadow-card-hover -translate-y-1;
+    border-color: hsl(var(--accent) / 0.2);
+  }
+
+  /* Glass card effect */
+  .glass-card {
+    @apply relative rounded-2xl p-8 border border-white/10;
+    background: hsl(var(--primary) / 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* Premium stat card */
+  .stat-card {
+    @apply relative rounded-xl p-6 border border-white/10 transition-all duration-500;
+    background: linear-gradient(135deg, hsl(var(--primary-foreground) / 0.05) 0%, hsl(var(--primary-foreground) / 0.02) 100%);
+    backdrop-filter: blur(10px);
+  }
+
+  .stat-card:hover {
+    @apply -translate-y-1;
+    border-color: hsl(var(--accent) / 0.3);
+    box-shadow: var(--shadow-glow);
   }
 
   /* Stat badge */
@@ -204,11 +229,46 @@
 
   /* Section titles with serif font */
   .section-title {
-    @apply text-3xl md:text-4xl font-semibold text-foreground font-display;
+    @apply text-3xl md:text-5xl font-semibold text-foreground font-display;
   }
 
   .section-subtitle {
-    @apply text-lg text-muted-foreground max-w-2xl;
+    @apply text-lg text-muted-foreground max-w-2xl leading-relaxed;
+  }
+
+  /* Decorative line */
+  .accent-line {
+    @apply h-1 w-16 rounded-full;
+    background: var(--gradient-gold);
+  }
+
+  /* Premium badge */
+  .premium-badge {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border;
+    background: hsl(var(--accent) / 0.1);
+    border-color: hsl(var(--accent) / 0.2);
+    color: hsl(var(--accent));
+  }
+
+  /* Shimmer effect */
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shimmer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, hsl(var(--accent) / 0.1), transparent);
+    animation: shimmer 3s infinite;
+  }
+
+  @keyframes shimmer {
+    100% { left: 100%; }
   }
 }
 

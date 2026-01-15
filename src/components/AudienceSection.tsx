@@ -1,51 +1,63 @@
-import { TrendingUp, Users, Home } from "lucide-react";
+import { TrendingUp, Users, Home, Check } from "lucide-react";
 
 const audiences = [
   {
     icon: TrendingUp,
     title: "Investidores",
     description:
-      "Oportunidades validadas matematicamente com análise de risco e retorno projetado. Tome decisões baseadas em dados, não em intuição.",
+      "Oportunidades validadas matematicamente com análise de risco e retorno projetado.",
     benefits: [
       "TIR e Cap Rate calculados automaticamente",
       "Análise de cenários (pessimista, realista, otimista)",
       "Comparativo de investimentos",
     ],
+    gradient: "from-accent/20 via-accent/5 to-transparent",
   },
   {
     icon: Users,
     title: "Corretores",
     description:
-      "Acelere fechamentos com dados técnicos e relatórios prontos para apresentação. Destaque-se da concorrência com análises profissionais.",
+      "Acelere fechamentos com dados técnicos e relatórios prontos para apresentação.",
     benefits: [
       "Relatórios PDF personalizados",
       "Dados que convencem clientes",
       "Fechamento mais rápido",
     ],
+    gradient: "from-blue-500/20 via-blue-500/5 to-transparent",
   },
   {
     icon: Home,
     title: "Proprietários",
     description:
-      "Descubra o valor real (vocação) do seu ativo e maximize seu potencial comercial. Saiba o melhor caminho: vender, alugar ou desenvolver.",
+      "Descubra o valor real do seu ativo e maximize seu potencial comercial.",
     benefits: [
       "Highest & Best Use do seu terreno",
       "Comparativo venda vs. permuta",
       "Potencial de valorização",
     ],
+    gradient: "from-emerald-500/20 via-emerald-500/5 to-transparent",
   },
 ];
 
 const AudienceSection = () => {
   return (
-    <section id="publico" className="py-24 bg-secondary/50">
-      <div className="container mx-auto px-4">
+    <section id="publico" className="py-32 bg-secondary/30 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-1/2 -right-1/4 w-[800px] h-[800px] bg-accent/5 rounded-full blur-[150px]" />
+        <div className="absolute -bottom-1/2 -left-1/4 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[150px]" />
+      </div>
+      
+      <div className="container mx-auto px-4 relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-16">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-accent/10 text-accent text-sm font-semibold mb-4 uppercase tracking-wider">
-            Para Quem
-          </span>
-          <h2 className="section-title mb-4">
+        <div className="text-center mb-20">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-accent/20 bg-accent/5 mb-6">
+            <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+            <span className="text-sm font-medium text-accent tracking-wide uppercase">
+              Para Quem
+            </span>
+          </div>
+          <h2 className="section-title mb-6">
             Feito Para Profissionais do Mercado
           </h2>
           <p className="section-subtitle mx-auto">
@@ -59,34 +71,39 @@ const AudienceSection = () => {
           {audiences.map((audience, index) => (
             <div
               key={index}
-              className="relative rounded-lg p-8 bg-card border border-border shadow-card overflow-hidden animate-fade-up"
+              className="group relative rounded-2xl p-8 bg-card border border-border shadow-card overflow-hidden animate-fade-up hover:shadow-card-hover hover:-translate-y-1 transition-all duration-500"
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              {/* Icon */}
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-lg bg-primary mb-6">
-                <audience.icon className="w-7 h-7 text-accent" strokeWidth={1.5} />
+              {/* Gradient overlay */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${audience.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+              
+              <div className="relative z-10">
+                {/* Icon */}
+                <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                  <audience.icon className="w-8 h-8 text-accent" strokeWidth={1.5} />
+                </div>
+
+                {/* Content */}
+                <h3 className="text-2xl font-bold text-foreground mb-3 font-serif group-hover:text-accent transition-colors">
+                  {audience.title}
+                </h3>
+                <p className="text-muted-foreground mb-8 leading-relaxed">{audience.description}</p>
+
+                {/* Benefits */}
+                <ul className="space-y-4">
+                  {audience.benefits.map((benefit, bIndex) => (
+                    <li
+                      key={bIndex}
+                      className="flex items-start gap-3 text-sm text-foreground"
+                    >
+                      <div className="w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-accent/20 transition-colors">
+                        <Check className="w-3 h-3 text-accent" />
+                      </div>
+                      {benefit}
+                    </li>
+                  ))}
+                </ul>
               </div>
-
-              {/* Content */}
-              <h3 className="text-2xl font-bold text-foreground mb-3 font-serif">
-                {audience.title}
-              </h3>
-              <p className="text-muted-foreground mb-6 leading-relaxed">{audience.description}</p>
-
-              {/* Benefits */}
-              <ul className="space-y-3">
-                {audience.benefits.map((benefit, bIndex) => (
-                  <li
-                    key={bIndex}
-                    className="flex items-start gap-3 text-sm text-foreground"
-                  >
-                    <div className="w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <div className="w-2 h-2 rounded-full bg-accent" />
-                    </div>
-                    {benefit}
-                  </li>
-                ))}
-              </ul>
             </div>
           ))}
         </div>
