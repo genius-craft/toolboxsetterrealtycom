@@ -4,7 +4,7 @@ import ToolsSection from "@/components/ToolsSection";
 import AudienceSection from "@/components/AudienceSection";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
-import FloatingCTA from "@/components/FloatingCTA";
+
 import CookieConsent from "@/components/CookieConsent";
 
 const Index = () => {
@@ -18,7 +18,7 @@ const Index = () => {
         <CTASection />
       </main>
       <Footer />
-      <FloatingCTA />
+      
       <CookieConsent />
     </div>
   );
