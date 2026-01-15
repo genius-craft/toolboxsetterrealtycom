@@ -1,5 +1,6 @@
 import { Calculator, ArrowRightLeft, Building2, CheckCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const tools = [
   {
@@ -111,10 +112,12 @@ const ToolsSection = () => {
               </ul>
 
               {/* CTA */}
-              <Button variant="ghost" className="group/btn p-0 h-auto font-semibold text-foreground hover:text-accent hover:bg-transparent">
-                Acessar Ferramenta
-                <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
-              </Button>
+              <Link to={tool.path}>
+                <Button variant="ghost" className="group/btn p-0 h-auto font-semibold text-foreground hover:text-accent hover:bg-transparent">
+                  Acessar Ferramenta
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
+                </Button>
+              </Link>
             </div>
           ))}
         </div>
