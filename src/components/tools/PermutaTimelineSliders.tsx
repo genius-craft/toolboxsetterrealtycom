@@ -1,5 +1,6 @@
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { GlossaryTooltip } from "./InfoTooltip";
 import { Clock, Building2, ShoppingCart, Percent } from "lucide-react";
 
 interface PermutaTimlineSlidersProps {
@@ -29,9 +30,12 @@ export function PermutaTimelineSliders({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-foreground">
-          Mas quanto a permuta vale de verdade?
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-foreground">
+            Mas quanto a permuta vale de verdade?
+          </h3>
+          <GlossaryTooltip term="presentValue" />
+        </div>
         <div className="bg-muted px-3 py-1.5 rounded-full">
           <span className="text-sm font-medium text-muted-foreground">
             Prazo total: <span className="text-foreground font-bold">{prazoTotalAnos} anos</span>
@@ -90,7 +94,10 @@ export function PermutaTimelineSliders({
             <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded">
               <ShoppingCart className="h-4 w-4 text-green-600 dark:text-green-400" />
             </div>
-            <Label className="text-sm font-medium">Venda</Label>
+            <div className="flex items-center gap-1.5">
+              <Label className="text-sm font-medium">Venda</Label>
+              <GlossaryTooltip term="absorptionMonths" />
+            </div>
           </div>
           <Slider
             value={[vendaMeses]}
@@ -112,7 +119,10 @@ export function PermutaTimelineSliders({
             <div className="p-1.5 bg-purple-100 dark:bg-purple-900/30 rounded">
               <Percent className="h-4 w-4 text-purple-600 dark:text-purple-400" />
             </div>
-            <Label className="text-sm font-medium">Taxa de Desconto</Label>
+            <div className="flex items-center gap-1.5">
+              <Label className="text-sm font-medium">Taxa de Desconto</Label>
+              <GlossaryTooltip term="discountRate" />
+            </div>
           </div>
           <Slider
             value={[taxaDesconto]}

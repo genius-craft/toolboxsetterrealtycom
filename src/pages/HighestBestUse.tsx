@@ -6,6 +6,7 @@ import { PercentageSlider } from '@/components/tools/PercentageSlider';
 import { HBUv3ScoreCard } from '@/components/tools/HBUv3ScoreCard';
 import { HBUv3RecommendationCard } from '@/components/tools/HBUv3RecommendationCard';
 import { HBUv3ComparisonTable } from '@/components/tools/HBUv3ComparisonTable';
+import { GlossaryTooltip } from '@/components/tools/InfoTooltip';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -211,7 +212,10 @@ export default function HighestBestUse() {
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">Coeficiente de Aproveitamento (CA)</Label>
+            <div className="flex items-center gap-1.5">
+              <Label className="text-sm font-medium">Coeficiente de Aproveitamento (CA)</Label>
+              <GlossaryTooltip term="far" />
+            </div>
             <span className="font-mono text-sm text-accent font-medium">{far}x</span>
           </div>
           <Slider
@@ -233,6 +237,7 @@ export default function HighestBestUse() {
           min={0.2}
           max={0.8}
           step={0.05}
+          tooltip="occupancyRate"
         />
 
         <div className="space-y-2">
@@ -287,7 +292,10 @@ export default function HighestBestUse() {
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">Prazo de Absorção (meses)</Label>
+            <div className="flex items-center gap-1.5">
+              <Label className="text-sm font-medium">Prazo de Absorção (meses)</Label>
+              <GlossaryTooltip term="absorptionMonths" />
+            </div>
             <span className="font-mono text-sm text-accent font-medium">{residencialAbsorptionMonths}</span>
           </div>
           <Slider
@@ -339,7 +347,10 @@ export default function HighestBestUse() {
       <CollapsibleInputCard title="Premissas Gerais" icon={Settings}>
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">Taxa de Desconto Anual</Label>
+            <div className="flex items-center gap-1.5">
+              <Label className="text-sm font-medium">Taxa de Desconto Anual</Label>
+              <GlossaryTooltip term="discountRate" />
+            </div>
             <span className="font-mono text-sm text-accent font-medium">{formatPercentage(discountRate)}</span>
           </div>
           <Slider

@@ -11,6 +11,7 @@ import { ScenarioMatrix } from '@/components/tools/ScenarioMatrix';
 import { SensitivityHeatmap } from '@/components/tools/SensitivityHeatmap';
 import { ProjectHeader } from '@/components/tools/ProjectHeader';
 import { RentalUnitsCard, RentalUnit } from '@/components/tools/RentalUnitsCard';
+import { GlossaryTooltip } from '@/components/tools/InfoTooltip';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
@@ -347,7 +348,7 @@ export default function Simulador() {
           label="Preço de Aquisição"
           value={purchasePrice}
           onChange={setPurchasePrice}
-          helperText="Valor de compra do imóvel"
+          tooltip="purchasePrice"
         />
         <PercentageSlider
           label="Custos de Fechamento"
@@ -356,13 +357,13 @@ export default function Simulador() {
           min={0}
           max={0.1}
           step={0.005}
-          helperText="ITBI, escritura, registro, etc."
+          tooltip="closingCosts"
         />
         <CurrencyInput
           label="Reforma / Retrofit"
           value={renovationCost}
           onChange={setRenovationCost}
-          helperText="Investimento em melhorias (opcional)"
+          tooltip="renovationCost"
         />
       </CollapsibleInputCard>
 
@@ -385,7 +386,7 @@ export default function Simulador() {
           min={0}
           max={0.2}
           step={0.01}
-          helperText="Estimativa de desocupação"
+          tooltip="vacancyRate"
         />
       </CollapsibleInputCard>
 
@@ -395,11 +396,13 @@ export default function Simulador() {
           label="IPTU (Anual)"
           value={propertyTax}
           onChange={setPropertyTax}
+          tooltip="propertyTax"
         />
         <CurrencyInput
           label="Condomínio (Anual)"
           value={condoFee}
           onChange={setCondoFee}
+          tooltip="condoFee"
         />
         <PercentageSlider
           label="Taxa de Administração"
@@ -408,7 +411,7 @@ export default function Simulador() {
           min={0}
           max={0.15}
           step={0.01}
-          helperText="Sobre o aluguel bruto"
+          tooltip="managementFee"
         />
       </CollapsibleInputCard>
 
@@ -416,7 +419,10 @@ export default function Simulador() {
       <CollapsibleInputCard title="Saída" icon={DoorOpen}>
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">Horizonte (anos)</Label>
+            <div className="flex items-center gap-1.5">
+              <Label className="text-sm font-medium">Horizonte (anos)</Label>
+              <GlossaryTooltip term="holdingPeriod" />
+            </div>
             <span className="font-mono text-sm text-accent font-medium">
               {holdingPeriod} anos
             </span>
@@ -436,7 +442,7 @@ export default function Simulador() {
           min={0.04}
           max={0.12}
           step={0.005}
-          helperText="Cap rate esperado na venda"
+          tooltip="exitCapRate"
         />
       </CollapsibleInputCard>
     </ToolLayout>
