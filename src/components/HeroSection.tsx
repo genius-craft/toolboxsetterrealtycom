@@ -1,25 +1,22 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, TrendingUp, Shield, Zap, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
-
 const HeroSection = () => {
-  return (
-    <section className="relative gradient-hero min-h-[100vh] flex items-center overflow-hidden">
+  return <section className="relative gradient-hero min-h-[100vh] flex items-center overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         {/* Gradient orbs */}
         <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-accent/20 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-accent/10 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-accent/10 rounded-full blur-[150px] animate-pulse" style={{
+        animationDelay: '1s'
+      }} />
         
         {/* Subtle grid pattern */}
-        <div 
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `linear-gradient(hsl(var(--primary-foreground)) 1px, transparent 1px),
+        <div className="absolute inset-0 opacity-[0.03]" style={{
+        backgroundImage: `linear-gradient(hsl(var(--primary-foreground)) 1px, transparent 1px),
                              linear-gradient(90deg, hsl(var(--primary-foreground)) 1px, transparent 1px)`,
-            backgroundSize: '60px 60px'
-          }}
-        />
+        backgroundSize: '60px 60px'
+      }} />
         
         {/* Decorative lines */}
         <div className="absolute top-0 left-1/2 w-px h-32 bg-gradient-to-b from-transparent via-accent/30 to-transparent" />
@@ -29,12 +26,7 @@ const HeroSection = () => {
       <div className="container mx-auto px-4 py-24 relative z-10">
         <div className="max-w-5xl mx-auto text-center">
           {/* Premium Badge */}
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-accent/20 bg-accent/5 mb-8 animate-fade-up backdrop-blur-sm">
-            <Sparkles className="w-4 h-4 text-accent" />
-            <span className="text-sm font-medium text-accent tracking-wide">
-              Plataforma Profissional de Análise Imobiliária
-            </span>
-          </div>
+          
 
           {/* Main Heading */}
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-semibold text-primary-foreground mb-8 leading-[1.1] animate-fade-up delay-100 font-serif">
@@ -42,7 +34,7 @@ const HeroSection = () => {
             <span className="relative inline-block">
               <span className="text-gradient-gold">Decisão</span>
               <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 200 8" fill="none">
-                <path d="M1 5.5Q50 1 100 5.5T199 5.5" stroke="url(#gold-gradient)" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M1 5.5Q50 1 100 5.5T199 5.5" stroke="url(#gold-gradient)" strokeWidth="2" strokeLinecap="round" />
                 <defs>
                   <linearGradient id="gold-gradient" x1="0" y1="0" x2="200" y2="0">
                     <stop offset="0%" stopColor="hsl(26, 90%, 37%)" />
@@ -133,8 +125,6 @@ const HeroSection = () => {
           <path d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="hsl(var(--background))" />
         </svg>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default HeroSection;
