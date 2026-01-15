@@ -10,6 +10,8 @@ import Permuta from "./pages/Permuta";
 import HighestBestUse from "./pages/HighestBestUse";
 import Decisor from "./pages/Decisor";
 import Dashboard from "./pages/Dashboard";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfUse from "./pages/TermsOfUse";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +30,8 @@ const App = () => (
             <Route path="/highest-best-use" element={<HighestBestUse />} />
             <Route path="/decisor" element={<Decisor />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/privacidade" element={<PrivacyPolicy />} />
+            <Route path="/termos" element={<TermsOfUse />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

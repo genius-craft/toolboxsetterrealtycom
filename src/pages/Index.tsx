@@ -5,6 +5,7 @@ import AudienceSection from "@/components/AudienceSection";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
 import FloatingCTA from "@/components/FloatingCTA";
+import CookieConsent from "@/components/CookieConsent";
 
 const Index = () => {
   return (
@@ -18,6 +19,7 @@ const Index = () => {
       </main>
       <Footer />
       <FloatingCTA />
+      <CookieConsent />
     </div>
   );
 };

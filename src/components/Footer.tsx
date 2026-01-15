@@ -1,4 +1,4 @@
-import { Calculator, Linkedin, Instagram, Mail } from "lucide-react";
+import { Calculator, Linkedin, Instagram, Mail, AlertTriangle } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Footer = () => {
@@ -117,20 +117,20 @@ const Footer = () => {
                 </a>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/termos"
                   className="text-primary-foreground/40 hover:text-accent transition-colors"
                 >
                   Termos de Uso
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/privacidade"
                   className="text-primary-foreground/40 hover:text-accent transition-colors"
                 >
                   Política de Privacidade
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -144,6 +144,22 @@ const Footer = () => {
           <p className="text-primary-foreground/20 text-xs">
             Feito com precisão para o mercado imobiliário brasileiro.
           </p>
+        </div>
+
+        {/* CVM Disclaimer */}
+        <div className="border-t border-primary-foreground/10 mt-8 pt-8">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-4 h-4 text-primary-foreground/20 flex-shrink-0 mt-0.5" strokeWidth={1.5} />
+            <p className="text-primary-foreground/20 text-xs leading-relaxed max-w-4xl">
+              <strong className="text-primary-foreground/30">Aviso Legal:</strong> As ferramentas disponibilizadas 
+              pela Setter Toolbox têm caráter exclusivamente educacional e informativo. Os cálculos e análises 
+              apresentados não constituem recomendação de investimento, oferta ou solicitação de compra ou venda 
+              de qualquer ativo. A Setter Toolbox não é uma instituição financeira, corretora de valores ou 
+              consultoria de investimentos registrada na CVM (Comissão de Valores Mobiliários). Rentabilidade 
+              passada não é garantia de resultados futuros. Antes de tomar qualquer decisão de investimento, 
+              consulte um profissional devidamente habilitado.
+            </p>
+          </div>
         </div>
       </div>
     </footer>
