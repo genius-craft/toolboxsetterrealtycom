@@ -75,7 +75,7 @@ const CTASection = () => {
                   </Button>
                 )}
                 <a 
-                  href="https://wa.me/5511999999999?text=Olá! Gostaria de saber mais sobre o Setter Toolbox" 
+                  href="https://wa.me/5519971223648?text=Olá! Gostaria de saber mais sobre o Setter Toolbox" 
                   target="_blank" 
                   rel="noopener noreferrer"
                 >
@@ -105,7 +105,7 @@ const CTASection = () => {
             </div>
 
             <a 
-              href="https://wa.me/5511999999999?text=Olá! Gostaria de validar minha análise com um especialista" 
+              href="https://wa.me/5519971223648?text=Olá! Gostaria de validar minha análise com um especialista" 
               target="_blank" 
               rel="noopener noreferrer"
             >
