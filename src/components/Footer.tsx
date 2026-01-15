@@ -1,4 +1,4 @@
-import { Calculator, Linkedin, Instagram, Mail, AlertTriangle } from "lucide-react";
+import { Calculator, Linkedin, Instagram, Mail, AlertTriangle, Phone, Globe } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Footer = () => {
@@ -33,22 +33,40 @@ const Footer = () => {
             {/* Social Links */}
             <div className="flex items-center gap-4">
               <a 
-                href="#" 
+                href="https://www.linkedin.com/company/setter-realty" 
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 rounded-lg bg-primary-foreground/5 border border-primary-foreground/10 flex items-center justify-center text-primary-foreground/40 hover:text-accent hover:border-accent/30 transition-all"
               >
                 <Linkedin className="w-5 h-5" strokeWidth={1.5} />
               </a>
               <a 
-                href="#" 
+                href="https://www.instagram.com/setter.realty/" 
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 rounded-lg bg-primary-foreground/5 border border-primary-foreground/10 flex items-center justify-center text-primary-foreground/40 hover:text-accent hover:border-accent/30 transition-all"
               >
                 <Instagram className="w-5 h-5" strokeWidth={1.5} />
               </a>
               <a 
-                href="mailto:contato@settertoolbox.com" 
+                href="mailto:contato@setterrealty.com" 
                 className="w-10 h-10 rounded-lg bg-primary-foreground/5 border border-primary-foreground/10 flex items-center justify-center text-primary-foreground/40 hover:text-accent hover:border-accent/30 transition-all"
               >
                 <Mail className="w-5 h-5" strokeWidth={1.5} />
+              </a>
+              <a 
+                href="tel:+5519971223648" 
+                className="w-10 h-10 rounded-lg bg-primary-foreground/5 border border-primary-foreground/10 flex items-center justify-center text-primary-foreground/40 hover:text-accent hover:border-accent/30 transition-all"
+              >
+                <Phone className="w-5 h-5" strokeWidth={1.5} />
+              </a>
+              <a 
+                href="https://www.setterrealty.com/" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-lg bg-primary-foreground/5 border border-primary-foreground/10 flex items-center justify-center text-primary-foreground/40 hover:text-accent hover:border-accent/30 transition-all"
+              >
+                <Globe className="w-5 h-5" strokeWidth={1.5} />
               </a>
             </div>
           </div>
@@ -102,7 +120,9 @@ const Footer = () => {
             <ul className="space-y-4">
               <li>
                 <a
-                  href="#"
+                  href="https://www.setterrealty.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-primary-foreground/40 hover:text-accent transition-colors"
                 >
                   Sobre Nós
@@ -110,7 +130,9 @@ const Footer = () => {
               </li>
               <li>
                 <a
-                  href="#"
+                  href="https://www.setterrealty.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-primary-foreground/40 hover:text-accent transition-colors"
                 >
                   Blog
