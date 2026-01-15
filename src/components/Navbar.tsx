@@ -36,8 +36,8 @@ const Navbar = () => {
               </span>
             </Link>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-10">
+            {/* Desktop Navigation - Centered */}
+            <div className="hidden md:flex items-center gap-10 absolute left-1/2 -translate-x-1/2">
               <a href="#ferramentas" className="nav-link relative group">
                 Ferramentas
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full" />
