@@ -74,14 +74,18 @@ export default function Decisor() {
 
   // Financial inputs
   const [askingPrice, setAskingPrice] = useState(5000000);
-  const [annualNOI, setAnnualNOI] = useState(400000);
-  const [targetCapRate, setTargetCapRate] = useState(0.08); // 8%
+  const [monthlyRent, setMonthlyRent] = useState(33333); // Aluguel mensal
+  const [targetMonthlyCapRate, setTargetMonthlyCapRate] = useState(0.0067); // 0.67% mensal
 
   // Qualitative inputs (1-5)
   const [locationQuality, setLocationQuality] = useState(4);
   const [tenantRisk, setTenantRisk] = useState(3);
   const [futureLiquidity, setFutureLiquidity] = useState(3);
   const [assetCondition, setAssetCondition] = useState(4);
+
+  // Convert monthly to annual for calculations
+  const annualNOI = monthlyRent * 12;
+  const targetCapRate = targetMonthlyCapRate * 12;
 
   // Calculations
   const result = useMemo(() => {
@@ -110,8 +114,8 @@ export default function Decisor() {
       name: `Decisor ${new Date().toLocaleDateString('pt-BR')}`,
       inputs: {
         askingPrice,
-        annualNOI,
-        targetCapRate,
+        monthlyRent,
+        targetMonthlyCapRate,
         locationQuality,
         tenantRisk,
         futureLiquidity,
@@ -187,8 +191,8 @@ export default function Decisor() {
       {/* Financial KPIs */}
       <div className="grid grid-cols-2 gap-4">
         <KPICard
-          label="Cap Rate Implícito"
-          value={formatPercentage(result.impliedCapRate)}
+          label="Cap Rate Implícito (mensal)"
+          value={formatPercentage(result.impliedCapRate / 12)}
           variant={result.impliedCapRate >= targetCapRate ? 'success' : 'warning'}
         />
         <KPICard
@@ -301,18 +305,18 @@ export default function Decisor() {
           tooltip="purchasePrice"
         />
         <CurrencyInput
-          label="NOI Anual"
-          value={annualNOI}
-          onChange={setAnnualNOI}
+          label="Aluguel Mensal"
+          value={monthlyRent}
+          onChange={setMonthlyRent}
           tooltip="noi"
         />
         <PercentageSlider
-          label="Cap Rate Alvo"
-          value={targetCapRate}
-          onChange={setTargetCapRate}
-          min={0.05}
-          max={0.15}
-          step={0.005}
+          label="Cap Rate Alvo (mensal)"
+          value={targetMonthlyCapRate}
+          onChange={setTargetMonthlyCapRate}
+          min={0.003}
+          max={0.015}
+          step={0.0005}
           tooltip="targetCapRate"
         />
       </CollapsibleInputCard>
