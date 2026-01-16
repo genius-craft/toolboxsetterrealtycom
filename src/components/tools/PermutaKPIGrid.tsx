@@ -1,5 +1,5 @@
 import { Clock, Percent, Minus, Plus } from "lucide-react";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatCompactCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 
 interface PermutaKPIGridProps {
@@ -32,8 +32,8 @@ export function PermutaKPIGrid({
     {
       icon: Percent,
       label: "Desconto Tempo",
-      value: formatCurrency(descontoTempo),
-      subvalue: `VP: ${formatCurrency(vpUnidades)}`,
+      value: formatCompactCurrency(descontoTempo),
+      subvalue: formatCurrency(vpUnidades),
       color: "text-red-600 dark:text-red-400",
       bgColor: "bg-red-50 dark:bg-red-900/20",
       borderColor: "border-red-200 dark:border-red-800",
@@ -42,8 +42,8 @@ export function PermutaKPIGrid({
     {
       icon: Minus,
       label: "Permuta Líquida",
-      value: formatCurrency(permutaLiquida),
-      subvalue: "após descontos e custos",
+      value: formatCompactCurrency(permutaLiquida),
+      subvalue: "após descontos",
       color: "text-slate-700 dark:text-slate-300",
       bgColor: "bg-slate-50 dark:bg-slate-800/50",
       borderColor: "border-slate-200 dark:border-slate-700",
@@ -51,8 +51,8 @@ export function PermutaKPIGrid({
     {
       icon: Plus,
       label: "Total Parceria",
-      value: formatCurrency(totalParceria),
-      subvalue: "permuta líquida + dinheiro",
+      value: formatCompactCurrency(totalParceria),
+      subvalue: "permuta + dinheiro",
       color: "text-primary",
       bgColor: "bg-primary/10",
       borderColor: "border-primary/30",
@@ -88,25 +88,25 @@ export function PermutaKPIGrid({
         <div
           key={index}
           className={cn(
-            "border rounded-xl p-4 text-center transition-all",
+            "border rounded-xl p-3 sm:p-4 text-center transition-all min-w-0 overflow-hidden",
             kpi.bgColor,
             kpi.borderColor,
             kpi.isHighlight && "border-2 shadow-lg"
           )}
         >
-          <div className={cn("p-2 rounded-full inline-flex mb-2", kpi.bgColor)}>
-            <kpi.icon className={cn("h-5 w-5", kpi.color)} />
+          <div className={cn("p-1.5 sm:p-2 rounded-full inline-flex mb-1.5 sm:mb-2", kpi.bgColor)}>
+            <kpi.icon className={cn("h-4 w-4 sm:h-5 sm:w-5", kpi.color)} />
           </div>
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+          <p className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wide leading-tight">
             {kpi.label}
           </p>
           <p className={cn(
-            "text-xl font-bold mt-1",
+            "text-base sm:text-lg md:text-xl font-bold mt-1 truncate",
             kpi.isNegative ? "text-red-600 dark:text-red-400" : kpi.color
           )}>
             {kpi.value}
           </p>
-          <p className="text-xs text-muted-foreground mt-1">{kpi.subvalue}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 truncate">{kpi.subvalue}</p>
         </div>
       ))}
     </div>
