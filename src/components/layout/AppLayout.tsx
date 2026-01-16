@@ -14,9 +14,9 @@ export function AppLayout({ children, title }: AppLayoutProps) {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <SidebarInset className="flex-1">
-          {/* Mobile header with trigger */}
-          <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-border bg-background px-4 lg:hidden">
-            <SidebarTrigger className="text-foreground">
+          {/* Header with trigger - visible on all screens */}
+          <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-border bg-background px-4">
+            <SidebarTrigger className="text-foreground hover:bg-accent rounded-md p-2 transition-colors">
               <Menu className="h-5 w-5" />
             </SidebarTrigger>
             {title && (
