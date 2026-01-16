@@ -13,6 +13,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSaveProject } from '@/hooks/useProjects';
 import { calculateGoNoGo } from '@/lib/calculations';
 import { formatCurrency, formatCompactCurrency, formatPercentage } from '@/lib/formatters';
+import { generateDecisorPDF } from '@/lib/pdfExport';
+import { toast } from 'sonner';
 import {
   Calculator,
   Star,
@@ -25,6 +27,7 @@ import {
   Users,
   TrendingUp,
   Wrench,
+  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { financialGlossary } from '@/components/tools/InfoTooltip';
@@ -72,6 +75,7 @@ const StarRating = ({
 export default function Decisor() {
   const { user } = useAuth();
   const saveProject = useSaveProject();
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
 
   // Project name
   const [assetName, setAssetName] = useState('');
@@ -134,6 +138,39 @@ export default function Decisor() {
         verdict: result.verdict,
       },
     });
+  };
+
+  const handleExportPDF = async () => {
+    setIsExportingPDF(true);
+    try {
+      await generateDecisorPDF({
+        assetName: assetName || 'Ativo sem nome',
+        verdict: result.verdict,
+        kpis: {
+          impliedCapRate: result.impliedCapRate,
+          qualityScore: result.qualityScore,
+          maxStrikePrice: result.maxStrikePrice,
+          priceGap: result.priceGap,
+          priceGapPercentage: result.priceGapPercentage,
+        },
+        inputs: {
+          askingPrice,
+          monthlyRent,
+          targetMonthlyCapRate,
+        },
+        ratings: {
+          locationQuality,
+          tenantRisk,
+          futureLiquidity,
+          assetCondition,
+        },
+      });
+      toast.success('PDF gerado com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao gerar PDF');
+    } finally {
+      setIsExportingPDF(false);
+    }
   };
 
   const VerdictDisplay = () => {
@@ -292,9 +329,18 @@ export default function Decisor() {
           <Save className="h-4 w-4 mr-2" />
           {saveProject.isPending ? 'Salvando...' : 'Salvar'}
         </Button>
-        <Button variant="outline" className="flex-1" disabled={!user}>
-          <Download className="h-4 w-4 mr-2" />
-          PDF
+        <Button 
+          variant="outline" 
+          className="flex-1" 
+          disabled={!user || isExportingPDF}
+          onClick={handleExportPDF}
+        >
+          {isExportingPDF ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Download className="h-4 w-4 mr-2" />
+          )}
+          {isExportingPDF ? 'Gerando...' : 'PDF'}
         </Button>
       </div>
     </div>

@@ -33,6 +33,7 @@ import {
   calculateAllScenarios,
 } from '@/lib/calculations';
 import { formatCurrency, formatPercentage, formatMultiple } from '@/lib/formatters';
+import { generateSimuladorPDF } from '@/lib/pdfExport';
 import {
   Building2,
   TrendingUp,
@@ -43,6 +44,7 @@ import {
   Target,
   BarChart3,
   FolderOpen,
+  Loader2,
 } from 'lucide-react';
 
 export default function Simulador() {
@@ -53,6 +55,7 @@ export default function Simulador() {
 
   // Dialog state
   const [openDialogOpen, setOpenDialogOpen] = useState(false);
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
 
   // Project Info
   const [projectName, setProjectName] = useState('');
@@ -264,7 +267,35 @@ export default function Simulador() {
         equityMultiple: calculations.equityMultiple,
         verdict: calculations.verdict,
       },
-    });
+  });
+  };
+
+  const handleExportPDF = async () => {
+    setIsExportingPDF(true);
+    try {
+      await generateSimuladorPDF({
+        projectName: projectName || 'Projeto sem nome',
+        kpis: {
+          entryCapRate: calculations.entryCapRate,
+          irr: calculations.irr,
+          npv: calculations.npv,
+          equityMultiple: calculations.equityMultiple,
+          totalInvestment: calculations.totalInvestment,
+          noi: calculations.noi,
+        },
+        verdict: calculations.verdict,
+        inputs: {
+          purchasePrice,
+          holdingPeriod,
+          discountRate,
+        },
+      });
+      toast({ title: 'PDF gerado com sucesso!', description: 'O download foi iniciado.' });
+    } catch (error) {
+      toast({ title: 'Erro ao gerar PDF', description: 'Tente novamente.', variant: 'destructive' });
+    } finally {
+      setIsExportingPDF(false);
+    }
   };
 
   // Right panel (Dashboard)
@@ -403,10 +434,15 @@ export default function Simulador() {
         </Button>
         <Button 
           className="flex-1 bg-[#E85D3D] hover:bg-[#D14D2D] text-white shadow-lg"
-          disabled={!user}
+          disabled={!user || isExportingPDF}
+          onClick={handleExportPDF}
         >
-          <FileText className="h-4 w-4 mr-2" />
-          Exportar PDF
+          {isExportingPDF ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <FileText className="h-4 w-4 mr-2" />
+          )}
+          {isExportingPDF ? 'Gerando...' : 'Exportar PDF'}
         </Button>
       </div>
 

@@ -13,8 +13,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Banknote, Building2, RefreshCcw, Save, FileDown, AlertTriangle, FolderOpen } from "lucide-react";
+import { Banknote, Building2, RefreshCcw, Save, FileDown, AlertTriangle, FolderOpen, Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
+import { generatePermutaPDF } from "@/lib/pdfExport";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSaveProject, useProjects, ProjectType } from "@/hooks/useProjects";
 import { toast } from "sonner";
@@ -27,6 +28,7 @@ export default function Permuta() {
 
   // === Estado: Dialog ===
   const [openDialogOpen, setOpenDialogOpen] = useState(false);
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
 
   // === Estado: Nome do Ativo ===
   const [assetName, setAssetName] = useState('');
@@ -111,6 +113,30 @@ export default function Permuta() {
     setCustoMensalUnidade(inputs.custoMensalUnidade ?? 1500);
     setOpenDialogOpen(false);
     toast.success(`Projeto "${project.name}" carregado!`);
+  };
+
+  const handleExportPDF = async () => {
+    setIsExportingPDF(true);
+    try {
+      await generatePermutaPDF({
+        assetName: assetName || 'Terreno sem nome',
+        vendaOferta,
+        calculations,
+        inputs: {
+          percentualUnidades,
+          taxaDesconto,
+          aprovacaoMeses,
+          construcaoMeses,
+          vendaMeses,
+        },
+      });
+      toast.success('PDF gerado com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao gerar PDF');
+    } finally {
+      setIsExportingPDF(false);
+    }
+  };
   };
 
   const InputsPanel = (
@@ -223,7 +249,10 @@ export default function Permuta() {
           </Button>
           <Button variant="outline" size="sm" onClick={handleReset}><RefreshCcw className="h-4 w-4 mr-2" />Limpar</Button>
           <Button variant="outline" size="sm" onClick={handleSave} disabled={isLocked}><Save className="h-4 w-4 mr-2" />Salvar</Button>
-          <Button variant="outline" size="sm" disabled><FileDown className="h-4 w-4 mr-2" />PDF</Button>
+          <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={isLocked || isExportingPDF}>
+            {isExportingPDF ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileDown className="h-4 w-4 mr-2" />}
+            {isExportingPDF ? 'Gerando...' : 'PDF'}
+          </Button>
         </div>
       </div>
 
