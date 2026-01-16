@@ -8,6 +8,7 @@ import { SoftLockOverlay } from '@/components/tools/SoftLockOverlay';
 import { GlossaryTooltip } from '@/components/tools/InfoTooltip';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSaveProject } from '@/hooks/useProjects';
 import { calculateGoNoGo } from '@/lib/calculations';
@@ -72,6 +73,9 @@ export default function Decisor() {
   const { user } = useAuth();
   const saveProject = useSaveProject();
 
+  // Project name
+  const [assetName, setAssetName] = useState('');
+
   // Financial inputs
   const [askingPrice, setAskingPrice] = useState(5000000);
   const [monthlyRent, setMonthlyRent] = useState(33333); // Aluguel mensal
@@ -109,10 +113,12 @@ export default function Decisor() {
   ]);
 
   const handleSave = () => {
+    const projectName = assetName.trim() || `Decisor ${new Date().toLocaleDateString('pt-BR')}`;
     saveProject.mutate({
       project_type: 'decisor',
-      name: `Decisor ${new Date().toLocaleDateString('pt-BR')}`,
+      name: projectName,
       inputs: {
+        assetName,
         askingPrice,
         monthlyRent,
         targetMonthlyCapRate,
@@ -296,6 +302,21 @@ export default function Decisor() {
 
   return (
     <ToolLayout title="Decisor Go/No-Go" rightPanel={Dashboard}>
+      {/* Asset Name */}
+      <div className="bg-card rounded-lg border border-border p-4 shadow-card mb-4">
+        <Label htmlFor="assetName" className="text-sm font-medium mb-2 block">
+          Nome do Ativo
+        </Label>
+        <Input
+          id="assetName"
+          placeholder="Ex: Galpão Logístico ABC"
+          value={assetName}
+          onChange={(e) => setAssetName(e.target.value)}
+          className="bg-background"
+          maxLength={100}
+        />
+      </div>
+
       {/* Financial Inputs */}
       <CollapsibleInputCard title="Dados Financeiros" icon={Calculator}>
         <CurrencyInput
