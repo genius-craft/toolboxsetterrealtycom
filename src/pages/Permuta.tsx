@@ -134,9 +134,8 @@ export default function Permuta() {
     } catch (error) {
       toast.error('Erro ao gerar PDF');
     } finally {
-      setIsExportingPDF(false);
+    setIsExportingPDF(false);
     }
-  };
   };
 
   const InputsPanel = (
