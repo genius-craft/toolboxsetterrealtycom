@@ -12,16 +12,21 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { Banknote, Building2, RefreshCcw, Save, FileDown, AlertTriangle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Banknote, Building2, RefreshCcw, Save, FileDown, AlertTriangle, FolderOpen } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import { useAuth } from "@/contexts/AuthContext";
-import { useSaveProject } from "@/hooks/useProjects";
+import { useSaveProject, useProjects, ProjectType } from "@/hooks/useProjects";
 import { toast } from "sonner";
 
 export default function Permuta() {
   const { user } = useAuth();
   const saveProject = useSaveProject();
+  const { data: savedProjects, isLoading: loadingProjects } = useProjects('permuta' as ProjectType);
   const isLocked = !user;
+
+  // === Estado: Dialog ===
+  const [openDialogOpen, setOpenDialogOpen] = useState(false);
 
   // === Estado: Nome do Ativo ===
   const [assetName, setAssetName] = useState('');
@@ -90,6 +95,23 @@ export default function Permuta() {
       });
       toast.success("Projeto salvo!");
     } catch { toast.error("Erro ao salvar"); }
+  };
+
+  const handleLoadProject = (project: any) => {
+    const inputs = project.inputs || {};
+    setAssetName(inputs.assetName || project.name || '');
+    setVendaOferta(inputs.vendaOferta ?? 8000000);
+    setValorImovelParceria(inputs.valorImovelParceria ?? 12000000);
+    setPercentualUnidades(inputs.percentualUnidades ?? 50);
+    setAprovacaoMeses(inputs.aprovacaoMeses ?? 12);
+    setConstrucaoMeses(inputs.construcaoMeses ?? 36);
+    setVendaMeses(inputs.vendaMeses ?? 12);
+    setTaxaDesconto(inputs.taxaDesconto ?? 12);
+    setPrecoUnidade(inputs.precoUnidade ?? 500000);
+    setCustoMensalUnidade(inputs.custoMensalUnidade ?? 1500);
+    setOpenDialogOpen(false);
+    toast.success(`Projeto "${project.name}" carregado!`);
+  };
   };
 
   const InputsPanel = (
@@ -194,9 +216,12 @@ export default function Permuta() {
 
   const ResultsPanel = (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-xl font-semibold">Resultados</h2>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={() => setOpenDialogOpen(true)} disabled={!user || loadingProjects}>
+            <FolderOpen className="h-4 w-4 mr-2" />Abrir
+          </Button>
           <Button variant="outline" size="sm" onClick={handleReset}><RefreshCcw className="h-4 w-4 mr-2" />Limpar</Button>
           <Button variant="outline" size="sm" onClick={handleSave} disabled={isLocked}><Save className="h-4 w-4 mr-2" />Salvar</Button>
           <Button variant="outline" size="sm" disabled><FileDown className="h-4 w-4 mr-2" />PDF</Button>
@@ -217,8 +242,38 @@ export default function Permuta() {
   );
 
   return (
-    <ToolLayout title="Calculadora de Permuta" rightPanel={ResultsPanel}>
-      {InputsPanel}
-    </ToolLayout>
+    <>
+      <ToolLayout title="Calculadora de Permuta" rightPanel={ResultsPanel}>
+        {InputsPanel}
+      </ToolLayout>
+
+      <Dialog open={openDialogOpen} onOpenChange={setOpenDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Abrir Projeto Salvo</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+            {savedProjects && savedProjects.length > 0 ? (
+              savedProjects.map((project) => (
+                <button
+                  key={project.id}
+                  onClick={() => handleLoadProject(project)}
+                  className="w-full p-3 text-left rounded-lg border border-border hover:bg-accent hover:text-accent-foreground transition-colors"
+                >
+                  <p className="font-medium">{project.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(project.updated_at).toLocaleDateString('pt-BR')}
+                  </p>
+                </button>
+              ))
+            ) : (
+              <p className="text-center text-muted-foreground py-4">
+                Nenhum projeto salvo
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
