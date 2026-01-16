@@ -16,6 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSaveProject } from '@/hooks/useProjects';
 import { calculateHBUv3, HBUv3Params } from '@/lib/calculations';
 import { formatArea, formatPercentage } from '@/lib/formatters';
+import { generateHBUPDF } from '@/lib/pdfExport';
 import {
   Map,
   Building,
@@ -25,12 +26,15 @@ import {
   RotateCcw,
   Info,
   Settings,
+  Download,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function HighestBestUse() {
   const { user } = useAuth();
   const saveProject = useSaveProject();
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
 
   // Terreno
   const [landArea, setLandArea] = useState(1000);
@@ -121,6 +125,27 @@ export default function HighestBestUse() {
     });
   };
 
+  const handleExportPDF = async () => {
+    setIsExportingPDF(true);
+    try {
+      await generateHBUPDF({
+        landParams: { landArea, far, occupancyRate, location },
+        results: {
+          residencial: results.residencial,
+          comercial: results.comercial,
+          misto: results.misto,
+          winner: results.winner,
+          justification: results.justification,
+        },
+      });
+      toast.success('PDF gerado com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao gerar PDF');
+    } finally {
+      setIsExportingPDF(false);
+    }
+  };
+
   const Dashboard = (
     <div className="space-y-6">
       {/* Educational Banner */}
@@ -188,6 +213,13 @@ export default function HighestBestUse() {
         >
           <Save className="h-4 w-4 mr-2" />
           {saveProject.isPending ? 'Salvando...' : 'Salvar'}
+        </Button>
+        <Button 
+          variant="outline" 
+          onClick={handleExportPDF}
+          disabled={!user || isExportingPDF}
+        >
+          {isExportingPDF ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
         </Button>
         <Button variant="outline" onClick={handleReset}>
           <RotateCcw className="h-4 w-4" />
