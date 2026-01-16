@@ -112,7 +112,6 @@ export default function Permuta() {
     setOpenDialogOpen(false);
     toast.success(`Projeto "${project.name}" carregado!`);
   };
-  };
 
   const InputsPanel = (
     <div className="space-y-6">
