@@ -15,8 +15,16 @@ import { GlossaryTooltip } from '@/components/tools/InfoTooltip';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSaveProject } from '@/hooks/useProjects';
+import { useSaveProject, useProjects, ProjectType } from '@/hooks/useProjects';
+import { useToast } from '@/hooks/use-toast';
 import {
   projectCashFlows,
   calculateIRR,
@@ -34,11 +42,17 @@ import {
   FileText,
   Target,
   BarChart3,
+  FolderOpen,
 } from 'lucide-react';
 
 export default function Simulador() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const saveProject = useSaveProject();
+  const { data: savedProjects, isLoading: loadingProjects } = useProjects('simulador' as ProjectType);
+
+  // Dialog state
+  const [openDialogOpen, setOpenDialogOpen] = useState(false);
 
   // Project Info
   const [projectName, setProjectName] = useState('');
@@ -48,6 +62,8 @@ export default function Simulador() {
   const [purchasePrice, setPurchasePrice] = useState(2000000);
   const [closingCosts, setClosingCosts] = useState(0.03); // 3%
   const [renovationCost, setRenovationCost] = useState(100000);
+  const [hasTurnkey, setHasTurnkey] = useState(false);
+  const [turnkeyCost, setTurnkeyCost] = useState(0);
 
   // Revenue - Multiple Units
   const [rentalUnits, setRentalUnits] = useState<RentalUnit[]>([
@@ -117,7 +133,8 @@ export default function Simulador() {
 
   // Calculations
   const calculations = useMemo(() => {
-    const totalInvestment = purchasePrice * (1 + closingCosts) + renovationCost;
+    const turnkeyAmount = hasTurnkey ? turnkeyCost : 0;
+    const totalInvestment = purchasePrice * (1 + closingCosts) + renovationCost + turnkeyAmount;
     const annualRent = totalMonthlyRent * 12;
     const annualManagement = annualRent * managementFee;
     const operatingExpenses = propertyTax + condoFee + annualManagement;
@@ -167,6 +184,8 @@ export default function Simulador() {
     purchasePrice,
     closingCosts,
     renovationCost,
+    hasTurnkey,
+    turnkeyCost,
     totalMonthlyRent,
     effectiveRentGrowth,
     vacancyRate,
@@ -189,6 +208,30 @@ export default function Simulador() {
     return investment > 0 ? annualRent / investment : 0;
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleLoadProject = (project: any) => {
+    const inputs = project.inputs || {};
+    setProjectName(inputs.projectName || project.name || '');
+    setInvestmentType(inputs.investmentType || 'ready');
+    setPurchasePrice(inputs.purchasePrice ?? 2000000);
+    setClosingCosts(inputs.closingCosts ?? 0.03);
+    setRenovationCost(inputs.renovationCost ?? 100000);
+    setHasTurnkey(inputs.hasTurnkey ?? false);
+    setTurnkeyCost(inputs.turnkeyCost ?? 0);
+    setRentalUnits(inputs.rentalUnits || [{ id: '1', name: 'Loja 1', monthlyRent: 15000 }]);
+    setAdjustmentIndex(inputs.adjustmentIndex || 'igpm');
+    setCustomIndexRate(inputs.customIndexRate ?? 0.05);
+    setVacancyRate(inputs.vacancyRate ?? 0.05);
+    setPropertyTax(inputs.propertyTax ?? 12000);
+    setCondoFee(inputs.condoFee ?? 6000);
+    setManagementFee(inputs.managementFee ?? 0.08);
+    setHoldingPeriod(inputs.holdingPeriod ?? 10);
+    setExitCapRate(inputs.exitCapRate ?? 0.07);
+    setDiscountRate(inputs.discountRate ?? 0.12);
+    setOpenDialogOpen(false);
+    toast({ title: 'Projeto carregado!', description: project.name });
+  };
+
   const handleSave = () => {
     saveProject.mutate({
       project_type: 'simulador',
@@ -199,6 +242,8 @@ export default function Simulador() {
         purchasePrice,
         closingCosts,
         renovationCost,
+        hasTurnkey,
+        turnkeyCost,
         rentalUnits,
         adjustmentIndex,
         customIndexRate,
@@ -337,7 +382,16 @@ export default function Simulador() {
       </SoftLockOverlay>
 
       {/* Action Buttons */}
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+        <Button
+          variant="outline"
+          className="flex-1"
+          onClick={() => setOpenDialogOpen(true)}
+          disabled={!user || loadingProjects}
+        >
+          <FolderOpen className="h-4 w-4 mr-2" />
+          Abrir Projeto
+        </Button>
         <Button
           variant="gold"
           className="flex-1"
@@ -352,9 +406,38 @@ export default function Simulador() {
           disabled={!user}
         >
           <FileText className="h-4 w-4 mr-2" />
-          Exportar PDF Profissional
+          Exportar PDF
         </Button>
       </div>
+
+      {/* Open Project Dialog */}
+      <Dialog open={openDialogOpen} onOpenChange={setOpenDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Abrir Projeto Salvo</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+            {savedProjects && savedProjects.length > 0 ? (
+              savedProjects.map((project) => (
+                <button
+                  key={project.id}
+                  onClick={() => handleLoadProject(project)}
+                  className="w-full p-3 text-left rounded-lg border border-border hover:bg-accent hover:text-accent-foreground transition-colors"
+                >
+                  <p className="font-medium">{project.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(project.updated_at).toLocaleDateString('pt-BR')}
+                  </p>
+                </button>
+              ))
+            ) : (
+              <p className="text-center text-muted-foreground py-4">
+                Nenhum projeto salvo
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 
@@ -391,6 +474,21 @@ export default function Simulador() {
           onChange={setRenovationCost}
           tooltip="renovationCost"
         />
+        <div className="flex items-center justify-between py-2">
+          <div className="flex items-center gap-1.5">
+            <Label className="text-sm font-medium">Incluir Obras Turnkey?</Label>
+            <GlossaryTooltip term="turnkeyCost" />
+          </div>
+          <Switch checked={hasTurnkey} onCheckedChange={setHasTurnkey} />
+        </div>
+        {hasTurnkey && (
+          <CurrencyInput
+            label="Custo Turnkey"
+            value={turnkeyCost}
+            onChange={setTurnkeyCost}
+            tooltip="turnkeyCost"
+          />
+        )}
       </CollapsibleInputCard>
 
       {/* Revenue Card - Multiple Units */}
