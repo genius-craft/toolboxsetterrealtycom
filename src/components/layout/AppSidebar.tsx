@@ -7,7 +7,8 @@ import {
   CheckCircle,
   LogOut,
   User,
-  ChevronLeft
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -62,9 +63,13 @@ export function AppSidebar() {
               </span>
             )}
           </Link>
-          {!isCollapsed && (
+          {!isCollapsed ? (
             <SidebarTrigger className="text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent">
               <ChevronLeft className="h-4 w-4" />
+            </SidebarTrigger>
+          ) : (
+            <SidebarTrigger className="text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent mx-auto mt-2">
+              <ChevronRight className="h-4 w-4" />
             </SidebarTrigger>
           )}
         </div>

@@ -59,6 +59,10 @@ export const financialGlossary = {
     title: 'Reforma / Retrofit',
     description: 'Investimento em melhorias físicas para valorizar ou adequar o imóvel. Pode incluir modernização, adequação de layout ou manutenção estrutural.',
   },
+  turnkeyCost: {
+    title: 'Obras Turnkey',
+    description: 'Custo de adequação sob medida para o inquilino (ex: lojas, escritórios). O investidor entrega o espaço pronto para operar. Comum em contratos BTS.',
+  },
   
   // Revenue
   monthlyRent: {

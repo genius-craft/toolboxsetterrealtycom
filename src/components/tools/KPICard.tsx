@@ -38,7 +38,7 @@ export function KPICard({
   return (
     <div
       className={cn(
-        'relative bg-card rounded-lg border p-4 lg:p-6 shadow-card transition-shadow hover:shadow-card-hover',
+        'relative bg-card rounded-lg border p-3 sm:p-4 lg:p-6 shadow-card transition-shadow hover:shadow-card-hover min-w-0',
         variantStyles[variant],
         className
       )}
@@ -51,24 +51,24 @@ export function KPICard({
         </div>
       )}
 
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs text-muted-foreground font-medium tracking-premium uppercase mb-1">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] sm:text-xs text-muted-foreground font-medium tracking-premium uppercase mb-1 leading-tight">
             {label}
           </p>
-          <p className={cn('font-mono text-2xl lg:text-3xl font-semibold', valueStyles[variant])}>
+          <p className={cn('font-mono text-lg sm:text-xl lg:text-2xl font-semibold truncate', valueStyles[variant])}>
             {value}
           </p>
           {subValue && (
-            <p className="text-sm text-muted-foreground mt-1">{subValue}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">{subValue}</p>
           )}
         </div>
         {Icon && (
           <div className={cn(
-            'p-2 rounded-lg',
+            'p-1.5 sm:p-2 rounded-lg shrink-0',
             variant === 'default' ? 'bg-secondary' : variantStyles[variant]
           )}>
-            <Icon className={cn('h-5 w-5', valueStyles[variant])} />
+            <Icon className={cn('h-4 w-4 sm:h-5 sm:w-5', valueStyles[variant])} />
           </div>
         )}
       </div>
