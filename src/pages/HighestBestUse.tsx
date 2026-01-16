@@ -131,9 +131,9 @@ export default function HighestBestUse() {
       await generateHBUPDF({
         landParams: { landArea, far, occupancyRate, location },
         results: {
-          residencial: results.residencial,
-          comercial: results.comercial,
-          misto: results.misto,
+          residencial: { score: results.residencial.score, vgv: results.residencial.vgv, profit: results.residencial.grossProfit, npv: results.residencial.npv, margin: results.residencial.margin },
+          comercial: { score: results.comercial.score, vgv: results.comercial.vgv, profit: results.comercial.grossProfit, npv: results.comercial.npv, margin: results.comercial.margin },
+          misto: { score: results.misto.score, vgv: results.misto.vgv, profit: results.misto.grossProfit, npv: results.misto.npv, margin: results.misto.margin },
           winner: results.winner,
           justification: results.justification,
         },
