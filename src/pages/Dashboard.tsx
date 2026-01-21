@@ -248,7 +248,7 @@ export default function Dashboard() {
 
                   {/* Actions */}
                   <div className="flex gap-2">
-                    <Link to={config.path} className="flex-1">
+                    <Link to={`${config.path}?id=${project.id}`} className="flex-1">
                       <Button variant="outline" size="sm" className="w-full">
                         <Eye className="h-4 w-4 mr-2" />
                         Ver

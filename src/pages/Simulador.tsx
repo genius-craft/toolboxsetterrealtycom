@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ToolLayout } from '@/components/tools/ToolLayout';
 import { CollapsibleInputCard } from '@/components/tools/CollapsibleInputCard';
 import { CurrencyInput } from '@/components/tools/CurrencyInput';
@@ -23,7 +24,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSaveProject, useProjects, ProjectType } from '@/hooks/useProjects';
+import { useSaveProject, useProjects, useProject, ProjectType } from '@/hooks/useProjects';
 import { useToast } from '@/hooks/use-toast';
 import {
   projectCashFlows,
@@ -52,10 +53,16 @@ export default function Simulador() {
   const { toast } = useToast();
   const saveProject = useSaveProject();
   const { data: savedProjects, isLoading: loadingProjects } = useProjects('simulador' as ProjectType);
+  
+  // URL params for loading project
+  const [searchParams] = useSearchParams();
+  const projectIdFromUrl = searchParams.get('id');
+  const { data: projectFromUrl, isLoading: loadingProjectFromUrl } = useProject(projectIdFromUrl || '');
 
   // Dialog state
   const [openDialogOpen, setOpenDialogOpen] = useState(false);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
+  const [hasLoadedFromUrl, setHasLoadedFromUrl] = useState(false);
 
   // Project Info
   const [projectName, setProjectName] = useState('');
@@ -212,7 +219,7 @@ export default function Simulador() {
   }, []);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleLoadProject = (project: any) => {
+  const handleLoadProject = useCallback((project: any, showToast = true) => {
     const inputs = project.inputs || {};
     setProjectName(inputs.projectName || project.name || '');
     setInvestmentType(inputs.investmentType || 'ready');
@@ -232,8 +239,18 @@ export default function Simulador() {
     setExitCapRate(inputs.exitCapRate ?? 0.07);
     setDiscountRate(inputs.discountRate ?? 0.12);
     setOpenDialogOpen(false);
-    toast({ title: 'Projeto carregado!', description: project.name });
-  };
+    if (showToast) {
+      toast({ title: 'Projeto carregado!', description: project.name });
+    }
+  }, [toast]);
+
+  // Auto-load project from URL
+  useEffect(() => {
+    if (projectFromUrl && !loadingProjectFromUrl && !hasLoadedFromUrl) {
+      handleLoadProject(projectFromUrl, false);
+      setHasLoadedFromUrl(true);
+    }
+  }, [projectFromUrl, loadingProjectFromUrl, hasLoadedFromUrl, handleLoadProject]);
 
   const handleSave = () => {
     saveProject.mutate({
