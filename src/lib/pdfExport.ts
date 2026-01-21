@@ -33,12 +33,13 @@ export interface PDFConfig {
   footer?: string;
 }
 
-// Brand colors
+// Brand colors - refined softer palette
 const COLORS = {
-  primary: [184, 155, 122] as [number, number, number], // #B89B7A - accent
-  dark: [30, 30, 32] as [number, number, number],
-  gray: [100, 100, 100] as [number, number, number],
-  lightGray: [200, 200, 200] as [number, number, number],
+  primary: [196, 168, 130] as [number, number, number], // #C4A882 - soft gold
+  dark: [45, 45, 48] as [number, number, number],
+  gray: [122, 122, 122] as [number, number, number], // #7A7A7A - softer gray
+  lightGray: [220, 218, 215] as [number, number, number],
+  warmBg: [250, 248, 246] as [number, number, number], // #FAF8F6 - warm beige
   success: [34, 197, 94] as [number, number, number],
   warning: [245, 158, 11] as [number, number, number],
   danger: [239, 68, 68] as [number, number, number],
@@ -71,18 +72,28 @@ export async function generatePDF(config: PDFConfig): Promise<void> {
     return false;
   };
 
-  // === HEADER ===
+  // === HEADER with Logo ===
   doc.setFillColor(...COLORS.primary);
   doc.rect(0, 0, pageWidth, 35, 'F');
 
-  doc.setTextColor(...COLORS.white);
-  doc.setFontSize(24);
-  doc.setFont('helvetica', 'bold');
-  doc.text('SETTER TOOLBOX', margin, 18);
-
+  // Logo "S" box
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(margin, 8, 14, 14, 3, 3, 'F');
+  doc.setTextColor(...COLORS.primary);
   doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text('S', margin + 4.5, 17);
+
+  // "SETTER TOOLBOX" text
+  doc.setTextColor(...COLORS.white);
+  doc.setFontSize(20);
+  doc.setFont('helvetica', 'bold');
+  doc.text('SETTER', margin + 18, 16);
+  doc.text('TOOLBOX', margin + 48, 16);
+
+  doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
-  doc.text(config.title, margin, 28);
+  doc.text(config.title, margin + 18, 26);
 
   yPosition = 45;
 
@@ -172,9 +183,9 @@ function renderKPIGrid(doc: jsPDF, kpis: PDFKPIItem[], x: number, y: number, wid
     const boxX = x + col * colWidth;
     const boxY = y + row * (boxHeight + 4);
 
-    // Box background
-    doc.setFillColor(248, 248, 248);
-    doc.roundedRect(boxX, boxY, colWidth - 4, boxHeight, 2, 2, 'F');
+    // Box background - warm beige with rounded corners
+    doc.setFillColor(...COLORS.warmBg);
+    doc.roundedRect(boxX, boxY, colWidth - 4, boxHeight, 4, 4, 'F');
 
     // Label
     doc.setTextColor(...COLORS.gray);
@@ -320,6 +331,7 @@ export interface SimuladorPDFData {
   projectName: string;
   kpis: {
     entryCapRate: number;
+    monthlyCapRate: number; // NOVO - Cap Rate Mensal
     irr: number;
     npv: number;
     equityMultiple: number;
@@ -392,27 +404,18 @@ export async function generateSimuladorPDF(data: SimuladorPDFData): Promise<void
     assetName: data.projectName || 'Projeto sem nome',
     date: new Date().toLocaleDateString('pt-BR'),
     sections: [
-      // KPIs
+      // KPIs - Incluindo Cap Rate Anual e Mensal
       {
         title: 'Indicadores Principais',
         type: 'kpi-grid',
         data: [
-          { label: 'Cap Rate Entrada', value: formatPercentage(data.kpis.entryCapRate), highlight: true },
+          { label: 'Cap Rate Anual', value: formatPercentage(data.kpis.entryCapRate), highlight: true },
+          { label: 'Cap Rate Mensal', value: formatPercentage(data.kpis.monthlyCapRate), highlight: true },
           { label: 'TIR', value: formatPercentage(data.kpis.irr), highlight: true },
           { label: 'VPL', value: formatCompactCurrency(data.kpis.npv), highlight: data.kpis.npv > 0 },
           { label: 'Multiplicador', value: `${data.kpis.equityMultiple.toFixed(2)}x`, highlight: true },
+          { label: 'NOI Mensal', value: formatCurrency(data.kpis.noi / 12), highlight: true },
         ],
-      },
-      // Verdict
-      {
-        title: 'Veredicto',
-        type: 'verdict',
-        data: {
-          verdict: verdictLabels[data.verdict] || data.verdict,
-          description: data.kpis.irr >= 0.15 ? 'Investimento atrativo com retornos acima da meta' : 
-                       data.kpis.irr >= 0.10 ? 'Investimento aceitável com retornos moderados' : 
-                       'Investimento com retornos abaixo do esperado',
-        },
       },
       // CAPEX Breakdown
       {
@@ -449,58 +452,6 @@ export async function generateSimuladorPDF(data: SimuladorPDFData): Promise<void
           { label: `Taxa Administração (${formatPercentage(data.opexBreakdown.managementFee)})`, value: formatCurrency(data.opexBreakdown.managementAmount) },
           { label: 'TOTAL OPEX', value: formatCurrency(totalOpex), highlight: true },
           { label: 'NOI Anual (Receita - OPEX)', value: formatCurrency(data.kpis.noi), highlight: true },
-        ],
-      },
-      // Scenarios Table
-      {
-        title: 'Análise de Cenários',
-        type: 'table',
-        columns: ['Pessimista', 'Realista', 'Otimista'],
-        data: [
-          { 
-            label: 'Cap Rate', 
-            values: [
-              formatPercentage(data.scenarios.pessimistic.capRate), 
-              formatPercentage(data.scenarios.realistic.capRate), 
-              formatPercentage(data.scenarios.optimistic.capRate)
-            ] 
-          },
-          { 
-            label: 'NOI Mensal', 
-            values: [
-              formatCurrency(data.scenarios.pessimistic.noiMonthly), 
-              formatCurrency(data.scenarios.realistic.noiMonthly), 
-              formatCurrency(data.scenarios.optimistic.noiMonthly)
-            ] 
-          },
-          { 
-            label: 'Payback', 
-            values: [
-              `${data.scenarios.pessimistic.paybackYears.toFixed(1)} anos`, 
-              `${data.scenarios.realistic.paybackYears.toFixed(1)} anos`, 
-              `${data.scenarios.optimistic.paybackYears.toFixed(1)} anos`
-            ] 
-          },
-          { 
-            label: 'Vacância', 
-            values: [
-              formatPercentage(data.scenarios.pessimistic.vacancyPremise), 
-              formatPercentage(data.scenarios.realistic.vacancyPremise), 
-              formatPercentage(data.scenarios.optimistic.vacancyPremise)
-            ] 
-          },
-        ],
-      },
-      // Assumptions
-      {
-        title: 'Premissas do Modelo',
-        type: 'key-value',
-        data: [
-          { label: 'Índice de Reajuste', value: `${indexLabels[data.assumptions.adjustmentIndex] || data.assumptions.adjustmentIndex} (${formatPercentage(data.assumptions.rentGrowth)})` },
-          { label: 'Taxa de Vacância', value: formatPercentage(data.assumptions.vacancyRate) },
-          { label: 'Horizonte de Saída', value: `${data.assumptions.holdingPeriod} anos` },
-          { label: 'Cap Rate de Saída', value: formatPercentage(data.assumptions.exitCapRate) },
-          { label: 'Custo de Oportunidade', value: formatPercentage(data.assumptions.discountRate) },
         ],
       },
     ],
