@@ -1,287 +1,125 @@
 
+# Plano: Corrigir Carregamento de Projetos Salvos
 
-# Plano: PDF Completo para o Simulador de Viabilidade
+## Diagnóstico
 
-## Objetivo
+O problema identificado é que ao clicar em "Ver" no Dashboard, o sistema navega para a página da ferramenta sem passar o ID do projeto. Isso faz com que a página abra com valores padrão em vez de carregar os dados salvos.
 
-Criar um relatório PDF mais detalhado e completo ("ficha") para o Simulador de Viabilidade, incluindo:
-1. **Detalhamento de cada valor de investimento (CAPEX)**
-2. **Lista de todos os lojistas/inquilinos e seus valores**
-3. **Seção com 3 cenários: Pessimista, Realista e Otimista**
+**Dados no banco estão corretos** - verificamos que o projeto "Projeto Araçatuba" tem todos os inputs salvos corretamente (R$ 2.100.000, 3 lojas, etc.)
 
 ---
 
-## 1. Estrutura do Novo PDF
+## Solução
 
-O PDF passará de ~2 páginas para um relatório completo de 3-4 páginas com as seguintes seções:
+Implementar passagem de ID via URL e carregamento automático em todas as 4 calculadoras.
 
-```text
-PÁGINA 1:
-┌─────────────────────────────────────┐
-│  SETTER TOOLBOX                     │
-│  Simulador de Viabilidade           │
-│  Ativo: [Nome do Projeto]           │
-│  Data: 21/01/2026                   │
-├─────────────────────────────────────┤
-│  INDICADORES PRINCIPAIS (KPIs)      │
-│  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐│
-│  │Cap   │ │ TIR  │ │ VPL  │ │Multi ││
-│  │Rate  │ │      │ │      │ │plica.││
-│  └──────┘ └──────┘ └──────┘ └──────┘│
-├─────────────────────────────────────┤
-│  VEREDICTO                          │
-│  [Excelente/Bom/Regular/Ruim]       │
-└─────────────────────────────────────┘
+---
 
-PÁGINA 2:
-┌─────────────────────────────────────┐
-│  DETALHAMENTO DO INVESTIMENTO       │
-│  (Breakdown completo do CAPEX)      │
-│                                     │
-│  Preço de Aquisição    R$ 2.000.000 │
-│  Custos de Fechamento  R$    60.000 │
-│  Reforma / Retrofit    R$   100.000 │
-│  Obras Turnkey         R$        0  │
-│  ─────────────────────────────────  │
-│  INVESTIMENTO TOTAL    R$ 2.160.000 │
-├─────────────────────────────────────┤
-│  RECEITA - DETALHAMENTO POR LOJISTA │
-│                                     │
-│  Loja 1 (Cafeteria)     R$ 15.000   │
-│  Loja 2 (Farmácia)      R$ 12.000   │
-│  Loja 3 (Pet Shop)      R$  8.000   │
-│  ─────────────────────────────────  │
-│  TOTAL MENSAL           R$ 35.000   │
-│  TOTAL ANUAL           R$ 420.000   │
-├─────────────────────────────────────┤
-│  DESPESAS OPERACIONAIS (OPEX)       │
-│                                     │
-│  IPTU (Anual)           R$ 12.000   │
-│  Condomínio (Anual)     R$  6.000   │
-│  Taxa Administração (8%)R$  3.360   │
-│  ─────────────────────────────────  │
-│  TOTAL OPEX             R$ 21.360   │
-└─────────────────────────────────────┘
+## 1. Modificar Dashboard.tsx
 
-PÁGINA 3:
-┌─────────────────────────────────────┐
-│  ANÁLISE DE CENÁRIOS                │
-│                                     │
-│ ┌─────────┬─────────┬─────────┬─────────┐
-│ │ Métrica │ Pessim. │ Realista│ Otimista│
-│ ├─────────┼─────────┼─────────┼─────────┤
-│ │Cap Rate │  5.2%   │  7.8%   │  8.5%   │
-│ │NOI Mês  │R$ 8.500 │R$12.500 │R$14.000 │
-│ │Payback  │19.2 anos│13.0 anos│11.9 anos│
-│ │Vacância │  20%    │   5%    │   0%    │
-│ └─────────┴─────────┴─────────┴─────────┘
-├─────────────────────────────────────┤
-│  PREMISSAS DO MODELO                │
-│                                     │
-│  Índice de Reajuste     IGPM (4%)   │
-│  Horizonte de Saída     10 anos     │
-│  Cap Rate de Saída      7%          │
-│  Custo de Oportunidade  12%         │
-└─────────────────────────────────────┘
+Alterar o botão "Ver" para passar o ID do projeto como query parameter:
+
+```typescript
+// Antes (linha 251)
+<Link to={config.path} className="flex-1">
+
+// Depois
+<Link to={`${config.path}?id=${project.id}`} className="flex-1">
 ```
 
 ---
 
-## 2. Alterações Necessárias
+## 2. Modificar Simulador.tsx
 
-### 2.1 Atualizar Interface `SimuladorPDFData`
-
-Adicionar campos para os dados detalhados:
+Adicionar lógica para detectar e carregar projeto da URL:
 
 ```typescript
-export interface SimuladorPDFData {
-  projectName: string;
-  kpis: {
-    entryCapRate: number;
-    irr: number;
-    npv: number;
-    equityMultiple: number;
-    totalInvestment: number;
-    noi: number;
-  };
-  verdict: string;
-  
-  // NOVOS CAMPOS
-  capexBreakdown: {
-    purchasePrice: number;
-    closingCostsAmount: number;  // Valor em R$
-    closingCostsPercent: number; // Percentual
-    renovationCost: number;
-    turnkeyCost: number;
-  };
-  
-  rentalUnits: Array<{
-    name: string;
-    monthlyRent: number;
-  }>;
-  
-  opexBreakdown: {
-    propertyTax: number;
-    condoFee: number;
-    managementFee: number;
-    managementAmount: number; // Valor em R$
-  };
-  
-  scenarios: {
-    pessimistic: ScenarioData;
-    realistic: ScenarioData;
-    optimistic: ScenarioData;
-  };
-  
-  assumptions: {
-    adjustmentIndex: string;
-    rentGrowth: number;
-    holdingPeriod: number;
-    exitCapRate: number;
-    discountRate: number;
-    vacancyRate: number;
-  };
-}
-```
+import { useSearchParams } from 'react-router-dom';
+import { useProject } from '@/hooks/useProjects';
 
-### 2.2 Atualizar `generateSimuladorPDF`
+// Dentro do componente:
+const [searchParams] = useSearchParams();
+const projectIdFromUrl = searchParams.get('id');
+const { data: projectFromUrl, isLoading: loadingProject } = useProject(projectIdFromUrl || '');
 
-Criar seções adicionais para o PDF:
-
-**Novas Seções:**
-1. **Detalhamento do Investimento (CAPEX)** - tipo `key-value`
-2. **Receita por Lojista** - tipo `key-value` com subtotal
-3. **Despesas Operacionais (OPEX)** - tipo `key-value`
-4. **Análise de Cenários** - tipo `table` (3 colunas)
-5. **Premissas do Modelo** - tipo `key-value`
-
-### 2.3 Atualizar Chamada em `Simulador.tsx`
-
-Passar todos os dados necessários para a função de exportação:
-
-```typescript
-const handleExportPDF = async () => {
-  setIsExportingPDF(true);
-  try {
-    const closingCostsAmount = purchasePrice * closingCosts;
-    const managementAmount = totalMonthlyRent * 12 * managementFee;
-    
-    await generateSimuladorPDF({
-      projectName: projectName || 'Projeto sem nome',
-      kpis: { ... },
-      verdict: calculations.verdict,
-      
-      // Novos dados
-      capexBreakdown: {
-        purchasePrice,
-        closingCostsAmount,
-        closingCostsPercent: closingCosts,
-        renovationCost,
-        turnkeyCost: hasTurnkey ? turnkeyCost : 0,
-      },
-      
-      rentalUnits: rentalUnits, // Array já existente
-      
-      opexBreakdown: {
-        propertyTax,
-        condoFee,
-        managementFee,
-        managementAmount,
-      },
-      
-      scenarios: scenarios, // Objeto já calculado
-      
-      assumptions: {
-        adjustmentIndex,
-        rentGrowth: effectiveRentGrowth,
-        holdingPeriod,
-        exitCapRate,
-        discountRate,
-        vacancyRate,
-      },
-    });
-    
-    toast({ title: 'PDF gerado com sucesso!' });
-  } catch (error) {
-    toast({ title: 'Erro ao gerar PDF', variant: 'destructive' });
-  } finally {
-    setIsExportingPDF(false);
+// useEffect para carregar quando dados chegarem
+useEffect(() => {
+  if (projectFromUrl && !loadingProject) {
+    handleLoadProject(projectFromUrl);
   }
-};
+}, [projectFromUrl, loadingProject]);
 ```
 
 ---
 
-## 3. Arquivos a Modificar
+## 3. Modificar Permuta.tsx
+
+Mesma lógica do Simulador:
+
+```typescript
+import { useSearchParams } from 'react-router-dom';
+import { useProject } from '@/hooks/useProjects';
+
+const [searchParams] = useSearchParams();
+const projectIdFromUrl = searchParams.get('id');
+const { data: projectFromUrl } = useProject(projectIdFromUrl || '');
+
+useEffect(() => {
+  if (projectFromUrl) {
+    handleLoadProject(projectFromUrl);
+  }
+}, [projectFromUrl]);
+```
+
+---
+
+## 4. Modificar Decisor.tsx
+
+Adicionar:
+1. Função `handleLoadProject` (se não existir)
+2. Lógica de carregamento via URL
+3. Dialog "Abrir Projeto" (se não existir)
+
+---
+
+## 5. Modificar HighestBestUse.tsx
+
+Mesma implementação:
+1. Adicionar hook `useSearchParams`
+2. Usar `useProject` para buscar por ID
+3. Criar `handleLoadProject` para popular os campos
+4. useEffect para carregar automaticamente
+
+---
+
+## Arquivos a Modificar
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `src/lib/pdfExport.ts` | Atualizar `SimuladorPDFData` e `generateSimuladorPDF` com novas seções |
-| `src/pages/Simulador.tsx` | Passar dados adicionais na chamada `handleExportPDF` |
+| `src/pages/Dashboard.tsx` | Passar `?id={project.id}` na URL do botão "Ver" |
+| `src/pages/Simulador.tsx` | Ler ID da URL e carregar projeto automaticamente |
+| `src/pages/Permuta.tsx` | Ler ID da URL e carregar projeto automaticamente |
+| `src/pages/Decisor.tsx` | Adicionar suporte completo a projetos salvos |
+| `src/pages/HighestBestUse.tsx` | Adicionar suporte completo a projetos salvos |
 
 ---
 
-## 4. Detalhes de Implementação
+## Fluxo Corrigido
 
-### Seção: Detalhamento do Investimento
-```typescript
-{
-  title: 'Detalhamento do Investimento (CAPEX)',
-  type: 'key-value',
-  data: [
-    { label: 'Preço de Aquisição', value: formatCurrency(capexBreakdown.purchasePrice) },
-    { label: `Custos de Fechamento (${formatPercentage(capexBreakdown.closingCostsPercent)})`, value: formatCurrency(capexBreakdown.closingCostsAmount) },
-    { label: 'Reforma / Retrofit', value: formatCurrency(capexBreakdown.renovationCost) },
-    { label: 'Obras Turnkey', value: formatCurrency(capexBreakdown.turnkeyCost) },
-    { label: 'INVESTIMENTO TOTAL', value: formatCurrency(kpis.totalInvestment), highlight: true },
-  ],
-}
-```
-
-### Seção: Lojistas
-```typescript
-{
-  title: 'Receita - Detalhamento por Lojista',
-  type: 'key-value',
-  data: [
-    ...rentalUnits.map(unit => ({
-      label: unit.name,
-      value: formatCurrency(unit.monthlyRent) + '/mês',
-    })),
-    { label: 'TOTAL MENSAL', value: formatCurrency(totalMonthly), highlight: true },
-    { label: 'TOTAL ANUAL', value: formatCurrency(totalMonthly * 12), highlight: true },
-  ],
-}
-```
-
-### Seção: Cenários
-```typescript
-{
-  title: 'Análise de Cenários',
-  type: 'table',
-  columns: ['Pessimista', 'Realista', 'Otimista'],
-  data: [
-    { label: 'Cap Rate', values: [formatPercentage(pessimistic.capRate), formatPercentage(realistic.capRate), formatPercentage(optimistic.capRate)] },
-    { label: 'NOI Mensal', values: [formatCurrency(pessimistic.noiMonthly), formatCurrency(realistic.noiMonthly), formatCurrency(optimistic.noiMonthly)] },
-    { label: 'Payback', values: [`${pessimistic.paybackYears.toFixed(1)} anos`, `${realistic.paybackYears.toFixed(1)} anos`, `${optimistic.paybackYears.toFixed(1)} anos`] },
-    { label: 'Vacância', values: [formatPercentage(pessimistic.vacancyPremise), formatPercentage(realistic.vacancyPremise), formatPercentage(optimistic.vacancyPremise)] },
-  ],
-}
-```
+1. Usuário salva projeto no Simulador com valores específicos
+2. No Dashboard, clica em "Ver" no projeto salvo
+3. Sistema navega para `/simulador?id=abc123`
+4. Simulador detecta `id=abc123` na URL
+5. Hook `useProject('abc123')` busca dados do Supabase
+6. `useEffect` detecta que dados chegaram
+7. `handleLoadProject` popula todos os campos
+8. Usuário vê exatamente os valores que salvou
 
 ---
 
-## 5. Resultado Esperado
+## Resultado Esperado
 
-Após a implementação, o PDF do Simulador será um relatório executivo completo contendo:
-
-- **4-6 KPIs principais** em destaque
-- **Veredicto visual** com cor e descrição
-- **Breakdown completo do CAPEX** com cada linha de investimento
-- **Lista de todos os lojistas** com nome e valor individual
-- **OPEX detalhado** com cada componente de despesa
-- **Tabela de 3 cenários** (Pessimista, Realista, Otimista)
-- **Premissas utilizadas** para transparência
-
-Este formato profissional permite apresentar a análise completa a investidores e parceiros de negócio.
-
+Após a implementação, clicar em "Ver" em qualquer projeto salvo no Dashboard irá:
+- Navegar para a ferramenta correta
+- Carregar automaticamente todos os valores salvos
+- Mostrar os números exatos que foram salvos pelo usuário
