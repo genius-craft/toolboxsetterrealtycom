@@ -295,10 +295,14 @@ export default function Simulador() {
       const effectiveRent = annualRent * (1 - vacancyRate);
       const managementAmount = effectiveRent * managementFee; // Taxa sobre valor recebido
       
+      // Calcular Cap Rate Mensal = (NOI / 12) / Investimento Total
+      const monthlyCapRate = (calculations.noi / 12) / calculations.totalInvestment;
+      
       await generateSimuladorPDF({
         projectName: projectName || 'Projeto sem nome',
         kpis: {
           entryCapRate: calculations.entryCapRate,
+          monthlyCapRate, // NOVO - Cap Rate Mensal
           irr: calculations.irr,
           npv: calculations.npv,
           equityMultiple: calculations.equityMultiple,
