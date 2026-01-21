@@ -273,6 +273,10 @@ export default function Simulador() {
   const handleExportPDF = async () => {
     setIsExportingPDF(true);
     try {
+      const closingCostsAmount = purchasePrice * closingCosts;
+      const annualRent = totalMonthlyRent * 12;
+      const managementAmount = annualRent * managementFee;
+      
       await generateSimuladorPDF({
         projectName: projectName || 'Projeto sem nome',
         kpis: {
@@ -284,10 +288,28 @@ export default function Simulador() {
           noi: calculations.noi,
         },
         verdict: calculations.verdict,
-        inputs: {
+        capexBreakdown: {
           purchasePrice,
+          closingCostsAmount,
+          closingCostsPercent: closingCosts,
+          renovationCost,
+          turnkeyCost: hasTurnkey ? turnkeyCost : 0,
+        },
+        rentalUnits,
+        opexBreakdown: {
+          propertyTax,
+          condoFee,
+          managementFee,
+          managementAmount,
+        },
+        scenarios,
+        assumptions: {
+          adjustmentIndex,
+          rentGrowth: effectiveRentGrowth,
           holdingPeriod,
+          exitCapRate,
           discountRate,
+          vacancyRate,
         },
       });
       toast({ title: 'PDF gerado com sucesso!', description: 'O download foi iniciado.' });

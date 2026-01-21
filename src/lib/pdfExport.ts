@@ -309,6 +309,13 @@ function renderKeyValue(doc: jsPDF, items: PDFKPIItem[], x: number, y: number, w
 /**
  * Generate PDF for Simulador de Viabilidade
  */
+export interface ScenarioData {
+  capRate: number;
+  noiMonthly: number;
+  paybackYears: number;
+  vacancyPremise: number;
+}
+
 export interface SimuladorPDFData {
   projectName: string;
   kpis: {
@@ -320,10 +327,45 @@ export interface SimuladorPDFData {
     noi: number;
   };
   verdict: string;
-  inputs: {
+  
+  // CAPEX Breakdown
+  capexBreakdown: {
     purchasePrice: number;
+    closingCostsAmount: number;
+    closingCostsPercent: number;
+    renovationCost: number;
+    turnkeyCost: number;
+  };
+  
+  // Rental Units
+  rentalUnits: Array<{
+    name: string;
+    monthlyRent: number;
+  }>;
+  
+  // OPEX Breakdown
+  opexBreakdown: {
+    propertyTax: number;
+    condoFee: number;
+    managementFee: number;
+    managementAmount: number;
+  };
+  
+  // Scenarios
+  scenarios: {
+    pessimistic: ScenarioData;
+    realistic: ScenarioData;
+    optimistic: ScenarioData;
+  };
+  
+  // Assumptions
+  assumptions: {
+    adjustmentIndex: string;
+    rentGrowth: number;
     holdingPeriod: number;
+    exitCapRate: number;
     discountRate: number;
+    vacancyRate: number;
   };
 }
 
@@ -335,11 +377,22 @@ export async function generateSimuladorPDF(data: SimuladorPDFData): Promise<void
     poor: 'Ruim',
   };
 
+  const indexLabels: Record<string, string> = {
+    igpm: 'IGPM',
+    ipca: 'IPCA',
+    custom: 'Personalizado',
+  };
+
+  const totalMonthlyRent = data.rentalUnits.reduce((sum, unit) => sum + unit.monthlyRent, 0);
+  const totalAnnualRent = totalMonthlyRent * 12;
+  const totalOpex = data.opexBreakdown.propertyTax + data.opexBreakdown.condoFee + data.opexBreakdown.managementAmount;
+
   await generatePDF({
     title: 'Simulador de Viabilidade',
     assetName: data.projectName || 'Projeto sem nome',
     date: new Date().toLocaleDateString('pt-BR'),
     sections: [
+      // KPIs
       {
         title: 'Indicadores Principais',
         type: 'kpi-grid',
@@ -350,18 +403,7 @@ export async function generateSimuladorPDF(data: SimuladorPDFData): Promise<void
           { label: 'Multiplicador', value: `${data.kpis.equityMultiple.toFixed(2)}x`, highlight: true },
         ],
       },
-      {
-        title: 'Resumo do Investimento',
-        type: 'key-value',
-        data: [
-          { label: 'Investimento Total', value: formatCurrency(data.kpis.totalInvestment) },
-          { label: 'NOI Ano 1', value: formatCurrency(data.kpis.noi) },
-          { label: 'Yield Anual', value: formatPercentage(data.kpis.noi / data.kpis.totalInvestment), highlight: true },
-          { label: 'Preço de Aquisição', value: formatCurrency(data.inputs.purchasePrice) },
-          { label: 'Horizonte', value: `${data.inputs.holdingPeriod} anos` },
-          { label: 'Taxa de Desconto', value: formatPercentage(data.inputs.discountRate) },
-        ],
-      },
+      // Verdict
       {
         title: 'Veredicto',
         type: 'verdict',
@@ -371,6 +413,95 @@ export async function generateSimuladorPDF(data: SimuladorPDFData): Promise<void
                        data.kpis.irr >= 0.10 ? 'Investimento aceitável com retornos moderados' : 
                        'Investimento com retornos abaixo do esperado',
         },
+      },
+      // CAPEX Breakdown
+      {
+        title: 'Detalhamento do Investimento (CAPEX)',
+        type: 'key-value',
+        data: [
+          { label: 'Preço de Aquisição', value: formatCurrency(data.capexBreakdown.purchasePrice) },
+          { label: `Custos de Fechamento (${formatPercentage(data.capexBreakdown.closingCostsPercent)})`, value: formatCurrency(data.capexBreakdown.closingCostsAmount) },
+          { label: 'Reforma / Retrofit', value: formatCurrency(data.capexBreakdown.renovationCost) },
+          { label: 'Obras Turnkey', value: formatCurrency(data.capexBreakdown.turnkeyCost) },
+          { label: 'INVESTIMENTO TOTAL', value: formatCurrency(data.kpis.totalInvestment), highlight: true },
+        ],
+      },
+      // Rental Units
+      {
+        title: 'Receita - Detalhamento por Lojista',
+        type: 'key-value',
+        data: [
+          ...data.rentalUnits.map(unit => ({
+            label: unit.name,
+            value: `${formatCurrency(unit.monthlyRent)}/mês`,
+          })),
+          { label: 'TOTAL MENSAL', value: formatCurrency(totalMonthlyRent), highlight: true },
+          { label: 'TOTAL ANUAL', value: formatCurrency(totalAnnualRent), highlight: true },
+        ],
+      },
+      // OPEX Breakdown
+      {
+        title: 'Despesas Operacionais (OPEX)',
+        type: 'key-value',
+        data: [
+          { label: 'IPTU (Anual)', value: formatCurrency(data.opexBreakdown.propertyTax) },
+          { label: 'Condomínio (Anual)', value: formatCurrency(data.opexBreakdown.condoFee) },
+          { label: `Taxa Administração (${formatPercentage(data.opexBreakdown.managementFee)})`, value: formatCurrency(data.opexBreakdown.managementAmount) },
+          { label: 'TOTAL OPEX', value: formatCurrency(totalOpex), highlight: true },
+          { label: 'NOI Anual (Receita - OPEX)', value: formatCurrency(data.kpis.noi), highlight: true },
+        ],
+      },
+      // Scenarios Table
+      {
+        title: 'Análise de Cenários',
+        type: 'table',
+        columns: ['Pessimista', 'Realista', 'Otimista'],
+        data: [
+          { 
+            label: 'Cap Rate', 
+            values: [
+              formatPercentage(data.scenarios.pessimistic.capRate), 
+              formatPercentage(data.scenarios.realistic.capRate), 
+              formatPercentage(data.scenarios.optimistic.capRate)
+            ] 
+          },
+          { 
+            label: 'NOI Mensal', 
+            values: [
+              formatCurrency(data.scenarios.pessimistic.noiMonthly), 
+              formatCurrency(data.scenarios.realistic.noiMonthly), 
+              formatCurrency(data.scenarios.optimistic.noiMonthly)
+            ] 
+          },
+          { 
+            label: 'Payback', 
+            values: [
+              `${data.scenarios.pessimistic.paybackYears.toFixed(1)} anos`, 
+              `${data.scenarios.realistic.paybackYears.toFixed(1)} anos`, 
+              `${data.scenarios.optimistic.paybackYears.toFixed(1)} anos`
+            ] 
+          },
+          { 
+            label: 'Vacância', 
+            values: [
+              formatPercentage(data.scenarios.pessimistic.vacancyPremise), 
+              formatPercentage(data.scenarios.realistic.vacancyPremise), 
+              formatPercentage(data.scenarios.optimistic.vacancyPremise)
+            ] 
+          },
+        ],
+      },
+      // Assumptions
+      {
+        title: 'Premissas do Modelo',
+        type: 'key-value',
+        data: [
+          { label: 'Índice de Reajuste', value: `${indexLabels[data.assumptions.adjustmentIndex] || data.assumptions.adjustmentIndex} (${formatPercentage(data.assumptions.rentGrowth)})` },
+          { label: 'Taxa de Vacância', value: formatPercentage(data.assumptions.vacancyRate) },
+          { label: 'Horizonte de Saída', value: `${data.assumptions.holdingPeriod} anos` },
+          { label: 'Cap Rate de Saída', value: formatPercentage(data.assumptions.exitCapRate) },
+          { label: 'Custo de Oportunidade', value: formatPercentage(data.assumptions.discountRate) },
+        ],
       },
     ],
   });
