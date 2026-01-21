@@ -356,9 +356,9 @@ export function calculateScenarioMetrics(
   const vacancyRate = vacancyOverride !== undefined ? vacancyOverride : inputs.vacancyRate;
   const totalInvestment = inputs.purchasePrice * (1 + inputs.closingCosts) + inputs.renovationCost;
   const annualRent = inputs.monthlyRent * 12;
-  const annualManagement = annualRent * inputs.managementFee;
-  const operatingExpenses = inputs.propertyTax + inputs.condoFee + annualManagement;
   const effectiveGrossIncome = annualRent * (1 - vacancyRate);
+  const annualManagement = effectiveGrossIncome * inputs.managementFee; // Taxa sobre valor recebido
+  const operatingExpenses = inputs.propertyTax + inputs.condoFee + annualManagement;
   const noi = effectiveGrossIncome - operatingExpenses;
   const capRate = calculateCapRate(noi, inputs.purchasePrice);
   const noiMonthly = noi / 12;
