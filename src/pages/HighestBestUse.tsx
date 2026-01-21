@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ToolLayout } from '@/components/tools/ToolLayout';
 import { CollapsibleInputCard } from '@/components/tools/CollapsibleInputCard';
 import { CurrencyInput } from '@/components/tools/CurrencyInput';
@@ -13,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSaveProject } from '@/hooks/useProjects';
+import { useSaveProject, useProject } from '@/hooks/useProjects';
 import { calculateHBUv3, HBUv3Params } from '@/lib/calculations';
 import { formatArea, formatPercentage } from '@/lib/formatters';
 import { generateHBUPDF } from '@/lib/pdfExport';
@@ -35,6 +36,12 @@ export default function HighestBestUse() {
   const { user } = useAuth();
   const saveProject = useSaveProject();
   const [isExportingPDF, setIsExportingPDF] = useState(false);
+
+  // URL params for loading project
+  const [searchParams] = useSearchParams();
+  const projectIdFromUrl = searchParams.get('id');
+  const { data: projectFromUrl, isLoading: loadingProjectFromUrl } = useProject(projectIdFromUrl || '');
+  const [hasLoadedFromUrl, setHasLoadedFromUrl] = useState(false);
 
   // Terreno
   const [landArea, setLandArea] = useState(1000);
@@ -86,6 +93,42 @@ export default function HighestBestUse() {
   ]);
 
   const winnerResult = results[results.winner];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleLoadProject = useCallback((project: any, showToast = true) => {
+    const inputs = project.inputs || {};
+    const terreno = inputs.terreno || {};
+    const residencial = inputs.residencial || {};
+    const comercial = inputs.comercial || {};
+    const gerais = inputs.gerais || {};
+    
+    setLandArea(terreno.landArea ?? 1000);
+    setFar(terreno.far ?? 2);
+    setOccupancyRate(terreno.occupancyRate ?? 0.5);
+    setLocation(terreno.location || 'central');
+    setZoning(terreno.zoning || 'zm');
+    setResidencialPricePerSqm(residencial.pricePerSqm ?? 12000);
+    setResidencialCostPerSqm(residencial.costPerSqm ?? 3500);
+    setResidencialAbsorptionMonths(residencial.absorptionMonths ?? 24);
+    setComercialPricePerSqm(comercial.pricePerSqm ?? 15000);
+    setComercialCostPerSqm(comercial.costPerSqm ?? 4000);
+    setComercialAbsorptionMonths(comercial.absorptionMonths ?? 36);
+    setDiscountRate(gerais.discountRate ?? 0.15);
+    setConstructionMonths(gerais.constructionMonths ?? 24);
+    setLandCostPremissa(gerais.landCostPremissa ?? 0.15);
+    
+    if (showToast) {
+      toast.success(`Projeto "${project.name}" carregado!`);
+    }
+  }, []);
+
+  // Auto-load project from URL
+  useEffect(() => {
+    if (projectFromUrl && !loadingProjectFromUrl && !hasLoadedFromUrl) {
+      handleLoadProject(projectFromUrl, false);
+      setHasLoadedFromUrl(true);
+    }
+  }, [projectFromUrl, loadingProjectFromUrl, hasLoadedFromUrl, handleLoadProject]);
 
   const handleReset = () => {
     setLandArea(1000);

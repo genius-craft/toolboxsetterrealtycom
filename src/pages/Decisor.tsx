@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ToolLayout } from '@/components/tools/ToolLayout';
 import { CollapsibleInputCard } from '@/components/tools/CollapsibleInputCard';
 import { CurrencyInput } from '@/components/tools/CurrencyInput';
@@ -10,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSaveProject } from '@/hooks/useProjects';
+import { useSaveProject, useProject } from '@/hooks/useProjects';
 import { calculateGoNoGo } from '@/lib/calculations';
 import { formatCurrency, formatCompactCurrency, formatPercentage } from '@/lib/formatters';
 import { generateDecisorPDF } from '@/lib/pdfExport';
@@ -77,6 +78,12 @@ export default function Decisor() {
   const saveProject = useSaveProject();
   const [isExportingPDF, setIsExportingPDF] = useState(false);
 
+  // URL params for loading project
+  const [searchParams] = useSearchParams();
+  const projectIdFromUrl = searchParams.get('id');
+  const { data: projectFromUrl, isLoading: loadingProjectFromUrl } = useProject(projectIdFromUrl || '');
+  const [hasLoadedFromUrl, setHasLoadedFromUrl] = useState(false);
+
   // Project name
   const [assetName, setAssetName] = useState('');
 
@@ -115,6 +122,30 @@ export default function Decisor() {
     futureLiquidity,
     assetCondition,
   ]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleLoadProject = useCallback((project: any, showToast = true) => {
+    const inputs = project.inputs || {};
+    setAssetName(inputs.assetName || project.name || '');
+    setAskingPrice(inputs.askingPrice ?? 5000000);
+    setMonthlyRent(inputs.monthlyRent ?? 33333);
+    setTargetMonthlyCapRate(inputs.targetMonthlyCapRate ?? 0.0067);
+    setLocationQuality(inputs.locationQuality ?? 4);
+    setTenantRisk(inputs.tenantRisk ?? 3);
+    setFutureLiquidity(inputs.futureLiquidity ?? 3);
+    setAssetCondition(inputs.assetCondition ?? 4);
+    if (showToast) {
+      toast.success(`Projeto "${project.name}" carregado!`);
+    }
+  }, []);
+
+  // Auto-load project from URL
+  useEffect(() => {
+    if (projectFromUrl && !loadingProjectFromUrl && !hasLoadedFromUrl) {
+      handleLoadProject(projectFromUrl, false);
+      setHasLoadedFromUrl(true);
+    }
+  }, [projectFromUrl, loadingProjectFromUrl, hasLoadedFromUrl, handleLoadProject]);
 
   const handleSave = () => {
     const projectName = assetName.trim() || `Decisor ${new Date().toLocaleDateString('pt-BR')}`;

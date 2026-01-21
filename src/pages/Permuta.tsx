@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { ToolLayout } from "@/components/tools/ToolLayout";
 import { CurrencyInput } from "@/components/tools/CurrencyInput";
 import { PermutaTimelineSliders } from "@/components/tools/PermutaTimelineSliders";
@@ -17,7 +18,7 @@ import { Banknote, Building2, RefreshCcw, Save, FileDown, AlertTriangle, FolderO
 import { formatCurrency } from "@/lib/formatters";
 import { generatePermutaPDF } from "@/lib/pdfExport";
 import { useAuth } from "@/contexts/AuthContext";
-import { useSaveProject, useProjects, ProjectType } from "@/hooks/useProjects";
+import { useSaveProject, useProjects, useProject, ProjectType } from "@/hooks/useProjects";
 import { toast } from "sonner";
 
 export default function Permuta() {
@@ -25,6 +26,12 @@ export default function Permuta() {
   const saveProject = useSaveProject();
   const { data: savedProjects, isLoading: loadingProjects } = useProjects('permuta' as ProjectType);
   const isLocked = !user;
+
+  // URL params for loading project
+  const [searchParams] = useSearchParams();
+  const projectIdFromUrl = searchParams.get('id');
+  const { data: projectFromUrl, isLoading: loadingProjectFromUrl } = useProject(projectIdFromUrl || '');
+  const [hasLoadedFromUrl, setHasLoadedFromUrl] = useState(false);
 
   // === Estado: Dialog ===
   const [openDialogOpen, setOpenDialogOpen] = useState(false);
@@ -99,7 +106,7 @@ export default function Permuta() {
     } catch { toast.error("Erro ao salvar"); }
   };
 
-  const handleLoadProject = (project: any) => {
+  const handleLoadProject = useCallback((project: any, showToast = true) => {
     const inputs = project.inputs || {};
     setAssetName(inputs.assetName || project.name || '');
     setVendaOferta(inputs.vendaOferta ?? 8000000);
@@ -112,8 +119,18 @@ export default function Permuta() {
     setPrecoUnidade(inputs.precoUnidade ?? 500000);
     setCustoMensalUnidade(inputs.custoMensalUnidade ?? 1500);
     setOpenDialogOpen(false);
-    toast.success(`Projeto "${project.name}" carregado!`);
-  };
+    if (showToast) {
+      toast.success(`Projeto "${project.name}" carregado!`);
+    }
+  }, []);
+
+  // Auto-load project from URL
+  useEffect(() => {
+    if (projectFromUrl && !loadingProjectFromUrl && !hasLoadedFromUrl) {
+      handleLoadProject(projectFromUrl, false);
+      setHasLoadedFromUrl(true);
+    }
+  }, [projectFromUrl, loadingProjectFromUrl, hasLoadedFromUrl, handleLoadProject]);
 
   const handleExportPDF = async () => {
     setIsExportingPDF(true);
