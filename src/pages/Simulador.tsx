@@ -146,9 +146,9 @@ export default function Simulador() {
     const turnkeyAmount = hasTurnkey ? turnkeyCost : 0;
     const totalInvestment = purchasePrice * (1 + closingCosts) + renovationCost + turnkeyAmount;
     const annualRent = totalMonthlyRent * 12;
-    const annualManagement = annualRent * managementFee;
-    const operatingExpenses = propertyTax + condoFee + annualManagement;
     const effectiveGrossIncome = annualRent * (1 - vacancyRate);
+    const annualManagement = effectiveGrossIncome * managementFee; // Taxa sobre valor recebido
+    const operatingExpenses = propertyTax + condoFee + annualManagement;
     const noi = effectiveGrossIncome - operatingExpenses;
     const entryCapRate = calculateCapRate(noi, purchasePrice);
 
@@ -292,7 +292,8 @@ export default function Simulador() {
     try {
       const closingCostsAmount = purchasePrice * closingCosts;
       const annualRent = totalMonthlyRent * 12;
-      const managementAmount = annualRent * managementFee;
+      const effectiveRent = annualRent * (1 - vacancyRate);
+      const managementAmount = effectiveRent * managementFee; // Taxa sobre valor recebido
       
       await generateSimuladorPDF({
         projectName: projectName || 'Projeto sem nome',
