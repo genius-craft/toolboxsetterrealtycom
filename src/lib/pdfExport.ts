@@ -173,6 +173,33 @@ export async function generatePDF(config: PDFConfig): Promise<void> {
 }
 
 function renderKPIGrid(doc: jsPDF, kpis: PDFKPIItem[], x: number, y: number, width: number): number {
+  // Se for apenas 1 KPI, renderizar de forma centralizada e destacada
+  if (kpis.length === 1) {
+    const singleKpi = kpis[0];
+    const boxWidth = width * 0.6;  // 60% da largura
+    const boxHeight = 35;          // Altura maior
+    const boxX = x + (width - boxWidth) / 2;  // Centralizado
+
+    // Background box
+    doc.setFillColor(...COLORS.warmBg);
+    doc.roundedRect(boxX, y, boxWidth, boxHeight, 4, 4, 'F');
+
+    // Label centralizado
+    doc.setTextColor(...COLORS.gray);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(singleKpi.label, boxX + boxWidth / 2, y + 12, { align: 'center' });
+
+    // Valor grande centralizado
+    doc.setTextColor(...COLORS.primary);
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text(singleKpi.value, boxX + boxWidth / 2, y + 28, { align: 'center' });
+
+    return y + boxHeight + 4;
+  }
+
+  // Múltiplos KPIs - grid normal
   const cols = Math.min(kpis.length, 4);
   const colWidth = width / cols;
   const boxHeight = 22;
@@ -404,17 +431,12 @@ export async function generateSimuladorPDF(data: SimuladorPDFData): Promise<void
     assetName: data.projectName || 'Projeto sem nome',
     date: new Date().toLocaleDateString('pt-BR'),
     sections: [
-      // KPIs - Incluindo Cap Rate Anual e Mensal
+      // Único KPI - Cap Rate Mensal (Estimado) centralizado
       {
-        title: 'Indicadores Principais',
+        title: 'Rentabilidade Estimada',
         type: 'kpi-grid',
         data: [
-          { label: 'Cap Rate Anual', value: formatPercentage(data.kpis.entryCapRate), highlight: true },
-          { label: 'Cap Rate Mensal', value: formatPercentage(data.kpis.monthlyCapRate), highlight: true },
-          { label: 'TIR', value: formatPercentage(data.kpis.irr), highlight: true },
-          { label: 'VPL', value: formatCompactCurrency(data.kpis.npv), highlight: data.kpis.npv > 0 },
-          { label: 'Multiplicador', value: `${data.kpis.equityMultiple.toFixed(2)}x`, highlight: true },
-          { label: 'NOI Mensal', value: formatCurrency(data.kpis.noi / 12), highlight: true },
+          { label: 'Cap Rate Mensal (Estimado)', value: formatPercentage(data.kpis.monthlyCapRate), highlight: true },
         ],
       },
       // CAPEX Breakdown
