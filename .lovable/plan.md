@@ -1,164 +1,144 @@
 
+# Plano: Correção do Cap Rate Mensal e Persistência de Projetos
 
-# Plano: Simplificar Indicadores do PDF para Apenas Cap Rate Mensal
+## Problema 1: Cálculo do Cap Rate Mensal
 
-## Objetivo
+### Fórmula Correta
+```
+Cap Rate Mensal = NOI Mensal / Investimento Total
+```
 
-Substituir a grid de 6 indicadores por um único box destacado mostrando apenas o **Cap Rate Mensal (Estimado)**.
+Onde:
+- **NOI Mensal** = (Aluguel Mensal Total × (1 - Vacância)) - OPEX Mensal
+- **OPEX Mensal** = (IPTU + Condomínio) / 12 + (Aluguel Efetivo Mensal × Taxa Administração)
+- **Investimento Total** = Aquisição + (Aquisição × % Custos Fechamento) + Reforma + Turn Key
+
+### Verificação com Dados da Imagem
+| Item | Valor |
+|------|-------|
+| Aluguel Mensal | R$ 73.000 |
+| IPTU (mensal) | R$ 0 |
+| Condomínio (mensal) | R$ 0 |
+| Taxa Adm (6% de 73k) | R$ 4.380/mês |
+| NOI Mensal | R$ 68.620 |
+| Investimento Total | R$ 7.284.000 |
+| Cap Rate Mensal | 68.620 / 7.284.000 = **0,94%** |
+
+### O Cálculo Atual Está Correto
+O código atual calcula:
+```typescript
+const monthlyCapRate = (calculations.noi / 12) / calculations.totalInvestment;
+```
+
+O `calculations.noi` já é o NOI Anual (Receita Efetiva - OPEX), então dividir por 12 dá o NOI Mensal.
+
+Porém, preciso verificar se a **Taxa Administrativa** está sendo calculada corretamente (sobre o valor recebido, não sobre o valor bruto).
 
 ---
 
-## Mudança Visual
+## Problema 2: Persistência - Editar Projeto Existente
 
-### Layout Atual (a ser removido)
-```text
-┌────────────────────────────────────────────────────────────────┐
-│  INDICADORES PRINCIPAIS                                        │
-├────────────────────────────────────────────────────────────────┤
-│ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐               │
-│ │Cap Rate │ │Cap Rate │ │  TIR    │ │  VPL    │               │
-│ │Anual    │ │Mensal   │ │ 16,4%   │ │R$ 2,4M  │               │
-│ │ 34,2%   │ │  0,9%   │ │         │ │         │               │
-│ └─────────┘ └─────────┘ └─────────┘ └─────────┘               │
-│ ┌─────────┐ ┌─────────┐                                       │
-│ │Multiplic│ │NOI      │                                       │
-│ │ 3.80x   │ │Mensal   │                                       │
-│ └─────────┘ └─────────┘                                       │
-└────────────────────────────────────────────────────────────────┘
-```
+### Problema Atual
+Quando o usuário:
+1. Abre projeto existente via Dashboard (clica "View" -> URL: `/simulador?id=xxx`)
+2. Faz alterações
+3. Clica "Salvar"
 
-### Novo Layout (único box)
-```text
-┌────────────────────────────────────────────────────────────────┐
-│  RENTABILIDADE ESTIMADA                                        │
-├────────────────────────────────────────────────────────────────┤
-│         ┌─────────────────────────────────────────┐            │
-│         │   Cap Rate Mensal (Estimado)           │            │
-│         │                                         │            │
-│         │              0,9%                       │            │
-│         └─────────────────────────────────────────┘            │
-└────────────────────────────────────────────────────────────────┘
-```
+O sistema **cria um novo projeto** ao invés de atualizar o existente.
 
----
+### Solução
+Manter o `projectId` em estado quando carregado via URL e usar `UPDATE` ao invés de `INSERT`.
 
-## Alterações no Código
+### Alterações Necessárias
 
-### Arquivo: `src/lib/pdfExport.ts`
-
-**Alterar a seção de KPIs (linhas 406-419):**
-
-De:
+#### 1. Adicionar Estado para Rastrear Projeto Carregado
 ```typescript
-sections: [
-  {
-    title: 'Indicadores Principais',
-    type: 'kpi-grid',
-    data: [
-      { label: 'Cap Rate Anual', value: ... },
-      { label: 'Cap Rate Mensal', value: ... },
-      { label: 'TIR', value: ... },
-      { label: 'VPL', value: ... },
-      { label: 'Multiplicador', value: ... },
-      { label: 'NOI Mensal', value: ... },
-    ],
-  },
-  // ... outras seções
-]
-```
+// Novo estado
+const [loadedProjectId, setLoadedProjectId] = useState<string | null>(null);
 
-Para:
-```typescript
-sections: [
-  {
-    title: 'Rentabilidade Estimada',
-    type: 'kpi-grid',
-    data: [
-      { label: 'Cap Rate Mensal (Estimado)', value: formatPercentage(data.kpis.monthlyCapRate), highlight: true },
-    ],
-  },
-  // ... outras seções
-]
-```
-
-### Ajustar Renderização do Box Único
-
-Modificar `renderKPIGrid` para exibir um único box de forma centralizada e destacada quando houver apenas 1 item:
-
-```typescript
-function renderKPIGrid(doc: jsPDF, kpis: PDFKPIItem[], x: number, y: number, width: number): number {
-  // Se for apenas 1 KPI, renderizar de forma centralizada
-  if (kpis.length === 1) {
-    const singleKpi = kpis[0];
-    const boxWidth = width * 0.6;  // 60% da largura
-    const boxHeight = 35;          // Altura maior
-    const boxX = x + (width - boxWidth) / 2;  // Centralizado
-
-    // Background box
-    doc.setFillColor(...COLORS.warmBg);
-    doc.roundedRect(boxX, y, boxWidth, boxHeight, 4, 4, 'F');
-
-    // Label centralizado
-    doc.setTextColor(...COLORS.gray);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(singleKpi.label, boxX + boxWidth / 2, y + 12, { align: 'center' });
-
-    // Valor grande centralizado
-    doc.setTextColor(...COLORS.primary);
-    doc.setFontSize(22);
-    doc.setFont('helvetica', 'bold');
-    doc.text(singleKpi.value, boxX + boxWidth / 2, y + 28, { align: 'center' });
-
-    return y + boxHeight + 4;
+// Quando carregar projeto da URL
+useEffect(() => {
+  if (projectFromUrl && !loadingProjectFromUrl && !hasLoadedFromUrl) {
+    handleLoadProject(projectFromUrl, false);
+    setLoadedProjectId(projectFromUrl.id); // <-- Guardar ID
+    setHasLoadedFromUrl(true);
   }
+}, [projectFromUrl, loadingProjectFromUrl, hasLoadedFromUrl, handleLoadProject]);
+```
 
-  // ... resto da função para múltiplos KPIs (manter código existente)
-}
+#### 2. Modificar handleSave para Atualizar ou Criar
+```typescript
+const updateProject = useUpdateProject(); // Importar hook existente
+
+const handleSave = () => {
+  const projectData = {
+    project_type: 'simulador' as ProjectType,
+    name: projectName || `Simulação ${new Date().toLocaleDateString('pt-BR')}`,
+    inputs: { ... },
+    results: { ... },
+  };
+
+  if (loadedProjectId) {
+    // ATUALIZAR projeto existente
+    updateProject.mutate({
+      id: loadedProjectId,
+      ...projectData,
+    });
+  } else {
+    // CRIAR novo projeto
+    saveProject.mutate(projectData);
+  }
+};
+```
+
+#### 3. Limpar ID ao Criar Novo Projeto
+Quando o usuário clica "Novo" ou limpa os campos, resetar o `loadedProjectId`:
+```typescript
+const handleNewProject = () => {
+  setLoadedProjectId(null);
+  setProjectName('');
+  // ... resetar outros campos
+};
 ```
 
 ---
 
-## Estrutura Final do PDF
+## Arquivos a Modificar
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/pages/Simulador.tsx` | Adicionar `loadedProjectId` e lógica de update |
+| `src/pages/Simulador.tsx` | Modificar `handleSave` para usar update quando apropriado |
+| `src/pages/Simulador.tsx` | Atualizar `handleLoadProject` para guardar o ID |
+
+---
+
+## Fluxo Final
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
-│  [S] SETTER TOOLBOX                                         │
-│      Simulador de Viabilidade                               │
+│  Usuário no Dashboard                                       │
+│  Clica "View" em projeto existente                         │
 ├─────────────────────────────────────────────────────────────┤
-│  Ativo: Projeto Araçatuba                                   │
-│  Data: 21/01/2026                                           │
+│  URL: /simulador?id=8182ad50-7592-467b-b8f2-af65c97c4cce   │
+│  Carrega projeto → loadedProjectId = "8182ad50..."         │
 ├─────────────────────────────────────────────────────────────┤
-│  RENTABILIDADE ESTIMADA                                     │
-│              ┌────────────────────────┐                     │
-│              │ Cap Rate Mensal (Est.) │                     │
-│              │         0,9%           │                     │
-│              └────────────────────────┘                     │
+│  Usuário edita campos                                       │
+│  Clica "Salvar"                                             │
 ├─────────────────────────────────────────────────────────────┤
-│  DETALHAMENTO DO INVESTIMENTO (CAPEX)                       │
-│  Preço de Aquisição .................. R$ 2.100.000         │
-│  ...                                                        │
+│  if (loadedProjectId) → UPDATE toolbox_projects            │
+│  else → INSERT toolbox_projects                             │
 ├─────────────────────────────────────────────────────────────┤
-│  RECEITA - DETALHAMENTO POR LOJISTA                         │
-│  ...                                                        │
-├─────────────────────────────────────────────────────────────┤
-│  DESPESAS OPERACIONAIS (OPEX)                               │
-│  ...                                                        │
-├─────────────────────────────────────────────────────────────┤
-│  Este relatório é para fins informativos.                   │
-│                                    Gerado por Setter Toolbox│
+│  updated_at = NOW() (automático pelo Supabase)             │
+│  Data mostrada no PDF reflete a edição                      │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Resumo das Alterações
+## Resultado Esperado
 
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/lib/pdfExport.ts` | Reduzir array de KPIs de 6 para 1 item |
-| `src/lib/pdfExport.ts` | Renomear título da seção para "Rentabilidade Estimada" |
-| `src/lib/pdfExport.ts` | Modificar `renderKPIGrid` para centralizar box único |
-
-O PDF ficará mais limpo e direto ao ponto, destacando apenas o Cap Rate Mensal (Estimado) como métrica principal de rentabilidade.
-
+1. **Cap Rate Mensal**: Já está correto (NOI Anual / 12 / Investimento Total)
+2. **Editar Projeto**: Ao abrir projeto via URL e salvar, atualiza o existente
+3. **Data de Modificação**: O campo `updated_at` é atualizado automaticamente pelo Supabase
+4. **PDF**: A data mostrada será a data atual (quando exportou), não quando salvou
