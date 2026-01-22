@@ -442,7 +442,7 @@ export async function generateSimuladorPDF(data: SimuladorPDFData): Promise<void
         title: 'Rentabilidade Estimada',
         type: 'kpi-grid',
         data: [
-          { label: 'Cap Rate Mensal (Estimado)', value: formatPercentage(data.kpis.monthlyCapRate), highlight: true },
+          { label: 'Cap Rate Mensal (Estimado)', value: formatPercentage(data.kpis.monthlyCapRate, 2), highlight: true },
         ],
       },
       // CAPEX Breakdown
