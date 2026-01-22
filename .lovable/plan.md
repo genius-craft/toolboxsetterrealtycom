@@ -1,45 +1,55 @@
 
 
-# Plano: Exibir Taxa de Administração Mensal no PDF
+# Plano: Adicionar "(Total Efetivamente Recebido)" ao TOTAL OPEX no PDF
 
 ## Objetivo
 
-Alterar a exibição da Taxa de Administração no PDF para mostrar o valor **mensal** ao invés do anual.
+Atualizar o label do **TOTAL OPEX** no PDF para incluir a indicação de que representa o valor líquido efetivamente recebido.
 
 ---
 
-## Alteração Atual vs. Proposta
+## Alteração
 
-### Atual (PDF)
-```text
-Taxa Administração (R$ 73.000 × 6,0%)    R$ 52.560/ano
-```
-
-### Proposto (PDF)
-```text
-Taxa Administração (R$ 73.000 × 6,0%)    R$ 4.380/mês
-```
-
----
-
-## Alteração no Código
-
-### Arquivo: `src/lib/pdfExport.ts` (linha 481)
+### Arquivo: `src/lib/pdfExport.ts` (linha 482)
 
 **Antes:**
 ```typescript
-{ 
-  label: `Taxa Administração (${formatCurrency(totalMonthlyRent)} × ${formatPercentage(data.opexBreakdown.managementFee)})`, 
-  value: `${formatCurrency(data.opexBreakdown.managementAmount)}/ano` 
-},
+{ label: 'TOTAL OPEX', value: formatCurrency(totalOpex), highlight: true },
 ```
 
 **Depois:**
 ```typescript
-{ 
-  label: `Taxa Administração (${formatCurrency(totalMonthlyRent)} × ${formatPercentage(data.opexBreakdown.managementFee)})`, 
-  value: `${formatCurrency(data.opexBreakdown.managementAmount / 12)}/mês` 
-},
+{ label: 'TOTAL OPEX (Total Efetivamente Recebido)', value: formatCurrency(totalOpex), highlight: true },
+```
+
+---
+
+## Resultado no PDF
+
+### Antes
+```text
+┌─────────────────────────────────────────────────────┐
+│ Despesas Operacionais (OPEX)                        │
+├─────────────────────────────────────────────────────┤
+│ IPTU (Anual)                           R$ 12.000    │
+│ Condomínio (Anual)                     R$ 24.000    │
+│ Taxa Administração (R$ 73.000 × 6,0%)  R$ 4.380/mês │
+│ TOTAL OPEX                             R$ 88.560    │
+│ NOI Anual (Receita - OPEX)             R$ 787.440   │
+└─────────────────────────────────────────────────────┘
+```
+
+### Depois
+```text
+┌─────────────────────────────────────────────────────────────┐
+│ Despesas Operacionais (OPEX)                                │
+├─────────────────────────────────────────────────────────────┤
+│ IPTU (Anual)                                   R$ 12.000    │
+│ Condomínio (Anual)                             R$ 24.000    │
+│ Taxa Administração (R$ 73.000 × 6,0%)          R$ 4.380/mês │
+│ TOTAL OPEX (Total Efetivamente Recebido)       R$ 88.560    │
+│ NOI Anual (Receita - OPEX)                     R$ 787.440   │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -48,7 +58,7 @@ Taxa Administração (R$ 73.000 × 6,0%)    R$ 4.380/mês
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `src/lib/pdfExport.ts` | Dividir `managementAmount` por 12 e mudar sufixo para `/mês` |
+| `src/lib/pdfExport.ts` | Adicionar "(Total Efetivamente Recebido)" ao label do TOTAL OPEX |
 
-Esta é uma alteração simples de uma única linha que corrige a exibição para mostrar o valor mensal da taxa de administração.
+Esta é uma alteração simples de texto no label.
 
