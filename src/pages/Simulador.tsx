@@ -285,6 +285,7 @@ export default function Simulador() {
         totalInvestment: calculations.totalInvestment,
         noi: calculations.noi,
         entryCapRate: calculations.entryCapRate,
+        monthlyCapRate: (calculations.noi / 12) / calculations.totalInvestment,
         irr: calculations.irr,
         npv: calculations.npv,
         equityMultiple: calculations.equityMultiple,
