@@ -59,6 +59,14 @@ export const financialGlossary = {
     title: 'Reforma / Retrofit',
     description: 'Investimento em melhorias físicas para valorizar ou adequar o imóvel. Pode incluir modernização, adequação de layout ou manutenção estrutural.',
   },
+  builtArea: {
+    title: 'Metros Construídos',
+    description: 'Área total em metros quadrados a ser construída ou reformada. Base para calcular o custo total de obra (m² × custo/m²).',
+  },
+  costPerSqm: {
+    title: 'Custo por m²',
+    description: 'Valor médio por metro quadrado de construção ou reforma. Varia conforme padrão de acabamento e tipo de obra (shell, retrofit completo, etc.).',
+  },
   turnkeyCost: {
     title: 'Obras Turnkey',
     description: 'Custo de adequação sob medida para o inquilino (ex: lojas, escritórios). O investidor entrega o espaço pronto para operar. Comum em contratos BTS.',

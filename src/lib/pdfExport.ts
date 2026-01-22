@@ -358,7 +358,7 @@ export interface SimuladorPDFData {
   projectName: string;
   kpis: {
     entryCapRate: number;
-    monthlyCapRate: number; // NOVO - Cap Rate Mensal
+    monthlyCapRate: number;
     irr: number;
     npv: number;
     equityMultiple: number;
@@ -372,8 +372,11 @@ export interface SimuladorPDFData {
     purchasePrice: number;
     closingCostsAmount: number;
     closingCostsPercent: number;
-    renovationCost: number;
+    builtArea: number;           // Metros quadrados
+    costPerSqm: number;          // Custo por m²
+    shellCost: number;           // Total shell
     turnkeyCost: number;
+    totalConstructionCost: number;  // Shell + turnkey
   };
   
   // Rental Units
@@ -381,6 +384,9 @@ export interface SimuladorPDFData {
     name: string;
     monthlyRent: number;
   }>;
+  
+  // Total Monthly Rent (for fee formula display)
+  totalMonthlyRent: number;
   
   // OPEX Breakdown
   opexBreakdown: {
@@ -422,7 +428,7 @@ export async function generateSimuladorPDF(data: SimuladorPDFData): Promise<void
     custom: 'Personalizado',
   };
 
-  const totalMonthlyRent = data.rentalUnits.reduce((sum, unit) => sum + unit.monthlyRent, 0);
+  const totalMonthlyRent = data.totalMonthlyRent;
   const totalAnnualRent = totalMonthlyRent * 12;
   const totalOpex = data.opexBreakdown.propertyTax + data.opexBreakdown.condoFee + data.opexBreakdown.managementAmount;
 
@@ -446,8 +452,9 @@ export async function generateSimuladorPDF(data: SimuladorPDFData): Promise<void
         data: [
           { label: 'Preço de Aquisição', value: formatCurrency(data.capexBreakdown.purchasePrice) },
           { label: `Custos de Fechamento (${formatPercentage(data.capexBreakdown.closingCostsPercent)})`, value: formatCurrency(data.capexBreakdown.closingCostsAmount) },
-          { label: 'Reforma / Retrofit', value: formatCurrency(data.capexBreakdown.renovationCost) },
+          { label: `Obra Shell (${data.capexBreakdown.builtArea}m² × ${formatCurrency(data.capexBreakdown.costPerSqm)}/m²)`, value: formatCurrency(data.capexBreakdown.shellCost) },
           { label: 'Obras Turnkey', value: formatCurrency(data.capexBreakdown.turnkeyCost) },
+          { label: 'TOTAL DE OBRA', value: formatCurrency(data.capexBreakdown.totalConstructionCost), highlight: true },
           { label: 'INVESTIMENTO TOTAL', value: formatCurrency(data.kpis.totalInvestment), highlight: true },
         ],
       },
@@ -471,7 +478,7 @@ export async function generateSimuladorPDF(data: SimuladorPDFData): Promise<void
         data: [
           { label: 'IPTU (Anual)', value: formatCurrency(data.opexBreakdown.propertyTax) },
           { label: 'Condomínio (Anual)', value: formatCurrency(data.opexBreakdown.condoFee) },
-          { label: `Taxa Administração (${formatPercentage(data.opexBreakdown.managementFee)})`, value: formatCurrency(data.opexBreakdown.managementAmount) },
+          { label: `Taxa Administração (${formatCurrency(totalMonthlyRent)} × ${formatPercentage(data.opexBreakdown.managementFee)})`, value: `${formatCurrency(data.opexBreakdown.managementAmount)}/ano` },
           { label: 'TOTAL OPEX', value: formatCurrency(totalOpex), highlight: true },
           { label: 'NOI Anual (Receita - OPEX)', value: formatCurrency(data.kpis.noi), highlight: true },
         ],

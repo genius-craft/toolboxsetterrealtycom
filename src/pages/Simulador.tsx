@@ -75,7 +75,8 @@ export default function Simulador() {
   // Investment (CAPEX)
   const [purchasePrice, setPurchasePrice] = useState(2000000);
   const [closingCosts, setClosingCosts] = useState(0.03); // 3%
-  const [renovationCost, setRenovationCost] = useState(100000);
+  const [builtArea, setBuiltArea] = useState(500); // Metros construídos (m²)
+  const [costPerSqm, setCostPerSqm] = useState(2000); // Custo por m² (R$)
   const [hasTurnkey, setHasTurnkey] = useState(false);
   const [turnkeyCost, setTurnkeyCost] = useState(0);
 
@@ -111,11 +112,15 @@ export default function Simulador() {
     return indexRates[adjustmentIndex];
   }, [adjustmentIndex, customIndexRate]);
 
+  // Calculate shell cost and total construction cost
+  const shellCost = builtArea * costPerSqm;
+  const totalConstructionCost = shellCost + (hasTurnkey ? turnkeyCost : 0);
+
   // Collect all inputs for scenario calculations
   const simuladorInputs = useMemo(() => ({
     purchasePrice,
     closingCosts,
-    renovationCost,
+    renovationCost: shellCost, // Use shellCost for compatibility with scenario calculations
     monthlyRent: totalMonthlyRent,
     rentGrowth: effectiveRentGrowth,
     vacancyRate,
@@ -128,7 +133,7 @@ export default function Simulador() {
   }), [
     purchasePrice,
     closingCosts,
-    renovationCost,
+    shellCost,
     totalMonthlyRent,
     effectiveRentGrowth,
     vacancyRate,
@@ -147,8 +152,7 @@ export default function Simulador() {
 
   // Calculations
   const calculations = useMemo(() => {
-    const turnkeyAmount = hasTurnkey ? turnkeyCost : 0;
-    const totalInvestment = purchasePrice * (1 + closingCosts) + renovationCost + turnkeyAmount;
+    const totalInvestment = purchasePrice * (1 + closingCosts) + totalConstructionCost;
     const annualRent = totalMonthlyRent * 12;
     const effectiveGrossIncome = annualRent * (1 - vacancyRate);
     const annualManagement = effectiveGrossIncome * managementFee; // Taxa sobre valor recebido
@@ -197,9 +201,7 @@ export default function Simulador() {
   }, [
     purchasePrice,
     closingCosts,
-    renovationCost,
-    hasTurnkey,
-    turnkeyCost,
+    totalConstructionCost,
     totalMonthlyRent,
     effectiveRentGrowth,
     vacancyRate,
@@ -229,7 +231,20 @@ export default function Simulador() {
     setInvestmentType(inputs.investmentType || 'ready');
     setPurchasePrice(inputs.purchasePrice ?? 2000000);
     setClosingCosts(inputs.closingCosts ?? 0.03);
-    setRenovationCost(inputs.renovationCost ?? 100000);
+    
+    // Handle migration from old renovationCost to new builtArea/costPerSqm
+    if (inputs.builtArea !== undefined) {
+      setBuiltArea(inputs.builtArea);
+      setCostPerSqm(inputs.costPerSqm ?? 2000);
+    } else if (inputs.renovationCost !== undefined && inputs.renovationCost > 0) {
+      // Migrate old projects: assume 500m² as default area
+      setBuiltArea(500);
+      setCostPerSqm(inputs.renovationCost / 500);
+    } else {
+      setBuiltArea(500);
+      setCostPerSqm(2000);
+    }
+    
     setHasTurnkey(inputs.hasTurnkey ?? false);
     setTurnkeyCost(inputs.turnkeyCost ?? 0);
     setRentalUnits(inputs.rentalUnits || [{ id: '1', name: 'Loja 1', monthlyRent: 15000 }]);
@@ -267,7 +282,8 @@ export default function Simulador() {
         investmentType,
         purchasePrice,
         closingCosts,
-        renovationCost,
+        builtArea,
+        costPerSqm,
         hasTurnkey,
         turnkeyCost,
         rentalUnits,
@@ -312,6 +328,7 @@ export default function Simulador() {
       const annualRent = totalMonthlyRent * 12;
       const effectiveRent = annualRent * (1 - vacancyRate);
       const managementAmount = effectiveRent * managementFee; // Taxa sobre valor recebido
+      const turnkeyAmount = hasTurnkey ? turnkeyCost : 0;
       
       // Calcular Cap Rate Mensal = (NOI / 12) / Investimento Total
       const monthlyCapRate = (calculations.noi / 12) / calculations.totalInvestment;
@@ -320,7 +337,7 @@ export default function Simulador() {
         projectName: projectName || 'Projeto sem nome',
         kpis: {
           entryCapRate: calculations.entryCapRate,
-          monthlyCapRate, // NOVO - Cap Rate Mensal
+          monthlyCapRate,
           irr: calculations.irr,
           npv: calculations.npv,
           equityMultiple: calculations.equityMultiple,
@@ -332,10 +349,14 @@ export default function Simulador() {
           purchasePrice,
           closingCostsAmount,
           closingCostsPercent: closingCosts,
-          renovationCost,
-          turnkeyCost: hasTurnkey ? turnkeyCost : 0,
+          builtArea,
+          costPerSqm,
+          shellCost,
+          turnkeyCost: turnkeyAmount,
+          totalConstructionCost,
         },
         rentalUnits,
+        totalMonthlyRent, // Para mostrar fórmula da taxa de administração
         opexBreakdown: {
           propertyTax,
           condoFee,
@@ -566,13 +587,45 @@ export default function Simulador() {
           step={0.005}
           tooltip="closingCosts"
         />
-        <CurrencyInput
-          label="Reforma / Retrofit"
-          value={renovationCost}
-          onChange={setRenovationCost}
-          tooltip="renovationCost"
-        />
-        <div className="flex items-center justify-between py-2">
+
+        {/* Nova seção: Obra (Shell) */}
+        <div className="border-t border-border pt-4 mt-4">
+          <h4 className="text-sm font-medium text-muted-foreground mb-3">Obra (Shell)</h4>
+          
+          {/* Input: Metros Construídos */}
+          <div className="space-y-2 mb-4">
+            <div className="flex items-center gap-1.5">
+              <Label className="text-sm font-medium">Metros Construídos</Label>
+              <GlossaryTooltip term="builtArea" />
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                value={builtArea}
+                onChange={(e) => setBuiltArea(Number(e.target.value) || 0)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-mono"
+              />
+              <span className="text-sm text-muted-foreground whitespace-nowrap">m²</span>
+            </div>
+          </div>
+          
+          {/* Input: Custo por m² */}
+          <CurrencyInput
+            label="Custo por m² (construção/reforma)"
+            value={costPerSqm}
+            onChange={setCostPerSqm}
+            tooltip="costPerSqm"
+          />
+          
+          {/* Resultado: Total Shell (somente leitura) */}
+          <div className="flex justify-between items-center py-2 bg-muted/50 rounded px-3 mt-2">
+            <span className="text-sm font-medium">Total Obra Shell</span>
+            <span className="font-mono font-bold text-accent">{formatCurrency(shellCost)}</span>
+          </div>
+        </div>
+
+        {/* Turnkey */}
+        <div className="flex items-center justify-between py-2 mt-4">
           <div className="flex items-center gap-1.5">
             <Label className="text-sm font-medium">Incluir Obras Turnkey?</Label>
             <GlossaryTooltip term="turnkeyCost" />
@@ -587,6 +640,12 @@ export default function Simulador() {
             tooltip="turnkeyCost"
           />
         )}
+
+        {/* Total de Obra (Shell + Turnkey) */}
+        <div className="flex justify-between items-center py-3 bg-primary/10 rounded px-3 mt-2">
+          <span className="text-sm font-bold">TOTAL DE OBRA</span>
+          <span className="font-mono font-bold text-lg">{formatCurrency(totalConstructionCost)}</span>
+        </div>
       </CollapsibleInputCard>
 
       {/* Revenue Card - Multiple Units */}
@@ -635,6 +694,10 @@ export default function Simulador() {
           step={0.01}
           tooltip="managementFee"
         />
+        {/* Linha mostrando o cálculo da taxa */}
+        <div className="text-sm text-muted-foreground pl-2 -mt-2">
+          {formatCurrency(totalMonthlyRent)} × {formatPercentage(managementFee)} = {formatCurrency(totalMonthlyRent * managementFee)}/mês
+        </div>
       </CollapsibleInputCard>
 
       {/* Exit Card */}
