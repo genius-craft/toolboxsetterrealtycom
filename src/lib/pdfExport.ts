@@ -468,7 +468,9 @@ export async function generateSimuladorPDF(data: SimuladorPDFData): Promise<void
             value: `${formatCurrency(unit.monthlyRent)}/mês`,
           })),
           { label: 'TOTAL MENSAL', value: formatCurrency(totalMonthlyRent), highlight: true },
-          { label: 'TOTAL ANUAL', value: formatCurrency(totalAnnualRent), highlight: true },
+          { label: 'RECEITA BRUTA ANUAL', value: formatCurrency(totalAnnualRent), highlight: true },
+          { label: `Vacância (${formatPercentage(data.assumptions.vacancyRate)})`, value: `-${formatCurrency(totalAnnualRent * data.assumptions.vacancyRate)}` },
+          { label: 'RECEITA LÍQUIDA ANUAL', value: formatCurrency(totalAnnualRent * (1 - data.assumptions.vacancyRate)), highlight: true },
         ],
       },
       // OPEX Breakdown
