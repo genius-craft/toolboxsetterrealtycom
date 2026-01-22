@@ -1,69 +1,105 @@
 
 
-# Plano: Exibir Cap Rate com Precisão de 2 Casas Decimais no PDF
+# Plano: Adicionar Explicação da Vacância no PDF
 
-## Problema Identificado
+## Objetivo
 
-O Cap Rate Mensal está sendo formatado com apenas **1 casa decimal** (padrão da função `formatPercentage`), causando arredondamento:
-
-| Valor Real | Exibido Atualmente | Deveria Exibir |
-|------------|-------------------|----------------|
-| 0,87% | 0,8% ou 0,9% | 0,87% |
-
-## Causa Raiz
-
-Na linha 445 do `src/lib/pdfExport.ts`:
-```typescript
-{ label: 'Cap Rate Mensal (Estimado)', value: formatPercentage(data.kpis.monthlyCapRate), highlight: true }
-```
-
-A função `formatPercentage` usa `decimals = 1` por padrão.
+Adicionar uma seção de **Receita com Vacância** no PDF que mostre claramente:
+1. Receita Bruta Anual
+2. Percentual de Vacância aplicado
+3. Receita Líquida (após vacância)
 
 ---
 
-## Solução
+## Dados Disponíveis
 
-### Arquivo: `src/lib/pdfExport.ts` (linha 445)
+A interface `SimuladorPDFData` já possui todos os dados necessários:
+
+| Campo | Localização |
+|-------|-------------|
+| Receita Mensal Total | `data.totalMonthlyRent` |
+| Taxa de Vacância | `data.assumptions.vacancyRate` |
+| NOI Final | `data.kpis.noi` |
+
+---
+
+## Alteração Proposta
+
+### Arquivo: `src/lib/pdfExport.ts` (linhas 461-473)
+
+Modificar a seção **"Receita - Detalhamento por Lojista"** para incluir as linhas de vacância após o total anual:
 
 **Antes:**
 ```typescript
-{ label: 'Cap Rate Mensal (Estimado)', value: formatPercentage(data.kpis.monthlyCapRate), highlight: true },
+{
+  title: 'Receita - Detalhamento por Lojista',
+  type: 'key-value',
+  data: [
+    ...data.rentalUnits.map(unit => ({
+      label: unit.name,
+      value: `${formatCurrency(unit.monthlyRent)}/mês`,
+    })),
+    { label: 'TOTAL MENSAL', value: formatCurrency(totalMonthlyRent), highlight: true },
+    { label: 'TOTAL ANUAL', value: formatCurrency(totalAnnualRent), highlight: true },
+  ],
+},
 ```
 
 **Depois:**
 ```typescript
-{ label: 'Cap Rate Mensal (Estimado)', value: formatPercentage(data.kpis.monthlyCapRate, 2), highlight: true },
+{
+  title: 'Receita - Detalhamento por Lojista',
+  type: 'key-value',
+  data: [
+    ...data.rentalUnits.map(unit => ({
+      label: unit.name,
+      value: `${formatCurrency(unit.monthlyRent)}/mês`,
+    })),
+    { label: 'TOTAL MENSAL', value: formatCurrency(totalMonthlyRent), highlight: true },
+    { label: 'RECEITA BRUTA ANUAL', value: formatCurrency(totalAnnualRent), highlight: true },
+    { label: `Vacância (${formatPercentage(data.assumptions.vacancyRate)})`, value: `-${formatCurrency(totalAnnualRent * data.assumptions.vacancyRate)}` },
+    { label: 'RECEITA LÍQUIDA ANUAL', value: formatCurrency(totalAnnualRent * (1 - data.assumptions.vacancyRate)), highlight: true },
+  ],
+},
 ```
 
 ---
 
-## Resultado no PDF
+## Resultado Esperado no PDF
 
-### Antes
+### Com Vacância de 4%:
 ```text
-┌─────────────────────────────────────┐
-│ Rentabilidade Estimada              │
-├─────────────────────────────────────┤
-│ Cap Rate Mensal (Estimado)    0,8%  │
-└─────────────────────────────────────┘
++-----------------------------------------------------------+
+| Receita - Detalhamento por Lojista                        |
++-----------------------------------------------------------+
+| Loja Principal                            R$ 72.000/mes   |
+| TOTAL MENSAL                              R$ 72.000       |
+| RECEITA BRUTA ANUAL                       R$ 864.000      |
+| Vacancia (4,0%)                           -R$ 34.560      |
+| RECEITA LIQUIDA ANUAL                     R$ 829.440      |
++-----------------------------------------------------------+
 ```
 
-### Depois
+### Com Vacância de 0%:
 ```text
-┌─────────────────────────────────────┐
-│ Rentabilidade Estimada              │
-├─────────────────────────────────────┤
-│ Cap Rate Mensal (Estimado)   0,87%  │
-└─────────────────────────────────────┘
++-----------------------------------------------------------+
+| Receita - Detalhamento por Lojista                        |
++-----------------------------------------------------------+
+| Loja Principal                            R$ 72.000/mes   |
+| TOTAL MENSAL                              R$ 72.000       |
+| RECEITA BRUTA ANUAL                       R$ 864.000      |
+| Vacancia (0,0%)                           R$ 0            |
+| RECEITA LIQUIDA ANUAL                     R$ 864.000      |
++-----------------------------------------------------------+
 ```
 
 ---
 
-## Resumo
+## Resumo Tecnico
 
-| Arquivo | Alteração |
+| Arquivo | Alteracao |
 |---------|-----------|
-| `src/lib/pdfExport.ts` | Adicionar parâmetro `2` na chamada `formatPercentage()` para Cap Rate |
+| `src/lib/pdfExport.ts` | Adicionar 3 linhas na secao de receita: Receita Bruta, Vacancia e Receita Liquida |
 
-Esta é uma alteração simples de uma única linha que corrige a precisão do Cap Rate no PDF.
+Esta alteracao deixa o PDF mais transparente, mostrando exatamente como a vacancia impacta a receita antes de calcular o NOI e o Cap Rate.
 
