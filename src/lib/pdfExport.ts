@@ -479,7 +479,7 @@ export async function generateSimuladorPDF(data: SimuladorPDFData): Promise<void
           { label: 'IPTU (Anual)', value: formatCurrency(data.opexBreakdown.propertyTax) },
           { label: 'Condomínio (Anual)', value: formatCurrency(data.opexBreakdown.condoFee) },
           { label: `Taxa Administração (${formatCurrency(totalMonthlyRent)} × ${formatPercentage(data.opexBreakdown.managementFee)})`, value: `${formatCurrency(data.opexBreakdown.managementAmount / 12)}/mês` },
-          { label: 'TOTAL OPEX', value: formatCurrency(totalOpex), highlight: true },
+          { label: 'TOTAL OPEX (Total Efetivamente Recebido)', value: formatCurrency(totalOpex), highlight: true },
           { label: 'NOI Anual (Receita - OPEX)', value: formatCurrency(data.kpis.noi), highlight: true },
         ],
       },
