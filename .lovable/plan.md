@@ -1,104 +1,91 @@
 
-# Plano: Correção do Cap Rate Mensal e Persistência de Projetos
+# Plano: Exibir Cap Rate Mensal no Card do Projeto
 
-## Problema 1: Cálculo do Cap Rate Mensal
+## Objetivo
 
-### Fórmula Correta
-```
-Cap Rate Mensal = NOI Mensal / Investimento Total
-```
-
-Onde:
-- **NOI Mensal** = (Aluguel Mensal Total × (1 - Vacância)) - OPEX Mensal
-- **OPEX Mensal** = (IPTU + Condomínio) / 12 + (Aluguel Efetivo Mensal × Taxa Administração)
-- **Investimento Total** = Aquisição + (Aquisição × % Custos Fechamento) + Reforma + Turn Key
-
-### Verificação com Dados da Imagem
-| Item | Valor |
-|------|-------|
-| Aluguel Mensal | R$ 73.000 |
-| IPTU (mensal) | R$ 0 |
-| Condomínio (mensal) | R$ 0 |
-| Taxa Adm (6% de 73k) | R$ 4.380/mês |
-| NOI Mensal | R$ 68.620 |
-| Investimento Total | R$ 7.284.000 |
-| Cap Rate Mensal | 68.620 / 7.284.000 = **0,94%** |
-
-### O Cálculo Atual Está Correto
-O código atual calcula:
-```typescript
-const monthlyCapRate = (calculations.noi / 12) / calculations.totalInvestment;
-```
-
-O `calculations.noi` já é o NOI Anual (Receita Efetiva - OPEX), então dividir por 12 dá o NOI Mensal.
-
-Porém, preciso verificar se a **Taxa Administrativa** está sendo calculada corretamente (sobre o valor recebido, não sobre o valor bruto).
+Substituir a exibição da **TIR** pelo **Cap Rate Mensal** nos cards de projetos do tipo Simulador no Dashboard.
 
 ---
 
-## Problema 2: Persistência - Editar Projeto Existente
+## Alterações Necessárias
 
-### Problema Atual
-Quando o usuário:
-1. Abre projeto existente via Dashboard (clica "View" -> URL: `/simulador?id=xxx`)
-2. Faz alterações
-3. Clica "Salvar"
+### 1. Salvar monthlyCapRate nos Results (src/pages/Simulador.tsx)
 
-O sistema **cria um novo projeto** ao invés de atualizar o existente.
+Atualmente o `results` salvo não inclui o `monthlyCapRate`. Precisamos adicioná-lo:
 
-### Solução
-Manter o `projectId` em estado quando carregado via URL e usar `UPDATE` ao invés de `INSERT`.
-
-### Alterações Necessárias
-
-#### 1. Adicionar Estado para Rastrear Projeto Carregado
+**Antes:**
 ```typescript
-// Novo estado
-const [loadedProjectId, setLoadedProjectId] = useState<string | null>(null);
-
-// Quando carregar projeto da URL
-useEffect(() => {
-  if (projectFromUrl && !loadingProjectFromUrl && !hasLoadedFromUrl) {
-    handleLoadProject(projectFromUrl, false);
-    setLoadedProjectId(projectFromUrl.id); // <-- Guardar ID
-    setHasLoadedFromUrl(true);
-  }
-}, [projectFromUrl, loadingProjectFromUrl, hasLoadedFromUrl, handleLoadProject]);
+results: {
+  totalInvestment: calculations.totalInvestment,
+  noi: calculations.noi,
+  entryCapRate: calculations.entryCapRate,
+  irr: calculations.irr,
+  npv: calculations.npv,
+  equityMultiple: calculations.equityMultiple,
+  verdict: calculations.verdict,
+},
 ```
 
-#### 2. Modificar handleSave para Atualizar ou Criar
+**Depois:**
 ```typescript
-const updateProject = useUpdateProject(); // Importar hook existente
-
-const handleSave = () => {
-  const projectData = {
-    project_type: 'simulador' as ProjectType,
-    name: projectName || `Simulação ${new Date().toLocaleDateString('pt-BR')}`,
-    inputs: { ... },
-    results: { ... },
-  };
-
-  if (loadedProjectId) {
-    // ATUALIZAR projeto existente
-    updateProject.mutate({
-      id: loadedProjectId,
-      ...projectData,
-    });
-  } else {
-    // CRIAR novo projeto
-    saveProject.mutate(projectData);
-  }
-};
+results: {
+  totalInvestment: calculations.totalInvestment,
+  noi: calculations.noi,
+  entryCapRate: calculations.entryCapRate,
+  monthlyCapRate: (calculations.noi / 12) / calculations.totalInvestment, // NOVO
+  irr: calculations.irr,
+  npv: calculations.npv,
+  equityMultiple: calculations.equityMultiple,
+  verdict: calculations.verdict,
+},
 ```
 
-#### 3. Limpar ID ao Criar Novo Projeto
-Quando o usuário clica "Novo" ou limpa os campos, resetar o `loadedProjectId`:
+---
+
+### 2. Alterar Dashboard para Exibir Cap Rate Mensal (src/pages/Dashboard.tsx)
+
+**Antes (linha 208-215):**
 ```typescript
-const handleNewProject = () => {
-  setLoadedProjectId(null);
-  setProjectName('');
-  // ... resetar outros campos
-};
+{project.project_type === 'simulador' && project.results.irr && (
+  <div className="flex justify-between">
+    <span className="text-muted-foreground">TIR</span>
+    <span className="font-mono text-accent">
+      {formatPercentage(project.results.irr)}
+    </span>
+  </div>
+)}
+```
+
+**Depois:**
+```typescript
+{project.project_type === 'simulador' && project.results.monthlyCapRate && (
+  <div className="flex justify-between">
+    <span className="text-muted-foreground">Cap Rate Mensal</span>
+    <span className="font-mono text-accent">
+      {formatPercentage(project.results.monthlyCapRate)}
+    </span>
+  </div>
+)}
+```
+
+---
+
+## Compatibilidade com Projetos Antigos
+
+Projetos salvos anteriormente não terão o campo `monthlyCapRate`. Para garantir compatibilidade, podemos calcular on-the-fly se não existir:
+
+```typescript
+{project.project_type === 'simulador' && (
+  <div className="flex justify-between">
+    <span className="text-muted-foreground">Cap Rate Mensal</span>
+    <span className="font-mono text-accent">
+      {formatPercentage(
+        project.results.monthlyCapRate ?? 
+        (project.results.noi / 12) / project.results.totalInvestment
+      )}
+    </span>
+  </div>
+)}
 ```
 
 ---
@@ -107,38 +94,22 @@ const handleNewProject = () => {
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `src/pages/Simulador.tsx` | Adicionar `loadedProjectId` e lógica de update |
-| `src/pages/Simulador.tsx` | Modificar `handleSave` para usar update quando apropriado |
-| `src/pages/Simulador.tsx` | Atualizar `handleLoadProject` para guardar o ID |
-
----
-
-## Fluxo Final
-
-```text
-┌─────────────────────────────────────────────────────────────┐
-│  Usuário no Dashboard                                       │
-│  Clica "View" em projeto existente                         │
-├─────────────────────────────────────────────────────────────┤
-│  URL: /simulador?id=8182ad50-7592-467b-b8f2-af65c97c4cce   │
-│  Carrega projeto → loadedProjectId = "8182ad50..."         │
-├─────────────────────────────────────────────────────────────┤
-│  Usuário edita campos                                       │
-│  Clica "Salvar"                                             │
-├─────────────────────────────────────────────────────────────┤
-│  if (loadedProjectId) → UPDATE toolbox_projects            │
-│  else → INSERT toolbox_projects                             │
-├─────────────────────────────────────────────────────────────┤
-│  updated_at = NOW() (automático pelo Supabase)             │
-│  Data mostrada no PDF reflete a edição                      │
-└─────────────────────────────────────────────────────────────┘
-```
+| `src/pages/Simulador.tsx` | Adicionar `monthlyCapRate` ao objeto `results` no save |
+| `src/pages/Dashboard.tsx` | Trocar TIR por Cap Rate Mensal nos cards de simulador |
 
 ---
 
 ## Resultado Esperado
 
-1. **Cap Rate Mensal**: Já está correto (NOI Anual / 12 / Investimento Total)
-2. **Editar Projeto**: Ao abrir projeto via URL e salvar, atualiza o existente
-3. **Data de Modificação**: O campo `updated_at` é atualizado automaticamente pelo Supabase
-4. **PDF**: A data mostrada será a data atual (quando exportou), não quando salvou
+O card do projeto no Dashboard mostrará:
+
+```text
+┌─────────────────────────────────────────┐
+│ 📊 SIMULADOR              📅 22/01/2026 │
+│                                         │
+│ Projeto Araçatuba                       │
+│ Cap Rate Mensal              0,9%       │
+│                                         │
+│  [👁 Ver]                    [🗑]       │
+└─────────────────────────────────────────┘
+```
