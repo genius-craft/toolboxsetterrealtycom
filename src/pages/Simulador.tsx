@@ -24,7 +24,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSaveProject, useProjects, useProject, ProjectType } from '@/hooks/useProjects';
+import { useSaveProject, useUpdateProject, useProjects, useProject, ProjectType } from '@/hooks/useProjects';
 import { useToast } from '@/hooks/use-toast';
 import {
   projectCashFlows,
@@ -52,6 +52,7 @@ export default function Simulador() {
   const { user } = useAuth();
   const { toast } = useToast();
   const saveProject = useSaveProject();
+  const updateProject = useUpdateProject();
   const { data: savedProjects, isLoading: loadingProjects } = useProjects('simulador' as ProjectType);
   
   // URL params for loading project
@@ -63,6 +64,9 @@ export default function Simulador() {
   const [openDialogOpen, setOpenDialogOpen] = useState(false);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [hasLoadedFromUrl, setHasLoadedFromUrl] = useState(false);
+  
+  // Track loaded project ID for update vs create
+  const [loadedProjectId, setLoadedProjectId] = useState<string | null>(null);
 
   // Project Info
   const [projectName, setProjectName] = useState('');
@@ -238,6 +242,7 @@ export default function Simulador() {
     setHoldingPeriod(inputs.holdingPeriod ?? 10);
     setExitCapRate(inputs.exitCapRate ?? 0.07);
     setDiscountRate(inputs.discountRate ?? 0.12);
+    setLoadedProjectId(project.id); // Track the loaded project ID for updates
     setOpenDialogOpen(false);
     if (showToast) {
       toast({ title: 'Projeto carregado!', description: project.name });
@@ -248,13 +253,14 @@ export default function Simulador() {
   useEffect(() => {
     if (projectFromUrl && !loadingProjectFromUrl && !hasLoadedFromUrl) {
       handleLoadProject(projectFromUrl, false);
+      setLoadedProjectId(projectFromUrl.id); // Track loaded project ID
       setHasLoadedFromUrl(true);
     }
   }, [projectFromUrl, loadingProjectFromUrl, hasLoadedFromUrl, handleLoadProject]);
 
   const handleSave = () => {
-    saveProject.mutate({
-      project_type: 'simulador',
+    const projectData = {
+      project_type: 'simulador' as const,
       name: projectName || `Simulação ${new Date().toLocaleDateString('pt-BR')}`,
       inputs: {
         projectName,
@@ -284,7 +290,18 @@ export default function Simulador() {
         equityMultiple: calculations.equityMultiple,
         verdict: calculations.verdict,
       },
-  });
+    };
+
+    if (loadedProjectId) {
+      // UPDATE existing project
+      updateProject.mutate({
+        id: loadedProjectId,
+        ...projectData,
+      });
+    } else {
+      // CREATE new project
+      saveProject.mutate(projectData);
+    }
   };
 
   const handleExportPDF = async () => {
@@ -471,10 +488,10 @@ export default function Simulador() {
           variant="gold"
           className="flex-1"
           onClick={handleSave}
-          disabled={!user || saveProject.isPending}
+          disabled={!user || saveProject.isPending || updateProject.isPending}
         >
           <Save className="h-4 w-4 mr-2" />
-          {saveProject.isPending ? 'Salvando...' : 'Salvar'}
+          {(saveProject.isPending || updateProject.isPending) ? 'Salvando...' : 'Salvar'}
         </Button>
         <Button 
           className="flex-1 bg-[#E85D3D] hover:bg-[#D14D2D] text-white shadow-lg"
