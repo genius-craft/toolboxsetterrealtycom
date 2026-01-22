@@ -205,11 +205,14 @@ export default function Dashboard() {
 
                   {/* Quick Stats */}
                   <div className="space-y-1 text-sm mb-4">
-                    {project.project_type === 'simulador' && project.results.irr && (
+                    {project.project_type === 'simulador' && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">TIR</span>
+                        <span className="text-muted-foreground">Cap Rate Mensal</span>
                         <span className="font-mono text-accent">
-                          {formatPercentage(project.results.irr)}
+                          {formatPercentage(
+                            project.results.monthlyCapRate ?? 
+                            (project.results.noi / 12) / project.results.totalInvestment
+                          )}
                         </span>
                       </div>
                     )}
