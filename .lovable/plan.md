@@ -1,25 +1,38 @@
 
 
-# Plano: Adicionar "(Total Efetivamente Recebido)" ao TOTAL OPEX no PDF
+# Plano: Exibir Cap Rate com Precisão de 2 Casas Decimais no PDF
 
-## Objetivo
+## Problema Identificado
 
-Atualizar o label do **TOTAL OPEX** no PDF para incluir a indicação de que representa o valor líquido efetivamente recebido.
+O Cap Rate Mensal está sendo formatado com apenas **1 casa decimal** (padrão da função `formatPercentage`), causando arredondamento:
+
+| Valor Real | Exibido Atualmente | Deveria Exibir |
+|------------|-------------------|----------------|
+| 0,87% | 0,8% ou 0,9% | 0,87% |
+
+## Causa Raiz
+
+Na linha 445 do `src/lib/pdfExport.ts`:
+```typescript
+{ label: 'Cap Rate Mensal (Estimado)', value: formatPercentage(data.kpis.monthlyCapRate), highlight: true }
+```
+
+A função `formatPercentage` usa `decimals = 1` por padrão.
 
 ---
 
-## Alteração
+## Solução
 
-### Arquivo: `src/lib/pdfExport.ts` (linha 482)
+### Arquivo: `src/lib/pdfExport.ts` (linha 445)
 
 **Antes:**
 ```typescript
-{ label: 'TOTAL OPEX', value: formatCurrency(totalOpex), highlight: true },
+{ label: 'Cap Rate Mensal (Estimado)', value: formatPercentage(data.kpis.monthlyCapRate), highlight: true },
 ```
 
 **Depois:**
 ```typescript
-{ label: 'TOTAL OPEX (Total Efetivamente Recebido)', value: formatCurrency(totalOpex), highlight: true },
+{ label: 'Cap Rate Mensal (Estimado)', value: formatPercentage(data.kpis.monthlyCapRate, 2), highlight: true },
 ```
 
 ---
@@ -28,28 +41,20 @@ Atualizar o label do **TOTAL OPEX** no PDF para incluir a indicação de que rep
 
 ### Antes
 ```text
-┌─────────────────────────────────────────────────────┐
-│ Despesas Operacionais (OPEX)                        │
-├─────────────────────────────────────────────────────┤
-│ IPTU (Anual)                           R$ 12.000    │
-│ Condomínio (Anual)                     R$ 24.000    │
-│ Taxa Administração (R$ 73.000 × 6,0%)  R$ 4.380/mês │
-│ TOTAL OPEX                             R$ 88.560    │
-│ NOI Anual (Receita - OPEX)             R$ 787.440   │
-└─────────────────────────────────────────────────────┘
+┌─────────────────────────────────────┐
+│ Rentabilidade Estimada              │
+├─────────────────────────────────────┤
+│ Cap Rate Mensal (Estimado)    0,8%  │
+└─────────────────────────────────────┘
 ```
 
 ### Depois
 ```text
-┌─────────────────────────────────────────────────────────────┐
-│ Despesas Operacionais (OPEX)                                │
-├─────────────────────────────────────────────────────────────┤
-│ IPTU (Anual)                                   R$ 12.000    │
-│ Condomínio (Anual)                             R$ 24.000    │
-│ Taxa Administração (R$ 73.000 × 6,0%)          R$ 4.380/mês │
-│ TOTAL OPEX (Total Efetivamente Recebido)       R$ 88.560    │
-│ NOI Anual (Receita - OPEX)                     R$ 787.440   │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────┐
+│ Rentabilidade Estimada              │
+├─────────────────────────────────────┤
+│ Cap Rate Mensal (Estimado)   0,87%  │
+└─────────────────────────────────────┘
 ```
 
 ---
@@ -58,7 +63,7 @@ Atualizar o label do **TOTAL OPEX** no PDF para incluir a indicação de que rep
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `src/lib/pdfExport.ts` | Adicionar "(Total Efetivamente Recebido)" ao label do TOTAL OPEX |
+| `src/lib/pdfExport.ts` | Adicionar parâmetro `2` na chamada `formatPercentage()` para Cap Rate |
 
-Esta é uma alteração simples de texto no label.
+Esta é uma alteração simples de uma única linha que corrige a precisão do Cap Rate no PDF.
 
