@@ -11,6 +11,7 @@ import Permuta from "./pages/Permuta";
 import HighestBestUse from "./pages/HighestBestUse";
 import Decisor from "./pages/Decisor";
 import Dashboard from "./pages/Dashboard";
+import AdminUsers from "./pages/AdminUsers";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
 import NotFound from "./pages/NotFound";
@@ -54,6 +55,11 @@ const App = () => (
             <Route path="/dashboard" element={
               <AppLayout title="Dashboard">
                 <Dashboard />
+              </AppLayout>
+            } />
+            <Route path="/admin/users" element={
+              <AppLayout title="Gestão de Usuários">
+                <AdminUsers />
               </AppLayout>
             } />
             

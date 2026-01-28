@@ -52,8 +52,8 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
           });
         } else {
           toast({
-            title: 'Conta criada!',
-            description: 'Verifique seu email para confirmar o cadastro.',
+            title: 'Cadastro enviado!',
+            description: 'Sua conta será analisada pela Setter. Você receberá acesso após aprovação.',
           });
           onOpenChange(false);
         }
