@@ -39,11 +39,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error, data } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    return { error: error as Error | null };
+    
+    if (error) {
+      return { error: error as Error | null };
+    }
+    
+    // Verificar se usuário está aprovado
+    if (data.user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('approved')
+        .eq('user_id', data.user.id)
+        .maybeSingle();
+      
+      if (!profile?.approved) {
+        // Fazer logout e retornar erro
+        await supabase.auth.signOut();
+        return { 
+          error: new Error('Sua conta ainda não foi aprovada. Aguarde a aprovação da Setter.') 
+        };
+      }
+    }
+    
+    return { error: null };
   };
 
   const signUp = async (email: string, password: string, name?: string) => {
