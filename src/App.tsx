@@ -12,6 +12,7 @@ import HighestBestUse from "./pages/HighestBestUse";
 import Decisor from "./pages/Decisor";
 import Dashboard from "./pages/Dashboard";
 import AdminUsers from "./pages/AdminUsers";
+import AdminProjects from "./pages/AdminProjects";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
 import NotFound from "./pages/NotFound";
@@ -60,6 +61,11 @@ const App = () => (
             <Route path="/admin/users" element={
               <AppLayout title="Gestão de Usuários">
                 <AdminUsers />
+              </AppLayout>
+            } />
+            <Route path="/admin/projects" element={
+              <AppLayout title="Projetos dos Usuários">
+                <AdminProjects />
               </AppLayout>
             } />
             

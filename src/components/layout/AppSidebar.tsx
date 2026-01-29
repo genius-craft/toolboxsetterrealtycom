@@ -9,6 +9,7 @@ import {
   LogOut,
   User,
   Users,
+  FolderKanban,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -151,6 +152,25 @@ export function AppSidebar() {
                     <Link to="/admin/users" className="flex items-center gap-3">
                       <Users className="h-4 w-4 shrink-0" />
                       <span>Usuários</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive('/admin/projects')}
+                    tooltip="Projetos dos Usuários"
+                    className={`
+                      transition-all duration-200
+                      ${isActive('/admin/projects') 
+                        ? 'bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90' 
+                        : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent'
+                      }
+                    `}
+                  >
+                    <Link to="/admin/projects" className="flex items-center gap-3">
+                      <FolderKanban className="h-4 w-4 shrink-0" />
+                      <span>Projetos</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

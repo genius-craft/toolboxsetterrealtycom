@@ -4,8 +4,8 @@ import ToolsSection from "@/components/ToolsSection";
 import AudienceSection from "@/components/AudienceSection";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
-
 import CookieConsent from "@/components/CookieConsent";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 
 const Index = () => {
   return (
@@ -20,6 +20,7 @@ const Index = () => {
       <Footer />
       
       <CookieConsent />
+      <WhatsAppButton />
     </div>
   );
 };

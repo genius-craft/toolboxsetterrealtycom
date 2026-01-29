@@ -3,6 +3,7 @@ import { ArrowLeft, FileText, Scale, AlertTriangle, Copyright, Gavel, Building2 
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 
 const TermsOfUse = () => {
   const sections = [
@@ -161,6 +162,20 @@ const TermsOfUse = () => {
                         <li>• Utilizar as ferramentas para análise pessoal e profissional</li>
                         <li>• Salvar e exportar seus projetos e simulações</li>
                         <li>• Compartilhar resultados com clientes e parceiros</li>
+                      </ul>
+                    </div>
+                    
+                    {/* Consentimento de Acesso Administrativo */}
+                    <div className="bg-primary/5 border border-primary/20 rounded-xl p-6">
+                      <h4 className="font-medium text-primary mb-3">Consentimento de Acesso a Dados</h4>
+                      <p className="text-sm">
+                        Ao utilizar a plataforma, você consente que a equipe administrativa da Setter Toolbox 
+                        poderá acessar seus projetos e análises salvos para fins de:
+                      </p>
+                      <ul className="space-y-1 text-sm mt-2">
+                        <li>• Suporte técnico personalizado</li>
+                        <li>• Melhoria dos serviços oferecidos</li>
+                        <li>• Oferecimento de consultoria especializada</li>
                       </ul>
                     </div>
                     
@@ -354,6 +369,7 @@ const TermsOfUse = () => {
       </main>
 
       <Footer />
+      <WhatsAppButton />
     </div>
   );
 };
