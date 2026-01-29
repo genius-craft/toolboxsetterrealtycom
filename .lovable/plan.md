@@ -1,93 +1,75 @@
 
 
-# Plano: Adicionar Campos de Telefone e Categoria no Cadastro
+# Plano: Adicionar Dados de OPEX ao Decisor
 
 ## Objetivo
 
-Atualizar o formulário de cadastro para coletar:
-1. **Nome** (já existe)
-2. **Telefone** (novo campo)
-3. **E-mail** (já existe)
-4. **Categoria** (novo campo com opções: Corretor, Investidor, Proprietário, Rede de Varejo)
+Adicionar campos de despesas operacionais (OPEX) ao calculador Decisor para que o NOI seja calculado corretamente, descontando:
+1. **Condomínio** - Taxa mensal de condomínio
+2. **IPTU** - Imposto predial (valor anual)
+3. **Taxa de Administração** - Percentual sobre o aluguel recebido
+
+---
+
+## Lógica Atual vs. Nova
+
+| Métrica | Antes | Depois |
+|---------|-------|--------|
+| NOI Anual | `Aluguel × 12` | `(Aluguel × 12) - Condomínio Anual - IPTU - Taxa Adm Anual` |
+| Cap Rate | Baseado no aluguel bruto | Baseado no NOI líquido real |
 
 ---
 
 ## Alterações Necessárias
 
-### 1. Migração do Banco de Dados
+### 1. Novos Campos no Formulário (`Decisor.tsx`)
 
-Adicionar coluna `category` na tabela `profiles`:
+Adicionar nova seção "Custos Operacionais (OPEX)" com:
 
-```sql
-ALTER TABLE public.profiles 
-ADD COLUMN category text;
+```text
++------------------------------------+
+|  CUSTOS OPERACIONAIS (OPEX)    ▼   |
++------------------------------------+
+| Condomínio (mensal)                |
+| R$ [__________________]            |
+|                                    |
+| IPTU (anual)                       |
+| R$ [__________________]            |
+|                                    |
+| Taxa de Administração              |
+| [====●===============] 8%          |
++------------------------------------+
 ```
 
-### 2. Atualizar Formulário de Cadastro (`AuthModal.tsx`)
-
-Adicionar os novos campos ao formulário:
-
-| Campo | Tipo | Obrigatório |
-|-------|------|-------------|
-| Nome | Input texto | Sim |
-| Telefone | Input telefone | Sim |
-| E-mail | Input email | Sim |
-| Categoria | Select dropdown | Sim |
-| Senha | Input senha | Sim |
-
-**Opções de Categoria:**
-- Corretor
-- Investidor
-- Proprietário
-- Rede de Varejo
-
-### 3. Atualizar AuthContext (`signUp`)
-
-Passar os novos campos para a criação do perfil:
+### 2. Atualizar Cálculo do NOI
 
 ```typescript
-signUp: (email, password, name, phone, category) => {
-  // ... criar usuário
-  await supabase.from('profiles').insert({
-    user_id: data.user.id,
-    name,
-    phone,
-    category,
-  });
-}
+// Novos estados
+const [condoFee, setCondoFee] = useState(0);      // mensal
+const [propertyTax, setPropertyTax] = useState(0); // anual
+const [managementFee, setManagementFee] = useState(0.08); // 8%
+
+// Cálculo do NOI
+const annualGrossRent = monthlyRent * 12;
+const annualCondoFee = condoFee * 12;
+const annualManagementFee = annualGrossRent * managementFee;
+const annualNOI = annualGrossRent - annualCondoFee - propertyTax - annualManagementFee;
 ```
 
-### 4. Atualizar Página de Admin (`AdminUsers.tsx`)
+### 3. Exibir Resumo de OPEX no Dashboard
 
-Exibir a categoria do usuário na tabela de gestão:
-
-| Nome | Telefone | Categoria | Data de Cadastro | Ações |
-|------|----------|-----------|------------------|-------|
-
----
-
-## Visualização do Formulário
+Adicionar card mostrando a decomposição:
 
 ```text
 +----------------------------------+
-|          Criar Conta             |
+| Estrutura de Custos (OPEX)       |
 +----------------------------------+
-| Nome                             |
-| [________________________]       |
-|                                  |
-| Telefone                         |
-| [________________________]       |
-|                                  |
-| Email                            |
-| [________________________]       |
-|                                  |
-| Categoria                        |
-| [▼ Selecione sua categoria ]     |
-|                                  |
-| Senha                            |
-| [________________________]  👁   |
-|                                  |
-| [ Criar Conta ]                  |
+| Receita Bruta      R$ 400.000/ano|
+| - Condomínio       R$ 12.000/ano |
+| - IPTU             R$ 8.000/ano  |
+| - Taxa Adm (8%)    R$ 32.000/ano |
++----------------------------------+
+| = NOI Líquido      R$ 348.000/ano|
 +----------------------------------+
 ```
 
@@ -97,52 +79,82 @@ Exibir a categoria do usuário na tabela de gestão:
 
 | Arquivo | Alteração |
 |---------|-----------|
-| **Migração SQL** | Adicionar coluna `category` |
-| `src/contexts/AuthContext.tsx` | Atualizar interface e função `signUp` |
-| `src/components/auth/AuthModal.tsx` | Adicionar campos de telefone e categoria |
-| `src/pages/AdminUsers.tsx` | Exibir categoria na tabela |
+| `src/pages/Decisor.tsx` | Adicionar estados e inputs de OPEX, atualizar cálculo do NOI |
+| `src/lib/pdfExport.ts` | Incluir OPEX no relatório PDF |
 
 ---
 
 ## Detalhes Técnicos
 
-### Interface `signUp` atualizada:
+### Estados a adicionar:
 
 ```typescript
-signUp: (
-  email: string, 
-  password: string, 
-  name?: string,
-  phone?: string,
-  category?: string
-) => Promise<{ error: Error | null }>;
+// OPEX inputs
+const [condoFee, setCondoFee] = useState(0);
+const [propertyTax, setPropertyTax] = useState(0);
+const [managementFee, setManagementFee] = useState(0.08);
 ```
 
-### Validação de campos:
-
-- Nome: obrigatório, mínimo 2 caracteres
-- Telefone: obrigatório, formato brasileiro
-- E-mail: obrigatório, formato válido
-- Categoria: obrigatório, deve selecionar uma opção
-- Senha: obrigatório, mínimo 6 caracteres
-
-### Categorias disponíveis:
+### Cálculo atualizado:
 
 ```typescript
-const categories = [
-  { value: 'corretor', label: 'Corretor' },
-  { value: 'investidor', label: 'Investidor' },
-  { value: 'proprietario', label: 'Proprietário' },
-  { value: 'rede_varejo', label: 'Rede de Varejo' },
-];
+// Convert monthly to annual for calculations
+const annualGrossRent = monthlyRent * 12;
+const annualCondoFee = condoFee * 12;
+const annualManagementFee = annualGrossRent * managementFee;
+const totalOpex = annualCondoFee + propertyTax + annualManagementFee;
+const annualNOI = annualGrossRent - totalOpex;
+const targetCapRate = targetMonthlyCapRate * 12;
+```
+
+### Atualizar save/load do projeto:
+
+```typescript
+inputs: {
+  // ... existentes
+  condoFee,
+  propertyTax,
+  managementFee,
+}
+```
+
+### Nova seção no formulário:
+
+```tsx
+<CollapsibleInputCard title="Custos Operacionais (OPEX)" icon={Receipt}>
+  <CurrencyInput
+    label="Condomínio (mensal)"
+    value={condoFee}
+    onChange={setCondoFee}
+    tooltip="condoFee"
+  />
+  <CurrencyInput
+    label="IPTU (anual)"
+    value={propertyTax}
+    onChange={setPropertyTax}
+    tooltip="propertyTax"
+  />
+  <PercentageSlider
+    label="Taxa de Administração"
+    value={managementFee}
+    onChange={setManagementFee}
+    min={0}
+    max={0.15}
+    step={0.01}
+    tooltip="managementFee"
+  />
+</CollapsibleInputCard>
 ```
 
 ---
 
 ## Resultado Esperado
 
-| Antes | Depois |
-|-------|--------|
-| Cadastro com Nome, Email, Senha | Cadastro com Nome, Telefone, Email, Categoria, Senha |
-| Admin vê: Nome, Telefone | Admin vê: Nome, Telefone, Categoria, Email |
+| Campo | Descrição |
+|-------|-----------|
+| Condomínio | Input de valor mensal em R$ |
+| IPTU | Input de valor anual em R$ |
+| Taxa Adm | Slider de 0% a 15% |
+| NOI | Calculado automaticamente descontando todos os custos |
+| Cap Rate | Baseado no NOI líquido (mais preciso) |
 
