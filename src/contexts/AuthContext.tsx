@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { validateProfile, getValidationError, ALLOWED_CATEGORIES } from '@/lib/validation';
 
 interface AuthContextType {
   user: User | null;
@@ -69,12 +70,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, name?: string, phone?: string, category?: string) => {
+    // Validate profile data before proceeding
+    const profileData = { name, phone, category };
+    const validation = validateProfile(profileData);
+    
+    if (!validation.success) {
+      return { error: new Error(getValidationError(validation)) };
+    }
+
+    // Validate category against allowed values
+    if (category && !ALLOWED_CATEGORIES.includes(category as typeof ALLOWED_CATEGORIES[number])) {
+      return { error: new Error('Categoria inválida') };
+    }
+
     const { error, data } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: window.location.origin,
-        data: { name },
+        data: { name: validation.data.name },
       },
     });
 
@@ -82,9 +96,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!error && data.user) {
       await supabase.from('profiles').insert({
         user_id: data.user.id,
-        name: name || null,
-        phone: phone || null,
-        category: category || null,
+        name: validation.data.name,
+        phone: validation.data.phone,
+        category: validation.data.category,
       });
     }
 

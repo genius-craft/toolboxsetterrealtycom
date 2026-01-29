@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { sanitizeErrorMessage } from '@/lib/errorMessages';
 
 export type ProjectType = 'simulador' | 'permuta' | 'hbu' | 'decisor';
 
@@ -88,9 +89,10 @@ export function useSaveProject() {
       });
     },
     onError: (error) => {
+      console.error('Error saving project:', error);
       toast({
         title: 'Erro ao salvar',
-        description: error.message,
+        description: sanitizeErrorMessage(error, 'Não foi possível salvar o projeto.'),
         variant: 'destructive',
       });
     },
@@ -122,9 +124,10 @@ export function useUpdateProject() {
       });
     },
     onError: (error) => {
+      console.error('Error updating project:', error);
       toast({
         title: 'Erro ao atualizar',
-        description: error.message,
+        description: sanitizeErrorMessage(error, 'Não foi possível atualizar o projeto.'),
         variant: 'destructive',
       });
     },
@@ -152,9 +155,10 @@ export function useDeleteProject() {
       });
     },
     onError: (error) => {
+      console.error('Error deleting project:', error);
       toast({
         title: 'Erro ao excluir',
-        description: error.message,
+        description: sanitizeErrorMessage(error, 'Não foi possível excluir o projeto.'),
         variant: 'destructive',
       });
     },
