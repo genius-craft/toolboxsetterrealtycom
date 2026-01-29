@@ -1,116 +1,148 @@
 
 
-# Plano: Adicionar Link de Gestão de Usuários no Menu Lateral
-
-## Situação Atual
-
-A página de gestão de usuários já existe em `/admin/users`, mas não aparece no menu lateral. Você precisa acessá-la manualmente pela URL.
+# Plano: Adicionar Campos de Telefone e Categoria no Cadastro
 
 ## Objetivo
 
-Adicionar um link "Gestão de Usuários" no menu lateral, visível apenas para administradores.
+Atualizar o formulário de cadastro para coletar:
+1. **Nome** (já existe)
+2. **Telefone** (novo campo)
+3. **E-mail** (já existe)
+4. **Categoria** (novo campo com opções: Corretor, Investidor, Proprietário, Rede de Varejo)
 
 ---
 
 ## Alterações Necessárias
 
-### Arquivo: `src/components/layout/AppSidebar.tsx`
+### 1. Migração do Banco de Dados
 
-1. **Importar ícone `Users`** do lucide-react
-2. **Verificar se o usuário é admin** usando a função `has_role` do Supabase
-3. **Adicionar seção "Administração"** no menu, visível apenas para admins
+Adicionar coluna `category` na tabela `profiles`:
 
-```typescript
-// Adicionar ao navItems (apenas para admins)
-const adminItems = [
-  { title: 'Gestão de Usuários', url: '/admin/users', icon: Users },
-];
+```sql
+ALTER TABLE public.profiles 
+ADD COLUMN category text;
 ```
 
-### Estrutura Visual do Menu
+### 2. Atualizar Formulário de Cadastro (`AuthModal.tsx`)
+
+Adicionar os novos campos ao formulário:
+
+| Campo | Tipo | Obrigatório |
+|-------|------|-------------|
+| Nome | Input texto | Sim |
+| Telefone | Input telefone | Sim |
+| E-mail | Input email | Sim |
+| Categoria | Select dropdown | Sim |
+| Senha | Input senha | Sim |
+
+**Opções de Categoria:**
+- Corretor
+- Investidor
+- Proprietário
+- Rede de Varejo
+
+### 3. Atualizar AuthContext (`signUp`)
+
+Passar os novos campos para a criação do perfil:
+
+```typescript
+signUp: (email, password, name, phone, category) => {
+  // ... criar usuário
+  await supabase.from('profiles').insert({
+    user_id: data.user.id,
+    name,
+    phone,
+    category,
+  });
+}
+```
+
+### 4. Atualizar Página de Admin (`AdminUsers.tsx`)
+
+Exibir a categoria do usuário na tabela de gestão:
+
+| Nome | Telefone | Categoria | Data de Cadastro | Ações |
+|------|----------|-----------|------------------|-------|
+
+---
+
+## Visualização do Formulário
 
 ```text
-+---------------------------+
-| Setter Toolbox            |
-+---------------------------+
-| FERRAMENTAS               |
-|   Dashboard               |
-|   Simulador               |
-|   Permuta                 |
-|   H&BU                    |
-|   Decisor                 |
-+---------------------------+
-| ADMINISTRAÇÃO (só admin)  |
-|   Gestão de Usuários      |
-+---------------------------+
-| [Usuário]                 |
-+---------------------------+
++----------------------------------+
+|          Criar Conta             |
++----------------------------------+
+| Nome                             |
+| [________________________]       |
+|                                  |
+| Telefone                         |
+| [________________________]       |
+|                                  |
+| Email                            |
+| [________________________]       |
+|                                  |
+| Categoria                        |
+| [▼ Selecione sua categoria ]     |
+|                                  |
+| Senha                            |
+| [________________________]  👁   |
+|                                  |
+| [ Criar Conta ]                  |
++----------------------------------+
 ```
 
 ---
 
-## Implementação
+## Arquivos a Modificar
 
-### 1. Criar hook para verificar role
+| Arquivo | Alteração |
+|---------|-----------|
+| **Migração SQL** | Adicionar coluna `category` |
+| `src/contexts/AuthContext.tsx` | Atualizar interface e função `signUp` |
+| `src/components/auth/AuthModal.tsx` | Adicionar campos de telefone e categoria |
+| `src/pages/AdminUsers.tsx` | Exibir categoria na tabela |
 
-Adicionar verificação de role do usuário logado:
+---
+
+## Detalhes Técnicos
+
+### Interface `signUp` atualizada:
 
 ```typescript
-const [isAdmin, setIsAdmin] = useState(false);
-
-useEffect(() => {
-  const checkAdminRole = async () => {
-    if (user) {
-      const { data } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .in('role', ['admin', 'super_admin']);
-      
-      setIsAdmin(data && data.length > 0);
-    }
-  };
-  checkAdminRole();
-}, [user]);
+signUp: (
+  email: string, 
+  password: string, 
+  name?: string,
+  phone?: string,
+  category?: string
+) => Promise<{ error: Error | null }>;
 ```
 
-### 2. Renderizar seção de administração
+### Validação de campos:
+
+- Nome: obrigatório, mínimo 2 caracteres
+- Telefone: obrigatório, formato brasileiro
+- E-mail: obrigatório, formato válido
+- Categoria: obrigatório, deve selecionar uma opção
+- Senha: obrigatório, mínimo 6 caracteres
+
+### Categorias disponíveis:
 
 ```typescript
-{isAdmin && (
-  <SidebarGroup>
-    <SidebarGroupLabel>
-      {!isCollapsed && 'Administração'}
-    </SidebarGroupLabel>
-    <SidebarGroupContent>
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <SidebarMenuButton asChild tooltip="Gestão de Usuários">
-            <Link to="/admin/users">
-              <Users className="h-4 w-4" />
-              <span>Usuários</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </SidebarMenu>
-    </SidebarGroupContent>
-  </SidebarGroup>
-)}
+const categories = [
+  { value: 'corretor', label: 'Corretor' },
+  { value: 'investidor', label: 'Investidor' },
+  { value: 'proprietario', label: 'Proprietário' },
+  { value: 'rede_varejo', label: 'Rede de Varejo' },
+];
 ```
 
 ---
 
 ## Resultado Esperado
 
-| Usuário | Menu |
-|---------|------|
-| Usuário comum | Vê apenas "Ferramentas" |
-| Admin/Super Admin | Vê "Ferramentas" + "Administração" com link para gestão de usuários |
-
----
-
-## Acesso Imediato
-
-Enquanto isso, você pode acessar a página agora pela URL direta:
-**`/admin/users`**
+| Antes | Depois |
+|-------|--------|
+| Cadastro com Nome, Email, Senha | Cadastro com Nome, Telefone, Email, Categoria, Senha |
+| Admin vê: Nome, Telefone | Admin vê: Nome, Telefone, Categoria, Email |
 
