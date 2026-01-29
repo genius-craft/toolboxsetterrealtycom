@@ -1,304 +1,289 @@
 
 
-# Plano: Gestão Completa de Usuários para Super Admin
+# Plano: Acesso Admin a Projetos + WhatsApp + Melhorias
 
 ## Objetivo
 
-Adicionar funcionalidades para que o super admin possa:
-1. **Editar** usuários aprovados (nome, telefone, categoria)
-2. **Excluir** usuários aprovados
-3. **Adicionar** novos usuários manualmente
+Implementar três funcionalidades principais:
+1. **Acesso Admin a Projetos** - Super admins podem visualizar projetos de todos os usuários
+2. **Botão WhatsApp Flutuante** - CTA em todas as páginas para conversão de leads
+3. **Atualização Legal** - Termos de Uso e Privacidade atualizados sobre acesso a dados
 
 ---
 
-## Alterações Necessárias
+## Parte 1: Acesso Admin aos Projetos
 
-### Arquivo: `src/pages/AdminUsers.tsx`
+### 1.1 Nova Página de Admin - Projetos
 
-#### 1. Botões de Ação na Tabela de Aprovados
-
-Adicionar coluna "Ações" com botões de editar e excluir:
+Criar página `/admin/projects` para super admins visualizarem todos os projetos:
 
 ```text
-| Nome | Telefone | Categoria | Data de Aprovação | Status | Ações      |
-|------|----------|-----------|-------------------|--------|------------|
-| João | (11)...  | Corretor  | 29/01/2026        | ✓      | ✏️ 🗑️      |
++------------------------------------------------------------------+
+| 📊 Projetos dos Usuários                              [Exportar]  |
++------------------------------------------------------------------+
+| Filtros: [Todos ▼] [Simulador] [Permuta] [H&BU] [Decisor]        |
+| Buscar: [___________________________]                             |
++------------------------------------------------------------------+
+| Usuário      | Projeto      | Tipo      | Data       | Ações     |
+|--------------|--------------|-----------|------------|-----------|
+| João Silva   | Loja Centro  | Simulador | 29/01/26   | 👁️        |
+| Maria Costa  | Terreno SP   | Permuta   | 28/01/26   | 👁️        |
++------------------------------------------------------------------+
 ```
 
-#### 2. Botão "Adicionar Usuário"
+### 1.2 RLS Policy Atualizada
 
-Botão no header da seção de usuários aprovados:
+A RLS já existe para admins visualizarem projetos:
+```sql
+-- Já existe:
+Policy Name: Admins can view all projects 
+Using Expression: (has_role(auth.uid(), 'admin'::app_role) OR has_role(auth.uid(), 'super_admin'::app_role))
+```
+
+### 1.3 Link na Sidebar de Admin
+
+Adicionar item "Projetos" na seção Administração do AppSidebar.
+
+---
+
+## Parte 2: Botão WhatsApp Flutuante
+
+### 2.1 Componente Reutilizável
+
+Criar componente `WhatsAppButton` que aparece em todas as páginas:
 
 ```text
-+------------------------------------------------+
-| ✓ Usuários Aprovados                  [+ Novo] |
-+------------------------------------------------+
+                                      +---------------------------+
+                                      | 💬 Falar com especialista |
+                                      +---------------------------+
+                                                    ↓
+                                              +--------+
+                                              |   📱   |  ← Botão flutuante
+                                              +--------+
+                                                (canto inferior direito)
 ```
 
-#### 3. Modal de Edição/Adição
+### 2.2 Comportamento
 
-Reutilizar estrutura do AuthModal com campos:
-- Nome
-- Telefone  
-- Email (somente para novo usuário)
-- Categoria (Select)
-- Senha (somente para novo usuário)
+| Estado | Comportamento |
+|--------|---------------|
+| Desktop | Botão + tooltip "Falar sobre esses números com especialista" |
+| Mobile | Botão compacto |
+| Hover | Expande com texto completo |
+| Click | Abre WhatsApp com mensagem pré-definida |
 
-#### 4. Dialog de Confirmação de Exclusão
+### 2.3 Número e Link
 
-Usar AlertDialog para confirmar exclusão:
+```typescript
+const whatsappNumber = '5519971223648';
+const message = 'Olá! Gostaria de falar com um especialista sobre minha análise imobiliária.';
+const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+```
+
+### 2.4 Implementação
+
+Adicionar o componente em:
+- `AppLayout.tsx` (páginas com sidebar)
+- `Index.tsx` (landing page)
+- `PrivacyPolicy.tsx` e `TermsOfUse.tsx`
+
+---
+
+## Parte 3: Atualização dos Termos Legais
+
+### 3.1 Política de Privacidade - Nova Seção
+
+Adicionar seção "Acesso Administrativo":
+
 ```text
 +----------------------------------+
-| Excluir Usuário                  |
-| Deseja realmente excluir João?   |
-| Esta ação não pode ser desfeita. |
+| 🔐 Acesso Administrativo          |
++----------------------------------+
+| Para garantir a qualidade dos    |
+| serviços e oferecer suporte      |
+| personalizado, nossos            |
+| administradores podem acessar:   |
 |                                  |
-| [Cancelar]  [Excluir]            |
+| • Projetos e simulações criados  |
+| • Dados inseridos nas análises   |
+| • Histórico de uso               |
+|                                  |
+| Este acesso é usado para:        |
+| • Suporte técnico personalizado  |
+| • Melhorias nos serviços         |
+| • Consultoria especializada      |
 +----------------------------------+
+```
+
+### 3.2 Termos de Uso - Atualização
+
+Adicionar cláusula na seção "Uso Permitido":
+
+```text
+"Ao utilizar a plataforma, você consente que a equipe 
+administrativa da Setter Toolbox poderá acessar seus 
+projetos e análises salvos para fins de suporte, 
+melhoria dos serviços e oferecimento de consultoria 
+especializada."
 ```
 
 ---
 
-## Estrutura Visual
+## Parte 4: Arquivos a Modificar/Criar
 
-### Tabela de Usuários Aprovados (Atualizada)
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/components/WhatsAppButton.tsx` | **Novo** - Componente do botão flutuante |
+| `src/pages/AdminProjects.tsx` | **Novo** - Página de gestão de projetos |
+| `src/App.tsx` | Adicionar rota `/admin/projects` |
+| `src/components/layout/AppLayout.tsx` | Incluir WhatsAppButton |
+| `src/components/layout/AppSidebar.tsx` | Adicionar link para admin/projects |
+| `src/pages/Index.tsx` | Incluir WhatsAppButton |
+| `src/pages/PrivacyPolicy.tsx` | Adicionar seção "Acesso Administrativo" |
+| `src/pages/TermsOfUse.tsx` | Atualizar cláusulas sobre acesso a dados |
 
-```text
-+------------------------------------------------------------------+
-| ✓ Usuários Aprovados                              [+ Adicionar]  |
-+------------------------------------------------------------------+
-| Nome      | Telefone       | Categoria  | Data     | Status | ⚙️ |
-|-----------|----------------|------------|----------|--------|-----|
-| João      | (11) 99999...  | Corretor   | 29/01/26 | ✓      | ✏️🗑️|
-| Maria     | (11) 88888...  | Investidor | 28/01/26 | ✓      | ✏️🗑️|
-+------------------------------------------------------------------+
-```
+---
 
-### Modal de Edição
+## Parte 5: 10 Sugestões de Melhorias
 
-```text
-+----------------------------------+
-|        Editar Usuário            |
-+----------------------------------+
-| Nome                             |
-| [João Silva_______________]      |
-|                                  |
-| Telefone                         |
-| [(11) 99999-9999__________]      |
-|                                  |
-| Categoria                        |
-| [▼ Corretor________________]     |
-|                                  |
-| [Cancelar]      [Salvar]         |
-+----------------------------------+
-```
+### Para Usuários (Geração de Leads e Autoridade)
 
-### Modal de Adição
+| # | Feature | Descrição | Impacto |
+|---|---------|-----------|---------|
+| 1 | **Landing Page com Depoimentos** | Seção com cases de sucesso e depoimentos de clientes | Autoridade + Conversão |
+| 2 | **Blog/Insights** | Área de conteúdo educacional sobre mercado imobiliário (já tem tabela `insights`) | SEO + Autoridade |
+| 3 | **Compartilhar PDF via Email** | Enviar análise por email com formulário de captura do destinatário | Lead Generation |
+| 4 | **Calculadora Gratuita Simplificada** | Versão básica sem login para captura de leads | Lead Generation |
+| 5 | **Notificações Push/Email** | Lembretes sobre projetos e novidades da plataforma | Engajamento |
 
-```text
-+----------------------------------+
-|       Adicionar Usuário          |
-+----------------------------------+
-| Nome                             |
-| [________________________]       |
-|                                  |
-| Telefone                         |
-| [________________________]       |
-|                                  |
-| Email                            |
-| [________________________]       |
-|                                  |
-| Categoria                        |
-| [▼ Selecione______________]      |
-|                                  |
-| Senha                            |
-| [________________________]  👁   |
-|                                  |
-| [Cancelar]      [Criar]          |
-+----------------------------------+
-```
+### Para Administradores
+
+| # | Feature | Descrição | Impacto |
+|---|---------|-----------|---------|
+| 6 | **Dashboard de Métricas** | KPIs: usuários ativos, projetos criados, conversão | Analytics |
+| 7 | **Exportar Projetos CSV** | Download de dados para análise offline | Operacional |
+| 8 | **Log de Atividades** | Histórico de ações dos usuários na plataforma | Segurança + Suporte |
+| 9 | **Segmentação de Leads** | Tags e scores para priorização de contatos | Vendas |
+| 10 | **Integração CRM** | Webhook para enviar leads ao CRM (Pipedrive, HubSpot) | Automação |
 
 ---
 
 ## Detalhes Técnicos
 
-### Novos Estados:
+### Componente WhatsAppButton
 
 ```typescript
-const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
-const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-const [deleteConfirmUser, setDeleteConfirmUser] = useState<UserProfile | null>(null);
+// src/components/WhatsAppButton.tsx
+import { MessageCircle } from 'lucide-react';
 
-// Form states
-const [formName, setFormName] = useState('');
-const [formPhone, setFormPhone] = useState('');
-const [formEmail, setFormEmail] = useState('');
-const [formCategory, setFormCategory] = useState('');
-const [formPassword, setFormPassword] = useState('');
-```
+const WHATSAPP_NUMBER = '5519971223648';
+const DEFAULT_MESSAGE = 'Olá! Gostaria de falar com um especialista sobre minha análise imobiliária.';
 
-### Função de Edição:
+export function WhatsAppButton() {
+  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(DEFAULT_MESSAGE)}`;
 
-```typescript
-const handleEdit = async () => {
-  if (!editingUser) return;
-  setActionLoading(editingUser.id);
-  
-  const { error } = await supabase
-    .from('profiles')
-    .update({
-      name: formName,
-      phone: formPhone,
-      category: formCategory,
-    })
-    .eq('id', editingUser.id);
-
-  if (!error) {
-    toast({ title: 'Usuário atualizado!' });
-    fetchProfiles();
-    setIsEditModalOpen(false);
-  }
-  setActionLoading(null);
-};
-```
-
-### Função de Exclusão:
-
-```typescript
-const handleDelete = async (profile: UserProfile) => {
-  setActionLoading(profile.id);
-  
-  // Deletar profile (cascade deve deletar auth.user se configurado)
-  const { error } = await supabase
-    .from('profiles')
-    .delete()
-    .eq('id', profile.id);
-
-  if (!error) {
-    toast({ title: 'Usuário excluído!' });
-    fetchProfiles();
-  }
-  setDeleteConfirmUser(null);
-  setActionLoading(null);
-};
-```
-
-### Função de Adição Manual:
-
-```typescript
-const handleAddUser = async () => {
-  setActionLoading('new');
-  
-  // Criar usuário via Supabase Auth
-  const { data, error } = await supabase.auth.admin.createUser({
-    email: formEmail,
-    password: formPassword,
-    email_confirm: true,
-  });
-
-  if (data?.user) {
-    // Criar profile já aprovado
-    await supabase.from('profiles').insert({
-      user_id: data.user.id,
-      name: formName,
-      phone: formPhone,
-      category: formCategory,
-      approved: true,
-      approved_at: new Date().toISOString(),
-      approved_by: user?.id,
-    });
-    
-    toast({ title: 'Usuário criado com sucesso!' });
-    fetchProfiles();
-  }
-  setIsAddModalOpen(false);
-  setActionLoading(null);
-};
-```
-
-### Componentes a Importar:
-
-```typescript
-import { Pencil, Trash2, UserPlus } from 'lucide-react';
-import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter 
-} from '@/components/ui/dialog';
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel,
-  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
-  AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-```
-
----
-
-## Edge Function para Criação de Usuário
-
-Como `supabase.auth.admin.createUser()` requer `service_role_key`, será necessário criar uma edge function:
-
-### Arquivo: `supabase/functions/create-user/index.ts`
-
-```typescript
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
-
-  const { email, password, name, phone, category, approved_by } = await req.json();
-  
-  const supabaseAdmin = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  return (
+    <a
+      href={whatsappUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="fixed bottom-6 right-6 z-50 group"
+    >
+      <div className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-full shadow-lg transition-all duration-300">
+        <MessageCircle className="h-6 w-6" />
+        <span className="hidden sm:inline whitespace-nowrap">
+          Falar com especialista
+        </span>
+      </div>
+    </a>
   );
-
-  // Criar usuário
-  const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-  });
-
-  if (userError) return new Response(JSON.stringify({ error: userError.message }), { status: 400 });
-
-  // Criar profile aprovado
-  const { error: profileError } = await supabaseAdmin.from('profiles').insert({
-    user_id: userData.user.id,
-    name,
-    phone,
-    category,
-    approved: true,
-    approved_at: new Date().toISOString(),
-    approved_by,
-  });
-
-  return new Response(JSON.stringify({ success: true, user: userData.user }));
-});
+}
 ```
 
----
+### Página AdminProjects
 
-## Arquivos a Modificar/Criar
+```typescript
+// Estrutura principal
+export default function AdminProjects() {
+  const { data: allProjects, isLoading } = useAllProjects(); // Hook para buscar todos
 
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/pages/AdminUsers.tsx` | Adicionar modals de edição/adição, botões de ação, dialogs de confirmação |
-| `supabase/functions/create-user/index.ts` | Nova edge function para criar usuários com service_role |
-| `supabase/config.toml` | Registrar nova edge function |
+  return (
+    <div className="p-6">
+      <h1>Projetos dos Usuários</h1>
+      
+      {/* Filtros */}
+      <div className="flex gap-2 mb-4">
+        <Select /> {/* Tipo de projeto */}
+        <Input placeholder="Buscar por usuário..." />
+      </div>
+      
+      {/* Tabela */}
+      <Table>
+        {/* Colunas: Usuário, Projeto, Tipo, Data, Ações */}
+      </Table>
+    </div>
+  );
+}
+```
+
+### Hook useAllProjects (Admin)
+
+```typescript
+export function useAllProjects(projectType?: ProjectType) {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['admin-projects', projectType],
+    queryFn: async () => {
+      // RLS já permite acesso para admins
+      let query = supabase
+        .from('toolbox_projects')
+        .select(`
+          *,
+          profiles!toolbox_projects_user_id_fkey(name, phone, category)
+        `)
+        .order('updated_at', { ascending: false });
+
+      if (projectType) {
+        query = query.eq('project_type', projectType);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+}
+```
+
+### Atualização do Sidebar
+
+```typescript
+// Em AppSidebar.tsx - seção admin
+{isAdmin && (
+  <SidebarGroup>
+    <SidebarGroupLabel>Administração</SidebarGroupLabel>
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <Link to="/admin/users">Usuários</Link>
+      </SidebarMenuItem>
+      <SidebarMenuItem>
+        <Link to="/admin/projects">Projetos</Link> {/* NOVO */}
+      </SidebarMenuItem>
+    </SidebarMenu>
+  </SidebarGroup>
+)}
+```
 
 ---
 
 ## Resultado Esperado
 
-| Ação | Comportamento |
-|------|---------------|
-| Clique em ✏️ | Abre modal de edição com dados preenchidos |
-| Clique em 🗑️ | Abre dialog de confirmação |
-| Clique em "+ Adicionar" | Abre modal para criar novo usuário |
-| Salvar edição | Atualiza profile no banco |
-| Confirmar exclusão | Remove profile do banco |
-| Criar usuário | Cria auth.user + profile já aprovado |
+| Funcionalidade | Resultado |
+|----------------|-----------|
+| Acesso Admin Projetos | Super admins veem todos os projetos salvos na plataforma |
+| WhatsApp Flutuante | Botão verde em todas as páginas para contato direto |
+| Termos Atualizados | Cláusulas claras sobre acesso administrativo aos dados |
+| 10 Sugestões | Roadmap para evolução da plataforma |
 
