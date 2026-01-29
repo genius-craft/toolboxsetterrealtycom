@@ -3,9 +3,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Mail, Lock, User, Eye, EyeOff, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+
+const categories = [
+  { value: 'corretor', label: 'Corretor' },
+  { value: 'investidor', label: 'Investidor' },
+  { value: 'proprietario', label: 'Proprietário' },
+  { value: 'rede_varejo', label: 'Rede de Varejo' },
+];
 
 interface AuthModalProps {
   open: boolean;
@@ -17,6 +25,8 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [category, setCategory] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { signIn, signUp } = useAuth();
@@ -43,7 +53,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
           onOpenChange(false);
         }
       } else {
-        const { error } = await signUp(email, password, name);
+        const { error } = await signUp(email, password, name, phone, category);
         if (error) {
           toast({
             title: 'Erro ao criar conta',
@@ -74,22 +84,43 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           {mode === 'signup' && (
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-sm font-medium">
-                Nome
-              </Label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Seu nome"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="pl-10"
-                />
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-sm font-medium">
+                  Nome
+                </Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Seu nome"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    className="pl-10"
+                  />
+                </div>
               </div>
-            </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-sm font-medium">
+                  Telefone
+                </Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="(11) 99999-9999"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+            </>
           )}
 
           <div className="space-y-2">
@@ -109,6 +140,26 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
               />
             </div>
           </div>
+
+          {mode === 'signup' && (
+            <div className="space-y-2">
+              <Label htmlFor="category" className="text-sm font-medium">
+                Categoria
+              </Label>
+              <Select value={category} onValueChange={setCategory} required>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione sua categoria" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="password" className="text-sm font-medium">

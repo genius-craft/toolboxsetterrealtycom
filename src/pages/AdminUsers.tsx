@@ -15,11 +15,19 @@ interface UserProfile {
   user_id: string;
   name: string | null;
   phone: string | null;
+  category: string | null;
   approved: boolean;
   approved_at: string | null;
   created_at: string | null;
   email?: string;
 }
+
+const categoryLabels: Record<string, string> = {
+  corretor: 'Corretor',
+  investidor: 'Investidor',
+  proprietario: 'Proprietário',
+  rede_varejo: 'Rede de Varejo',
+};
 
 export default function AdminUsers() {
   const { user } = useAuth();
@@ -179,6 +187,7 @@ export default function AdminUsers() {
                 <TableRow>
                   <TableHead>Nome</TableHead>
                   <TableHead>Telefone</TableHead>
+                  <TableHead>Categoria</TableHead>
                   <TableHead>Data de Cadastro</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -190,6 +199,13 @@ export default function AdminUsers() {
                       {profile.name || 'Sem nome'}
                     </TableCell>
                     <TableCell>{profile.phone || '-'}</TableCell>
+                    <TableCell>
+                      {profile.category ? (
+                        <Badge variant="outline" className="bg-muted">
+                          {categoryLabels[profile.category] || profile.category}
+                        </Badge>
+                      ) : '-'}
+                    </TableCell>
                     <TableCell>
                       {profile.created_at
                         ? format(new Date(profile.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
@@ -257,6 +273,7 @@ export default function AdminUsers() {
                 <TableRow>
                   <TableHead>Nome</TableHead>
                   <TableHead>Telefone</TableHead>
+                  <TableHead>Categoria</TableHead>
                   <TableHead>Data de Aprovação</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
@@ -268,6 +285,13 @@ export default function AdminUsers() {
                       {profile.name || 'Sem nome'}
                     </TableCell>
                     <TableCell>{profile.phone || '-'}</TableCell>
+                    <TableCell>
+                      {profile.category ? (
+                        <Badge variant="outline" className="bg-muted">
+                          {categoryLabels[profile.category] || profile.category}
+                        </Badge>
+                      ) : '-'}
+                    </TableCell>
                     <TableCell>
                       {profile.approved_at
                         ? format(new Date(profile.approved_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
