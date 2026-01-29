@@ -507,6 +507,14 @@ export interface DecisorPDFData {
     monthlyRent: number;
     targetMonthlyCapRate: number;
   };
+  opex?: {
+    condoFee: number;
+    propertyTax: number;
+    managementFee: number;
+    annualGrossRent: number;
+    totalOpex: number;
+    annualNOI: number;
+  };
   ratings: {
     locationQuality: number;
     tenantRisk: number;
@@ -524,49 +532,69 @@ export async function generateDecisorPDF(data: DecisorPDFData): Promise<void> {
 
   const starRating = (value: number) => '★'.repeat(value) + '☆'.repeat(5 - value);
 
+  // Build sections array
+  const sections: PDFSection[] = [
+    {
+      title: 'Veredicto',
+      type: 'verdict',
+      data: {
+        verdict: data.verdict,
+        description: verdictDescriptions[data.verdict],
+      },
+    },
+    {
+      title: 'Análise de Preço',
+      type: 'key-value',
+      data: [
+        { label: 'Preço Pedido', value: formatCurrency(data.inputs.askingPrice) },
+        { label: 'Preço Máximo (Strike)', value: formatCurrency(data.kpis.maxStrikePrice), highlight: true },
+        { label: 'Gap', value: `${formatCompactCurrency(data.kpis.priceGap)} (${formatPercentage(data.kpis.priceGapPercentage)})`, highlight: data.kpis.priceGap >= 0 },
+      ],
+    },
+    {
+      title: 'Indicadores Financeiros',
+      type: 'kpi-grid',
+      data: [
+        { label: 'Cap Rate Implícito (mensal)', value: formatPercentage(data.kpis.impliedCapRate / 12) },
+        { label: 'Aluguel Mensal', value: formatCurrency(data.inputs.monthlyRent) },
+        { label: 'Cap Rate Alvo (mensal)', value: formatPercentage(data.inputs.targetMonthlyCapRate) },
+        { label: 'Score Qualitativo', value: `${Math.round(data.kpis.qualityScore)}/100`, highlight: true },
+      ],
+    },
+  ];
+
+  // Add OPEX section if data is provided
+  if (data.opex && data.opex.totalOpex > 0) {
+    sections.push({
+      title: 'Custos Operacionais (OPEX)',
+      type: 'key-value',
+      data: [
+        { label: 'Receita Bruta Anual', value: formatCurrency(data.opex.annualGrossRent) },
+        { label: 'Condomínio (anual)', value: `-${formatCurrency(data.opex.condoFee * 12)}` },
+        { label: 'IPTU (anual)', value: `-${formatCurrency(data.opex.propertyTax)}` },
+        { label: `Taxa Adm (${formatPercentage(data.opex.managementFee)})`, value: `-${formatCurrency(data.opex.annualGrossRent * data.opex.managementFee)}` },
+        { label: 'NOI Líquido Anual', value: formatCurrency(data.opex.annualNOI), highlight: true },
+      ],
+    });
+  }
+
+  // Add qualitative section
+  sections.push({
+    title: 'Avaliação Qualitativa',
+    type: 'key-value',
+    data: [
+      { label: 'Localização', value: starRating(data.ratings.locationQuality) },
+      { label: 'Risco do Inquilino', value: starRating(data.ratings.tenantRisk) },
+      { label: 'Liquidez Futura', value: starRating(data.ratings.futureLiquidity) },
+      { label: 'Condição do Ativo', value: starRating(data.ratings.assetCondition) },
+    ],
+  });
+
   await generatePDF({
     title: 'Decisor Go/No-Go',
     assetName: data.assetName || 'Ativo sem nome',
     date: new Date().toLocaleDateString('pt-BR'),
-    sections: [
-      {
-        title: 'Veredicto',
-        type: 'verdict',
-        data: {
-          verdict: data.verdict,
-          description: verdictDescriptions[data.verdict],
-        },
-      },
-      {
-        title: 'Análise de Preço',
-        type: 'key-value',
-        data: [
-          { label: 'Preço Pedido', value: formatCurrency(data.inputs.askingPrice) },
-          { label: 'Preço Máximo (Strike)', value: formatCurrency(data.kpis.maxStrikePrice), highlight: true },
-          { label: 'Gap', value: `${formatCompactCurrency(data.kpis.priceGap)} (${formatPercentage(data.kpis.priceGapPercentage)})`, highlight: data.kpis.priceGap >= 0 },
-        ],
-      },
-      {
-        title: 'Indicadores Financeiros',
-        type: 'kpi-grid',
-        data: [
-          { label: 'Cap Rate Implícito (mensal)', value: formatPercentage(data.kpis.impliedCapRate / 12) },
-          { label: 'Aluguel Mensal', value: formatCurrency(data.inputs.monthlyRent) },
-          { label: 'Cap Rate Alvo (mensal)', value: formatPercentage(data.inputs.targetMonthlyCapRate) },
-          { label: 'Score Qualitativo', value: `${Math.round(data.kpis.qualityScore)}/100`, highlight: true },
-        ],
-      },
-      {
-        title: 'Avaliação Qualitativa',
-        type: 'key-value',
-        data: [
-          { label: 'Localização', value: starRating(data.ratings.locationQuality) },
-          { label: 'Risco do Inquilino', value: starRating(data.ratings.tenantRisk) },
-          { label: 'Liquidez Futura', value: starRating(data.ratings.futureLiquidity) },
-          { label: 'Condição do Ativo', value: starRating(data.ratings.assetCondition) },
-        ],
-      },
-    ],
+    sections,
   });
 }
 

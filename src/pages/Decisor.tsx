@@ -29,6 +29,7 @@ import {
   TrendingUp,
   Wrench,
   Loader2,
+  Receipt,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { financialGlossary } from '@/components/tools/InfoTooltip';
@@ -92,6 +93,11 @@ export default function Decisor() {
   const [monthlyRent, setMonthlyRent] = useState(33333); // Aluguel mensal
   const [targetMonthlyCapRate, setTargetMonthlyCapRate] = useState(0.0067); // 0.67% mensal
 
+  // OPEX inputs
+  const [condoFee, setCondoFee] = useState(0); // mensal
+  const [propertyTax, setPropertyTax] = useState(0); // anual
+  const [managementFee, setManagementFee] = useState(0.08); // 8%
+
   // Qualitative inputs (1-5)
   const [locationQuality, setLocationQuality] = useState(4);
   const [tenantRisk, setTenantRisk] = useState(3);
@@ -99,7 +105,11 @@ export default function Decisor() {
   const [assetCondition, setAssetCondition] = useState(4);
 
   // Convert monthly to annual for calculations
-  const annualNOI = monthlyRent * 12;
+  const annualGrossRent = monthlyRent * 12;
+  const annualCondoFee = condoFee * 12;
+  const annualManagementFee = annualGrossRent * managementFee;
+  const totalOpex = annualCondoFee + propertyTax + annualManagementFee;
+  const annualNOI = annualGrossRent - totalOpex;
   const targetCapRate = targetMonthlyCapRate * 12;
 
   // Calculations
@@ -130,6 +140,9 @@ export default function Decisor() {
     setAskingPrice(inputs.askingPrice ?? 5000000);
     setMonthlyRent(inputs.monthlyRent ?? 33333);
     setTargetMonthlyCapRate(inputs.targetMonthlyCapRate ?? 0.0067);
+    setCondoFee(inputs.condoFee ?? 0);
+    setPropertyTax(inputs.propertyTax ?? 0);
+    setManagementFee(inputs.managementFee ?? 0.08);
     setLocationQuality(inputs.locationQuality ?? 4);
     setTenantRisk(inputs.tenantRisk ?? 3);
     setFutureLiquidity(inputs.futureLiquidity ?? 3);
@@ -157,6 +170,9 @@ export default function Decisor() {
         askingPrice,
         monthlyRent,
         targetMonthlyCapRate,
+        condoFee,
+        propertyTax,
+        managementFee,
         locationQuality,
         tenantRisk,
         futureLiquidity,
@@ -188,6 +204,14 @@ export default function Decisor() {
           askingPrice,
           monthlyRent,
           targetMonthlyCapRate,
+        },
+        opex: {
+          condoFee,
+          propertyTax,
+          managementFee,
+          annualGrossRent,
+          totalOpex,
+          annualNOI,
         },
         ratings: {
           locationQuality,
@@ -280,6 +304,34 @@ export default function Decisor() {
               : 'danger'
           }
         />
+      </div>
+
+      {/* OPEX Summary */}
+      <div className="bg-card rounded-lg border border-border p-4 shadow-card">
+        <h3 className="font-serif text-lg mb-3">Estrutura de Custos (OPEX)</h3>
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Receita Bruta</span>
+            <span className="font-mono">{formatCompactCurrency(annualGrossRent)}/ano</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">- Condomínio</span>
+            <span className="font-mono text-red-500">-{formatCompactCurrency(annualCondoFee)}/ano</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">- IPTU</span>
+            <span className="font-mono text-red-500">-{formatCompactCurrency(propertyTax)}/ano</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">- Taxa Adm ({formatPercentage(managementFee)})</span>
+            <span className="font-mono text-red-500">-{formatCompactCurrency(annualManagementFee)}/ano</span>
+          </div>
+          <div className="h-px bg-border" />
+          <div className="flex justify-between font-medium">
+            <span className="text-foreground">= NOI Líquido</span>
+            <span className="font-mono text-accent">{formatCompactCurrency(annualNOI)}/ano</span>
+          </div>
+        </div>
       </div>
 
       {/* Strike Price */}
@@ -406,7 +458,7 @@ export default function Decisor() {
           label="Aluguel Mensal"
           value={monthlyRent}
           onChange={setMonthlyRent}
-          tooltip="noi"
+          tooltip="monthlyRent"
         />
         <PercentageSlider
           label="Cap Rate Alvo (mensal)"
@@ -416,6 +468,31 @@ export default function Decisor() {
           max={0.015}
           step={0.0005}
           tooltip="targetCapRate"
+        />
+      </CollapsibleInputCard>
+
+      {/* OPEX Inputs */}
+      <CollapsibleInputCard title="Custos Operacionais (OPEX)" icon={Receipt} defaultOpen={false}>
+        <CurrencyInput
+          label="Condomínio (mensal)"
+          value={condoFee}
+          onChange={setCondoFee}
+          tooltip="condoFee"
+        />
+        <CurrencyInput
+          label="IPTU (anual)"
+          value={propertyTax}
+          onChange={setPropertyTax}
+          tooltip="propertyTax"
+        />
+        <PercentageSlider
+          label="Taxa de Administração"
+          value={managementFee}
+          onChange={setManagementFee}
+          min={0}
+          max={0.15}
+          step={0.01}
+          tooltip="managementFee"
         />
       </CollapsibleInputCard>
 
