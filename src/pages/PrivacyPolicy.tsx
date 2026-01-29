@@ -1,14 +1,16 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, Shield, Database, Eye, Lock, UserCheck, Mail } from "lucide-react";
+import { ArrowLeft, Shield, Database, Eye, Lock, UserCheck, Mail, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 
 const PrivacyPolicy = () => {
   const sections = [
     { id: "introducao", title: "Introdução" },
     { id: "dados-coletados", title: "Dados Coletados" },
     { id: "finalidade", title: "Finalidade" },
+    { id: "acesso-administrativo", title: "Acesso Administrativo" },
     { id: "compartilhamento", title: "Compartilhamento" },
     { id: "cookies", title: "Cookies" },
     { id: "direitos", title: "Seus Direitos" },
@@ -164,6 +166,58 @@ const PrivacyPolicy = () => {
                         <span><strong className="text-foreground">Obrigações Legais:</strong> Cumprir requisitos legais e regulatórios aplicáveis.</span>
                       </li>
                     </ul>
+                  </div>
+                </section>
+
+                {/* Acesso Administrativo - NOVA SEÇÃO */}
+                <section id="acesso-administrativo">
+                  <div className="bg-primary/5 border border-primary/20 rounded-2xl p-8">
+                    <h2 className="text-2xl font-semibold text-foreground mb-4 flex items-center gap-3">
+                      <KeyRound className="w-6 h-6 text-primary" strokeWidth={1.5} />
+                      Acesso Administrativo
+                    </h2>
+                    <div className="space-y-4 text-muted-foreground">
+                      <p>
+                        Para garantir a qualidade dos serviços e oferecer suporte personalizado, 
+                        nossos administradores podem acessar:
+                      </p>
+                      <ul className="space-y-2">
+                        <li className="flex items-center gap-3">
+                          <span className="w-2 h-2 rounded-full bg-primary" />
+                          <span>Projetos e simulações criados na plataforma</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <span className="w-2 h-2 rounded-full bg-primary" />
+                          <span>Dados inseridos nas análises</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <span className="w-2 h-2 rounded-full bg-primary" />
+                          <span>Histórico de uso e navegação</span>
+                        </li>
+                      </ul>
+                      <p className="mt-4">
+                        <strong className="text-foreground">Este acesso é utilizado exclusivamente para:</strong>
+                      </p>
+                      <ul className="space-y-2">
+                        <li className="flex items-center gap-3">
+                          <span className="w-2 h-2 rounded-full bg-accent" />
+                          <span>Suporte técnico personalizado</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <span className="w-2 h-2 rounded-full bg-accent" />
+                          <span>Melhorias contínuas nos serviços</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <span className="w-2 h-2 rounded-full bg-accent" />
+                          <span>Oferecimento de consultoria especializada</span>
+                        </li>
+                      </ul>
+                      <p className="text-sm mt-4 bg-muted/30 p-4 rounded-lg">
+                        <strong className="text-foreground">Importante:</strong> Ao utilizar a plataforma, 
+                        você consente que a equipe administrativa da Setter Toolbox poderá acessar seus 
+                        projetos e análises salvos para os fins descritos acima.
+                      </p>
+                    </div>
                   </div>
                 </section>
 
@@ -334,6 +388,7 @@ const PrivacyPolicy = () => {
       </main>
 
       <Footer />
+      <WhatsAppButton />
     </div>
   );
 };

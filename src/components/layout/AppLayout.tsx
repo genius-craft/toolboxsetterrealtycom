@@ -1,6 +1,7 @@
 import React from 'react';
 import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
+import { WhatsAppButton } from '@/components/WhatsAppButton';
 import { Menu } from 'lucide-react';
 
 interface AppLayoutProps {
@@ -31,6 +32,9 @@ export function AppLayout({ children, title }: AppLayoutProps) {
             {children}
           </main>
         </SidebarInset>
+        
+        {/* WhatsApp floating button */}
+        <WhatsAppButton />
       </div>
     </SidebarProvider>
   );
