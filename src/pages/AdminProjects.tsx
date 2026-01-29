@@ -26,6 +26,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { ProjectViewer } from '@/components/admin/ProjectViewer';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const projectTypeLabels: Record<string, string> = {
@@ -222,7 +223,14 @@ export default function AdminProjects() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => setViewingProject({ inputs: project.inputs, results: project.results, name: project.name })}
+                      onClick={() => setViewingProject({
+                        inputs: project.inputs,
+                        results: project.results,
+                        name: project.name,
+                        project_type: project.project_type,
+                        user_name: project.user_name,
+                        updated_at: project.updated_at,
+                      })}
                       title="Ver detalhes"
                     >
                       <Eye className="h-4 w-4" />
@@ -237,34 +245,22 @@ export default function AdminProjects() {
 
       {/* View Project Dialog */}
       <Dialog open={!!viewingProject} onOpenChange={() => setViewingProject(null)}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Eye className="h-5 w-5" />
+            <DialogTitle className="sr-only">
               {(viewingProject?.name as string) || 'Detalhes do Projeto'}
             </DialogTitle>
           </DialogHeader>
           
           {viewingProject && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                  Inputs
-                </h3>
-                <pre className="bg-muted/50 rounded-lg p-4 text-sm overflow-x-auto">
-                  {JSON.stringify(viewingProject.inputs, null, 2)}
-                </pre>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                  Resultados
-                </h3>
-                <pre className="bg-muted/50 rounded-lg p-4 text-sm overflow-x-auto">
-                  {JSON.stringify(viewingProject.results, null, 2)}
-                </pre>
-              </div>
-            </div>
+            <ProjectViewer
+              projectType={(viewingProject.project_type as string) || ''}
+              inputs={viewingProject.inputs as import('@/integrations/supabase/types').Json}
+              results={viewingProject.results as import('@/integrations/supabase/types').Json}
+              projectName={(viewingProject.name as string) || ''}
+              userName={viewingProject.user_name as string | null}
+              updatedAt={viewingProject.updated_at as string}
+            />
           )}
         </DialogContent>
       </Dialog>
