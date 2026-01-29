@@ -6,9 +6,35 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Check, X, Loader2, Users, Clock, CheckCircle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Check, X, Loader2, Users, Clock, CheckCircle, Pencil, Trash2, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface UserProfile {
   id: string;
@@ -29,12 +55,33 @@ const categoryLabels: Record<string, string> = {
   rede_varejo: 'Rede de Varejo',
 };
 
+const categoryOptions = [
+  { value: 'corretor', label: 'Corretor' },
+  { value: 'investidor', label: 'Investidor' },
+  { value: 'proprietario', label: 'Proprietário' },
+  { value: 'rede_varejo', label: 'Rede de Varejo' },
+];
+
 export default function AdminUsers() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  // Modal states
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  const [deleteConfirmUser, setDeleteConfirmUser] = useState<UserProfile | null>(null);
+
+  // Form states
+  const [formName, setFormName] = useState('');
+  const [formPhone, setFormPhone] = useState('');
+  const [formEmail, setFormEmail] = useState('');
+  const [formCategory, setFormCategory] = useState('');
+  const [formPassword, setFormPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     fetchProfiles();
@@ -114,6 +161,153 @@ export default function AdminUsers() {
       toast({
         title: 'Erro',
         description: 'Não foi possível rejeitar o usuário.',
+        variant: 'destructive',
+      });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Open edit modal with user data
+  const openEditModal = (profile: UserProfile) => {
+    setEditingUser(profile);
+    setFormName(profile.name || '');
+    setFormPhone(profile.phone || '');
+    setFormCategory(profile.category || '');
+    setIsEditModalOpen(true);
+  };
+
+  // Handle edit save
+  const handleEditSave = async () => {
+    if (!editingUser) return;
+    setActionLoading(editingUser.id);
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          name: formName || null,
+          phone: formPhone || null,
+          category: formCategory || null,
+        })
+        .eq('id', editingUser.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Usuário atualizado!',
+        description: 'Os dados foram salvos com sucesso.',
+      });
+
+      setIsEditModalOpen(false);
+      setEditingUser(null);
+      fetchProfiles();
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível atualizar o usuário.',
+        variant: 'destructive',
+      });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Handle delete
+  const handleDelete = async () => {
+    if (!deleteConfirmUser) return;
+    setActionLoading(deleteConfirmUser.id);
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', deleteConfirmUser.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Usuário excluído',
+        description: 'O usuário foi removido do sistema.',
+      });
+
+      setDeleteConfirmUser(null);
+      fetchProfiles();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível excluir o usuário.',
+        variant: 'destructive',
+      });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Open add modal
+  const openAddModal = () => {
+    setFormName('');
+    setFormPhone('');
+    setFormEmail('');
+    setFormCategory('');
+    setFormPassword('');
+    setShowPassword(false);
+    setIsAddModalOpen(true);
+  };
+
+  // Handle add new user
+  const handleAddUser = async () => {
+    if (!formEmail || !formPassword) {
+      toast({
+        title: 'Campos obrigatórios',
+        description: 'Email e senha são obrigatórios.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setActionLoading('new');
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+
+      if (!accessToken) {
+        throw new Error('Não autenticado');
+      }
+
+      const response = await supabase.functions.invoke('create-user', {
+        body: {
+          email: formEmail,
+          password: formPassword,
+          name: formName || null,
+          phone: formPhone || null,
+          category: formCategory || null,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Erro ao criar usuário');
+      }
+
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
+
+      toast({
+        title: 'Usuário criado!',
+        description: `${formName || formEmail} foi adicionado com sucesso.`,
+      });
+
+      setIsAddModalOpen(false);
+      fetchProfiles();
+    } catch (error: any) {
+      console.error('Error creating user:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Não foi possível criar o usuário.',
         variant: 'destructive',
       });
     } finally {
@@ -253,14 +447,20 @@ export default function AdminUsers() {
 
       {/* Approved Users */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-emerald-500" />
-            Usuários Aprovados
-          </CardTitle>
-          <CardDescription>
-            Usuários com acesso liberado ao sistema
-          </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-emerald-500" />
+              Usuários Aprovados
+            </CardTitle>
+            <CardDescription>
+              Usuários com acesso liberado ao sistema
+            </CardDescription>
+          </div>
+          <Button onClick={openAddModal} className="gap-2">
+            <UserPlus className="h-4 w-4" />
+            Adicionar
+          </Button>
         </CardHeader>
         <CardContent>
           {approvedUsers.length === 0 ? (
@@ -276,6 +476,7 @@ export default function AdminUsers() {
                   <TableHead>Categoria</TableHead>
                   <TableHead>Data de Aprovação</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -302,6 +503,28 @@ export default function AdminUsers() {
                         Aprovado
                       </Badge>
                     </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                          onClick={() => openEditModal(profile)}
+                          disabled={actionLoading === profile.id}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          onClick={() => setDeleteConfirmUser(profile)}
+                          disabled={actionLoading === profile.id}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -309,6 +532,177 @@ export default function AdminUsers() {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Usuário</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Nome</Label>
+              <Input
+                id="edit-name"
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
+                placeholder="Nome completo"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-phone">Telefone</Label>
+              <Input
+                id="edit-phone"
+                value={formPhone}
+                onChange={(e) => setFormPhone(e.target.value)}
+                placeholder="(00) 00000-0000"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-category">Categoria</Label>
+              <Select value={formCategory} onValueChange={setFormCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categoryOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleEditSave} disabled={actionLoading === editingUser?.id}>
+              {actionLoading === editingUser?.id ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : null}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Modal */}
+      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Adicionar Usuário</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="add-name">Nome</Label>
+              <Input
+                id="add-name"
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
+                placeholder="Nome completo"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="add-phone">Telefone</Label>
+              <Input
+                id="add-phone"
+                value={formPhone}
+                onChange={(e) => setFormPhone(e.target.value)}
+                placeholder="(00) 00000-0000"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="add-email">Email *</Label>
+              <Input
+                id="add-email"
+                type="email"
+                value={formEmail}
+                onChange={(e) => setFormEmail(e.target.value)}
+                placeholder="email@exemplo.com"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="add-category">Categoria</Label>
+              <Select value={formCategory} onValueChange={setFormCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categoryOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="add-password">Senha *</Label>
+              <div className="relative">
+                <Input
+                  id="add-password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={formPassword}
+                  onChange={(e) => setFormPassword(e.target.value)}
+                  placeholder="Senha do usuário"
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleAddUser} disabled={actionLoading === 'new'}>
+              {actionLoading === 'new' ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : null}
+              Criar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteConfirmUser} onOpenChange={(open) => !open && setDeleteConfirmUser(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Usuário</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja realmente excluir {deleteConfirmUser?.name || 'este usuário'}? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {actionLoading === deleteConfirmUser?.id ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : null}
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
