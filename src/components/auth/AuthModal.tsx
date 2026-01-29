@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Mail, Lock, User, Eye, EyeOff, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { sanitizeErrorMessage } from '@/lib/errorMessages';
 
 const categories = [
   { value: 'corretor', label: 'Corretor' },
@@ -42,7 +43,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
         if (error) {
           toast({
             title: 'Erro ao entrar',
-            description: error.message,
+            description: sanitizeErrorMessage(error),
             variant: 'destructive',
           });
         } else {
@@ -57,7 +58,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
         if (error) {
           toast({
             title: 'Erro ao criar conta',
-            description: error.message,
+            description: sanitizeErrorMessage(error),
             variant: 'destructive',
           });
         } else {

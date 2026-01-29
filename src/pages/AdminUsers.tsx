@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useAdminRole } from '@/hooks/useAdminRole';
+import { validateProfile, validateUserCreation, getValidationError } from '@/lib/validation';
+import { sanitizeErrorMessage } from '@/lib/errorMessages';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -65,6 +68,13 @@ const categoryOptions = [
 export default function AdminUsers() {
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  // Server-side role verification
+  const { isLoading: roleLoading, isAuthorized } = useAdminRole({
+    requiredRoles: ['admin', 'super_admin'],
+    redirectTo: '/dashboard',
+  });
+
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -84,8 +94,10 @@ export default function AdminUsers() {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    fetchProfiles();
-  }, []);
+    if (isAuthorized) {
+      fetchProfiles();
+    }
+  }, [isAuthorized]);
 
   const fetchProfiles = async () => {
     try {
@@ -177,18 +189,35 @@ export default function AdminUsers() {
     setIsEditModalOpen(true);
   };
 
-  // Handle edit save
+  // Handle edit save with validation
   const handleEditSave = async () => {
     if (!editingUser) return;
+
+    // Validate profile data
+    const validation = validateProfile({
+      name: formName,
+      phone: formPhone,
+      category: formCategory || null,
+    });
+
+    if (!validation.success) {
+      toast({
+        title: 'Dados inválidos',
+        description: getValidationError(validation),
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setActionLoading(editingUser.id);
 
     try {
       const { error } = await supabase
         .from('profiles')
         .update({
-          name: formName || null,
-          phone: formPhone || null,
-          category: formCategory || null,
+          name: validation.data.name,
+          phone: validation.data.phone,
+          category: validation.data.category,
         })
         .eq('id', editingUser.id);
 
@@ -206,7 +235,7 @@ export default function AdminUsers() {
       console.error('Error updating user:', error);
       toast({
         title: 'Erro',
-        description: 'Não foi possível atualizar o usuário.',
+        description: sanitizeErrorMessage(error, 'Não foi possível atualizar o usuário.'),
         variant: 'destructive',
       });
     } finally {
@@ -257,12 +286,21 @@ export default function AdminUsers() {
     setIsAddModalOpen(true);
   };
 
-  // Handle add new user
+  // Handle add new user with validation
   const handleAddUser = async () => {
-    if (!formEmail || !formPassword) {
+    // Validate user creation data
+    const validation = validateUserCreation({
+      email: formEmail,
+      password: formPassword,
+      name: formName || null,
+      phone: formPhone || null,
+      category: formCategory || null,
+    });
+
+    if (!validation.success) {
       toast({
-        title: 'Campos obrigatórios',
-        description: 'Email e senha são obrigatórios.',
+        title: 'Dados inválidos',
+        description: getValidationError(validation),
         variant: 'destructive',
       });
       return;
@@ -280,11 +318,11 @@ export default function AdminUsers() {
 
       const response = await supabase.functions.invoke('create-user', {
         body: {
-          email: formEmail,
-          password: formPassword,
-          name: formName || null,
-          phone: formPhone || null,
-          category: formCategory || null,
+          email: validation.data.email,
+          password: validation.data.password,
+          name: validation.data.name,
+          phone: validation.data.phone,
+          category: validation.data.category,
         },
       });
 
@@ -307,7 +345,7 @@ export default function AdminUsers() {
       console.error('Error creating user:', error);
       toast({
         title: 'Erro',
-        description: error.message || 'Não foi possível criar o usuário.',
+        description: sanitizeErrorMessage(error, 'Não foi possível criar o usuário.'),
         variant: 'destructive',
       });
     } finally {
@@ -318,7 +356,8 @@ export default function AdminUsers() {
   const pendingUsers = profiles.filter((p) => !p.approved);
   const approvedUsers = profiles.filter((p) => p.approved);
 
-  if (loading) {
+  // Show loading state while verifying role or loading data
+  if (roleLoading || !isAuthorized || loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />

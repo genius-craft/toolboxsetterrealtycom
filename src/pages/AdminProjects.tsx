@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
-import { FolderKanban, Search, Eye, Download, Filter } from 'lucide-react';
+import { FolderKanban, Search, Eye, Download, Filter, Loader2 } from 'lucide-react';
 import { useAdminProjects, ProjectType } from '@/hooks/useAdminProjects';
+import { useAdminRole } from '@/hooks/useAdminRole';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -42,6 +43,12 @@ const projectTypeColors: Record<string, string> = {
 };
 
 export default function AdminProjects() {
+  // Server-side role verification
+  const { isLoading: roleLoading, isAuthorized } = useAdminRole({
+    requiredRoles: ['admin', 'super_admin'],
+    redirectTo: '/dashboard',
+  });
+
   const [selectedType, setSelectedType] = useState<ProjectType | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [viewingProject, setViewingProject] = useState<Record<string, unknown> | null>(null);
@@ -89,6 +96,15 @@ export default function AdminProjects() {
     link.download = `projetos-${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
   };
+
+  // Show loading state while verifying role
+  if (roleLoading || !isAuthorized) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
