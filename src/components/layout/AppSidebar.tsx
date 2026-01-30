@@ -13,7 +13,7 @@ import {
   FolderKanban,
   ChevronLeft,
   ChevronRight,
-  Building2
+  Store
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -46,7 +46,7 @@ const navItems = [
   { title: 'H&BU', url: '/highest-best-use', icon: BarChart3 },
   { title: 'Decisor', url: '/decisor', icon: CheckCircle },
   { title: 'Preço Teto', url: '/preco-teto', icon: Target },
-  { title: 'Vitrine', url: '/vitrine', icon: Building2 },
+  { title: 'Vitrine', url: '/vitrine', icon: Store },
 ];
 
 export function AppSidebar() {
@@ -175,25 +175,6 @@ export function AppSidebar() {
                     <Link to="/admin/projects" className="flex items-center gap-3">
                       <FolderKanban className="h-4 w-4 shrink-0" />
                       <span>Projetos</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive('/admin/imoveis')}
-                    tooltip="Gestão de Imóveis"
-                    className={`
-                      transition-all duration-200
-                      ${isActive('/admin/imoveis') 
-                        ? 'bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90' 
-                        : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent'
-                      }
-                    `}
-                  >
-                    <Link to="/admin/imoveis" className="flex items-center gap-3">
-                      <Building2 className="h-4 w-4 shrink-0" />
-                      <span>Imóveis</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

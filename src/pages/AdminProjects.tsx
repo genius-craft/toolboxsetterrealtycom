@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
-import { FolderKanban, Search, Eye, Download, Filter, Loader2 } from 'lucide-react';
-import { useAdminProjects, ProjectType } from '@/hooks/useAdminProjects';
+import { FolderKanban, Search, Eye, Download, Filter, Loader2, Globe, EyeOff } from 'lucide-react';
+import { useAdminProjects, useToggleVitrineStatus, ProjectType } from '@/hooks/useAdminProjects';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -28,12 +29,19 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { ProjectViewer } from '@/components/admin/ProjectViewer';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { toast } from 'sonner';
 
 const projectTypeLabels: Record<string, string> = {
   simulador: 'Simulador',
   permuta: 'Permuta',
   'highest-best-use': 'H&BU',
   decisor: 'Decisor',
+  'preco-teto': 'Preço Teto',
 };
 
 const projectTypeColors: Record<string, string> = {
@@ -41,6 +49,7 @@ const projectTypeColors: Record<string, string> = {
   permuta: 'bg-purple-500/10 text-purple-500 border-purple-500/20',
   'highest-best-use': 'bg-amber-500/10 text-amber-500 border-amber-500/20',
   decisor: 'bg-green-500/10 text-green-500 border-green-500/20',
+  'preco-teto': 'bg-rose-500/10 text-rose-500 border-rose-500/20',
 };
 
 export default function AdminProjects() {
@@ -55,6 +64,7 @@ export default function AdminProjects() {
   const [viewingProject, setViewingProject] = useState<Record<string, unknown> | null>(null);
 
   const { data: projects, isLoading, error } = useAdminProjects(selectedType);
+  const toggleVitrine = useToggleVitrineStatus();
 
   const filteredProjects = useMemo(() => {
     if (!projects) return [];
@@ -77,16 +87,33 @@ export default function AdminProjects() {
     });
   };
 
+  const handleToggleVitrine = async (projectId: string, currentStatus: boolean) => {
+    try {
+      await toggleVitrine.mutateAsync({
+        projectId,
+        showInVitrine: !currentStatus,
+      });
+      toast.success(
+        !currentStatus 
+          ? 'Projeto publicado na vitrine!' 
+          : 'Projeto removido da vitrine'
+      );
+    } catch {
+      toast.error('Erro ao atualizar status da vitrine');
+    }
+  };
+
   const exportToCSV = () => {
     if (!filteredProjects.length) return;
 
-    const headers = ['Usuário', 'Telefone', 'Categoria', 'Projeto', 'Tipo', 'Data'];
+    const headers = ['Usuário', 'Telefone', 'Categoria', 'Projeto', 'Tipo', 'Vitrine', 'Data'];
     const rows = filteredProjects.map((p) => [
       p.user_name || 'N/A',
       p.user_phone || 'N/A',
       p.user_category || 'N/A',
       p.name,
       projectTypeLabels[p.project_type] || p.project_type,
+      p.show_in_vitrine ? 'Sim' : 'Não',
       formatDate(p.updated_at),
     ]);
 
@@ -152,6 +179,7 @@ export default function AdminProjects() {
             <SelectItem value="permuta">Permuta</SelectItem>
             <SelectItem value="highest-best-use">Highest & Best Use</SelectItem>
             <SelectItem value="decisor">Decisor</SelectItem>
+            <SelectItem value="preco-teto">Preço Teto</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -165,6 +193,7 @@ export default function AdminProjects() {
               <TableHead className="hidden md:table-cell">Telefone</TableHead>
               <TableHead>Projeto</TableHead>
               <TableHead>Tipo</TableHead>
+              <TableHead className="text-center">Vitrine</TableHead>
               <TableHead className="hidden sm:table-cell">Atualizado</TableHead>
               <TableHead className="w-12">Ações</TableHead>
             </TableRow>
@@ -177,19 +206,20 @@ export default function AdminProjects() {
                   <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-28" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-40" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-12 mx-auto" /></TableCell>
                   <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-20" /></TableCell>
                   <TableCell><Skeleton className="h-8 w-8" /></TableCell>
                 </TableRow>
               ))
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-destructive">
+                <TableCell colSpan={7} className="text-center py-8 text-destructive">
                   Erro ao carregar projetos
                 </TableCell>
               </TableRow>
             ) : filteredProjects.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   Nenhum projeto encontrado
                 </TableCell>
               </TableRow>
@@ -215,6 +245,29 @@ export default function AdminProjects() {
                     >
                       {projectTypeLabels[project.project_type] || project.project_type}
                     </Badge>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center justify-center gap-2">
+                          <Switch
+                            checked={project.show_in_vitrine}
+                            onCheckedChange={() => handleToggleVitrine(project.id, project.show_in_vitrine)}
+                            disabled={toggleVitrine.isPending}
+                          />
+                          {project.show_in_vitrine ? (
+                            <Globe className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {project.show_in_vitrine 
+                          ? 'Visível na vitrine pública' 
+                          : 'Clique para publicar na vitrine'}
+                      </TooltipContent>
+                    </Tooltip>
                   </TableCell>
                   <TableCell className="hidden sm:table-cell text-muted-foreground">
                     {formatDate(project.updated_at)}
