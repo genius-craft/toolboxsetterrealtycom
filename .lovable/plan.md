@@ -1,212 +1,168 @@
 
+# Plano: Ajustes na Vitrine e Gestão de Administradores
 
-# Plano: Vitrine de Simulações/Projetos
+## Resumo das Solicitações
 
-## Objetivo
-
-Transformar a **Vitrine** para exibir **projetos das ferramentas** (Simulador, Permuta, Preço Teto, H&BU, Decisor) marcados para publicação pelo administrador, usando os mesmos visualizadores visuais existentes.
+1. **WhatsApp sobrepondo botões** - Ajustar z-index e posição
+2. **Botão para publicar na Vitrine** - Já existe em `/admin/projects` (explicação)
+3. **Atribuir role de Administrador** - Adicionar gestão de roles na edição de usuários
+4. **Bloquear Vitrine para não-logados** - Cards com blur e cadeado
 
 ---
 
-## Conceito
+## 1. WhatsApp Sobrepondo Botões
 
-```text
-ADMIN (/admin/projects)                  PÚBLICO (/vitrine)
-+----------------------------+           +----------------------------+
-|                            |           |                            |
-|  Ver todos os projetos     |           |  Grid de cards             |
-|  de todos os usuários      |           |  com projetos publicados   |
-|                            |           |                            |
-|  [x] Publicar na Vitrine   |  ----->   |  Click abre visualização   |
-|      (toggle)              |           |  completa (read-only)      |
-|                            |           |                            |
-+----------------------------+           +----------------------------+
-        (Gestão)                              (Somente leitura)
+### Problema
+O botão do WhatsApp está com `fixed bottom-6 right-6 z-50`, o que pode sobrepor elementos interativos em algumas páginas.
+
+### Solução
+Ajustar o z-index para ficar abaixo de modais e dialogs, e adicionar um padding-bottom em containers que possam ter botões na parte inferior.
+
+**Arquivo:** `src/components/WhatsAppButton.tsx`
+```tsx
+// Mudar de z-50 para z-40
+className="fixed bottom-6 right-6 z-40 group"
 ```
 
 ---
 
-## Alterações no Banco de Dados
+## 2. Botão para Publicar na Vitrine
 
-### 1. Adicionar campos à tabela `toolbox_projects`
+### Onde está?
+O toggle para publicar projetos na Vitrine **já existe** e está localizado em:
 
-```sql
-ALTER TABLE toolbox_projects
-ADD COLUMN show_in_vitrine BOOLEAN DEFAULT false,
-ADD COLUMN vitrine_title TEXT,
-ADD COLUMN vitrine_description TEXT;
-```
+**Caminho:** Menu Lateral → Administração → Projetos → Coluna "Vitrine"
 
-- `show_in_vitrine`: Controle de publicação
-- `vitrine_title`: Título customizado para a vitrine (opcional, usa `name` se vazio)
-- `vitrine_description`: Descrição adicional para o card
+Na tabela de projetos (`/admin/projects`), cada linha tem um **Switch** na coluna "Vitrine" que permite ativar/desativar a publicação. Quando ativado, o ícone muda de 🔒 para 🌐.
 
-### 2. Política RLS para acesso público
-
-```sql
-CREATE POLICY "Anyone can view vitrine projects"
-ON toolbox_projects FOR SELECT
-USING (show_in_vitrine = true);
-```
+Você já está logado como super_admin (thiago.montemor@gmail.com), então deve ter acesso a essa área.
 
 ---
 
-## O que muda na Vitrine
+## 3. Atribuir Role de Administrador na Edição de Usuários
 
-### Página `/vitrine` - Listagem Pública
+### Problema Atual
+A edição de usuários em `/admin/users` permite editar Nome, Telefone e Categoria (Corretor, Investidor, etc.), mas não permite atribuir roles de admin.
 
-**Antes:** Cards de imóveis (tabela `properties`)
-**Depois:** Cards de projetos (tabela `toolbox_projects`)
+### Solução
+Adicionar uma seção na edição de usuários para atribuir/remover roles de admin.
 
-**Card de Projeto (estilo consistente):**
+### Alterações
+
+**Arquivo:** `src/pages/AdminUsers.tsx`
+
+1. Adicionar select para atribuir role (apenas para super_admin)
+2. Buscar roles atuais do usuário ao abrir modal de edição
+3. Permitir atribuir: `user` (padrão), `admin`, `super_admin`
+
+**Novo campo no modal de edição:**
 ```text
 +--------------------------------+
-|  [ÍCONE] Simulador             |
+| Editar Usuário                 |
 |--------------------------------|
-|  Edifício Comercial Centro     |
-|  Análise de viabilidade...     |
+| Nome: [________________]       |
+| Telefone: [_____________]      |
+| Categoria: [Corretor ▼]        |
 |                                |
-|  Cap Rate: 8.5%                |
-|  TIR: 15.2%                    |
-|  Veredicto: GO                 |
-|                                |
-|  [Ver Análise]                 |
+| Perfil de Acesso: [Admin ▼]    |  <-- NOVO
+| - Usuário                      |
+| - Administrador                |
+| - Super Administrador          |
 +--------------------------------+
 ```
 
-### Página `/vitrine/:id` - Detalhes do Projeto
-
-Renderiza o **ProjectViewer** correspondente (Simulador, Permuta, H&BU, etc.) em modo somente leitura, mostrando todos os KPIs, gráficos e veredictos.
-
----
-
-## Páginas a Modificar
-
-### 1. `src/pages/Vitrine.tsx`
-
-- Buscar da tabela `toolbox_projects` onde `show_in_vitrine = true`
-- Renderizar cards com tipo, nome, métricas principais
-- Manter filtros por tipo de ferramenta
-
-### 2. `src/pages/VitrineDetail.tsx`
-
-- Buscar projeto específico
-- Usar `ProjectViewer` para renderizar (mesmo componente do admin)
-- Remover botões de edição/exclusão
-- Manter disclaimer legal
-
-### 3. `src/pages/AdminProjects.tsx`
-
-- Adicionar coluna "Vitrine" na tabela
-- Toggle para publicar/despublicar projetos
-- Possibilidade de editar título/descrição para vitrine
+### Segurança
+- Apenas `super_admin` pode alterar roles
+- Um admin não pode se remover como admin (self-protection)
+- Verificar role do usuário logado antes de mostrar a opção
 
 ---
 
-## Hooks a Modificar
+## 4. Vitrine com Blur para Não-Logados
 
-### 1. `src/hooks/useVitrineProperties.ts` → `src/hooks/useVitrineProjects.ts`
+### Problema
+Usuários não cadastrados podem ver os detalhes completos das simulações na Vitrine.
 
-Renomear e adaptar para buscar de `toolbox_projects`:
+### Solução
+Usar o componente `SoftLockOverlay` existente para bloquear o conteúdo da Vitrine para usuários não autenticados.
 
-```typescript
-export function useVitrineProjects(options: UseVitrineProjectsOptions = {}) {
-  return useQuery({
-    queryKey: ['vitrine-projects', options.projectType],
-    queryFn: async () => {
-      let query = supabase
-        .from('toolbox_projects')
-        .select('*')
-        .eq('show_in_vitrine', true)
-        .order('updated_at', { ascending: false });
+### Comportamento
+- **Usuário logado:** Vê todos os cards normalmente
+- **Usuário não logado:** Vê os cards com blur + cadeado + "Faça login gratuito para acessar"
 
-      if (options.projectType && options.projectType !== 'all') {
-        query = query.eq('project_type', options.projectType);
-      }
+### Alterações
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
-    },
-  });
-}
+**Arquivo:** `src/pages/Vitrine.tsx`
+
+Envolver o grid de cards com `SoftLockOverlay`:
+
+```tsx
+import { SoftLockOverlay } from '@/components/tools/SoftLockOverlay';
+
+// No grid de projetos:
+<SoftLockOverlay featureName="as análises da vitrine">
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {projects?.map((project) => (
+      <ProjectCard key={project.id} project={project} />
+    ))}
+  </div>
+</SoftLockOverlay>
 ```
 
----
+**Arquivo:** `src/pages/VitrineDetail.tsx`
 
-## Componentes a Modificar
+Bloquear a página de detalhes também:
 
-### 1. `src/components/vitrine/PropertyCard.tsx` → `src/components/vitrine/ProjectCard.tsx`
-
-Card adaptado para mostrar projetos com:
-- Ícone e cor por tipo de ferramenta
-- Nome do projeto
-- Métricas principais (Cap Rate, TIR, Veredicto, etc.)
-- Botão "Ver Análise"
-
-### 2. `src/components/vitrine/PropertyFilters.tsx` → `src/components/vitrine/ProjectFilters.tsx`
-
-Filtros por tipo de ferramenta:
-- Todos
-- Simulador
-- Permuta
-- H&BU
-- Decisor
-- Preço Teto
-
----
-
-## Arquivos a Excluir
-
-Os arquivos criados anteriormente para imóveis podem ser removidos ou adaptados:
-
-| Arquivo | Ação |
-|---------|------|
-| `src/pages/AdminImoveis.tsx` | **EXCLUIR** (usar AdminProjects) |
-| `src/hooks/useVitrineProperties.ts` | **SUBSTITUIR** por `useVitrineProjects.ts` |
-| `src/hooks/useAdminProperties.ts` | **MANTER** (pode ser útil para o cadastro de imóveis real no futuro) |
-| `src/components/vitrine/PropertyCard.tsx` | **RENOMEAR** para `ProjectCard.tsx` |
-| `src/components/vitrine/PropertyFilters.tsx` | **ADAPTAR** para filtrar por tipo de ferramenta |
-| `src/components/vitrine/PropertyForm.tsx` | **EXCLUIR** (não precisa de formulário) |
+```tsx
+<SoftLockOverlay featureName="os detalhes desta análise">
+  <ProjectViewer ... />
+</SoftLockOverlay>
+```
 
 ---
 
 ## Resumo de Arquivos
 
-| Arquivo | Ação |
-|---------|------|
-| Migration SQL | Adicionar `show_in_vitrine` em `toolbox_projects` + RLS |
-| `src/hooks/useVitrineProjects.ts` | **CRIAR** (substituindo useVitrineProperties) |
-| `src/components/vitrine/ProjectCard.tsx` | **CRIAR** (card de projeto) |
-| `src/components/vitrine/ProjectFilters.tsx` | **CRIAR** (filtros por ferramenta) |
-| `src/pages/Vitrine.tsx` | **MODIFICAR** (buscar projetos) |
-| `src/pages/VitrineDetail.tsx` | **MODIFICAR** (usar ProjectViewer) |
-| `src/pages/AdminProjects.tsx` | **MODIFICAR** (adicionar toggle vitrine) |
-| `src/pages/AdminImoveis.tsx` | **EXCLUIR** |
-| Arquivos `Property*.tsx` antigos | **EXCLUIR** ou renomear |
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/components/WhatsAppButton.tsx` | Ajustar z-index de z-50 para z-40 |
+| `src/pages/AdminUsers.tsx` | Adicionar gestão de roles (admin/super_admin) |
+| `src/pages/Vitrine.tsx` | Envolver cards com SoftLockOverlay |
+| `src/pages/VitrineDetail.tsx` | Envolver detalhes com SoftLockOverlay |
 
 ---
 
-## Segurança e Permissões
+## Detalhes Técnicos
 
-| Ação | Quem pode |
-|------|-----------|
-| Ver projetos na vitrine | Qualquer pessoa |
-| Ver detalhes do projeto | Qualquer pessoa |
-| Publicar projeto na vitrine | Apenas admin |
-| Editar projeto | Apenas dono do projeto |
+### Gestão de Roles
 
-**Nota:** Projetos publicados são de leitura pública, mas o admin pode escolher quais publicar.
+A tabela `user_roles` já existe com a estrutura:
+```sql
+user_id UUID
+role app_role (admin | super_admin | user | hunter)
+```
+
+Para atribuir/remover roles:
+```typescript
+// Adicionar role
+await supabase.from('user_roles').insert({ 
+  user_id, 
+  role: 'admin' 
+});
+
+// Remover role
+await supabase.from('user_roles').delete()
+  .eq('user_id', user_id)
+  .eq('role', 'admin');
+```
+
+### Verificação de Super Admin
+O hook `useAdminRole` já retorna `isSuperAdmin`, que será usado para mostrar/esconder a opção de gestão de roles.
 
 ---
 
 ## Ordem de Implementação
 
-1. Migração do banco (campo `show_in_vitrine` em `toolbox_projects` + RLS)
-2. Hook `useVitrineProjects.ts` para buscar projetos públicos
-3. Componente `ProjectCard.tsx` para renderizar cards
-4. Atualizar `AdminProjects.tsx` com toggle de publicação
-5. Atualizar `Vitrine.tsx` para listar projetos
-6. Atualizar `VitrineDetail.tsx` para usar ProjectViewer
-7. Limpar arquivos antigos de `properties`
-
+1. Ajustar z-index do WhatsApp
+2. Adicionar SoftLockOverlay na Vitrine
+3. Implementar gestão de roles em AdminUsers
