@@ -10,6 +10,7 @@ interface KPICardProps {
   variant?: 'default' | 'success' | 'warning' | 'danger';
   locked?: boolean;
   className?: string;
+  tooltip?: React.ReactNode;
 }
 
 export function KPICard({
@@ -20,6 +21,7 @@ export function KPICard({
   variant = 'default',
   locked = false,
   className,
+  tooltip,
 }: KPICardProps) {
   const variantStyles = {
     default: 'border-border',
@@ -53,9 +55,12 @@ export function KPICard({
 
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] sm:text-xs text-muted-foreground font-medium tracking-premium uppercase mb-1 leading-tight">
-            {label}
-          </p>
+          <div className="flex items-center gap-1 mb-1">
+            <p className="text-[10px] sm:text-xs text-muted-foreground font-medium tracking-premium uppercase leading-tight">
+              {label}
+            </p>
+            {tooltip}
+          </div>
           <p className={cn('font-mono text-lg sm:text-xl lg:text-2xl font-semibold truncate', valueStyles[variant])}>
             {value}
           </p>

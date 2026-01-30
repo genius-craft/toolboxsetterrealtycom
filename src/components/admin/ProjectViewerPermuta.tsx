@@ -1,4 +1,5 @@
 import { formatCurrency, formatDuration } from '@/lib/formatters';
+import { GlossaryTooltip } from '@/components/tools/InfoTooltip';
 import { Calendar, User, ArrowRightLeft, Banknote, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -106,6 +107,7 @@ export function ProjectViewerPermuta({
           <div className="flex items-center justify-center gap-2 mb-3">
             <Building2 className="h-5 w-5 text-blue-600" />
             <span className="font-semibold">Parceria</span>
+            <GlossaryTooltip term="permuta" />
           </div>
           <p className="text-2xl font-mono font-bold">{formatCurrency(totalParceria)}</p>
           <p className="text-xs text-muted-foreground mt-1">Valor Presente Líquido</p>
@@ -125,17 +127,26 @@ export function ProjectViewerPermuta({
             <span className="text-muted-foreground">Prazo Total</span>
             <span className="font-mono font-medium">{formatDuration(prazoTotalMeses)}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">VP das Unidades</span>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">VP das Unidades</span>
+              <GlossaryTooltip term="presentValue" />
+            </div>
             <span className="font-mono font-medium">{formatCurrency(vpUnidades)}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Custo de Carrego</span>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">Custo de Carrego</span>
+              <GlossaryTooltip term="carryingCost" />
+            </div>
             <span className="font-mono font-medium text-red-600">-{formatCurrency(custoTotalCarrego)}</span>
           </div>
           <div className="h-px bg-border my-2" />
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Permuta Líquida</span>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">Permuta Líquida</span>
+              <GlossaryTooltip term="permuta" />
+            </div>
             <span className="font-mono font-medium">{formatCurrency(permutaLiquida)}</span>
           </div>
           <div className="flex justify-between">
