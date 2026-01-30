@@ -360,7 +360,8 @@ export function calculateScenarioMetrics(
   const annualManagement = effectiveGrossIncome * inputs.managementFee; // Taxa sobre valor recebido
   const operatingExpenses = inputs.propertyTax + inputs.condoFee + annualManagement;
   const noi = effectiveGrossIncome - operatingExpenses;
-  const capRate = calculateCapRate(noi, inputs.purchasePrice);
+  // Cap Rate = NOI / Total Investment (not just purchase price)
+  const capRate = calculateCapRate(noi, totalInvestment);
   const noiMonthly = noi / 12;
   const paybackYears = noi > 0 ? totalInvestment / noi : Infinity;
 
