@@ -8,9 +8,9 @@ import { KPICard } from '@/components/tools/KPICard';
 import { SoftLockOverlay } from '@/components/tools/SoftLockOverlay';
 import { GlossaryTooltip } from '@/components/tools/InfoTooltip';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Slider } from '@/components/ui/slider';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
