@@ -1,154 +1,173 @@
 
 
-# Plano: Vitrine de Empreendimentos
+# Plano: Vitrine de Simulações/Projetos
 
-## Resumo
+## Objetivo
 
-Criar uma **Vitrine de Imóveis** onde administradores cadastram propriedades e o público pode apenas visualizar. Os cards seguirão o mesmo estilo visual das ferramentas do Dashboard.
+Transformar a **Vitrine** para exibir **projetos das ferramentas** (Simulador, Permuta, Preço Teto, H&BU, Decisor) marcados para publicação pelo administrador, usando os mesmos visualizadores visuais existentes.
 
 ---
 
-## Fluxo de Uso
+## Conceito
 
 ```text
-ADMINISTRADOR                           PÚBLICO
-+----------------------------+          +----------------------------+
-|                            |          |                            |
-|  /admin/imoveis            |          |  /vitrine                  |
-|  - Cadastrar imóvel        |          |  - Ver cards de imóveis    |
-|  - Editar dados            |          |  - Filtrar por tipo/cidade |
-|  - Upload de imagem        |          |  - Ver detalhes            |
-|  - Toggle "Exibir"         |  ----->  |  - Botão WhatsApp          |
-|                            |          |                            |
-+----------------------------+          +----------------------------+
-        (CRUD completo)                      (Somente leitura)
+ADMIN (/admin/projects)                  PÚBLICO (/vitrine)
++----------------------------+           +----------------------------+
+|                            |           |                            |
+|  Ver todos os projetos     |           |  Grid de cards             |
+|  de todos os usuários      |           |  com projetos publicados   |
+|                            |           |                            |
+|  [x] Publicar na Vitrine   |  ----->   |  Click abre visualização   |
+|      (toggle)              |           |  completa (read-only)      |
+|                            |           |                            |
++----------------------------+           +----------------------------+
+        (Gestão)                              (Somente leitura)
 ```
 
 ---
 
 ## Alterações no Banco de Dados
 
-### 1. Adicionar campo `show_in_vitrine`
-
-A tabela `properties` já existe com todos os campos necessários. Será adicionado apenas um campo booleano para controlar a exibição na vitrine:
+### 1. Adicionar campos à tabela `toolbox_projects`
 
 ```sql
-ALTER TABLE properties
-ADD COLUMN show_in_vitrine BOOLEAN DEFAULT false;
+ALTER TABLE toolbox_projects
+ADD COLUMN show_in_vitrine BOOLEAN DEFAULT false,
+ADD COLUMN vitrine_title TEXT,
+ADD COLUMN vitrine_description TEXT;
 ```
 
-### 2. Atualizar políticas RLS
+- `show_in_vitrine`: Controle de publicação
+- `vitrine_title`: Título customizado para a vitrine (opcional, usa `name` se vazio)
+- `vitrine_description`: Descrição adicional para o card
 
-Adicionar política que permite qualquer pessoa visualizar imóveis marcados para exibição:
+### 2. Política RLS para acesso público
 
 ```sql
-CREATE POLICY "Anyone can view vitrine properties"
-ON properties FOR SELECT
-USING (show_in_vitrine = true AND status = 'available');
+CREATE POLICY "Anyone can view vitrine projects"
+ON toolbox_projects FOR SELECT
+USING (show_in_vitrine = true);
 ```
 
 ---
 
-## Páginas a Criar
+## O que muda na Vitrine
 
-### 1. `/vitrine` - Listagem Pública
+### Página `/vitrine` - Listagem Pública
 
-**Estrutura:**
-- Header com título e disclaimer legal (CRECI)
-- Filtros: tipo de imóvel, cidade, transação (venda/locação)
-- Grid de cards no estilo do Dashboard
-- Cada card mostra: imagem, título, cidade, preço, área, cap rate (se disponível)
-- Click no card abre modal ou página de detalhes
+**Antes:** Cards de imóveis (tabela `properties`)
+**Depois:** Cards de projetos (tabela `toolbox_projects`)
 
-**Card de Imóvel (mesmo estilo do Dashboard):**
+**Card de Projeto (estilo consistente):**
 ```text
 +--------------------------------+
-|  [IMAGEM DO IMÓVEL]            |
+|  [ÍCONE] Simulador             |
 |--------------------------------|
-|  🏢 Comercial | Venda          |
+|  Edifício Comercial Centro     |
+|  Análise de viabilidade...     |
 |                                |
-|  Título do Imóvel              |
-|  Cidade, Estado                |
+|  Cap Rate: 8.5%                |
+|  TIR: 15.2%                    |
+|  Veredicto: GO                 |
 |                                |
-|  R$ 2.500.000                  |
-|  450m² | Cap Rate: 8.5%        |
-|                                |
-|  [Ver Detalhes]                |
+|  [Ver Análise]                 |
 +--------------------------------+
 ```
 
-### 2. `/vitrine/:id` - Detalhes do Imóvel
+### Página `/vitrine/:id` - Detalhes do Projeto
 
-**Seções:**
-- Galeria de imagens
-- Informações completas (área, tipo, vocação)
-- Métricas financeiras (preço, cap rate)
-- Localização (bairro, cidade - sem endereço exato para não-logados)
-- Botão "Falar com Corretor" (WhatsApp)
-- Disclaimer legal fixo no rodapé
-
-### 3. `/admin/imoveis` - Gestão de Imóveis (Admin)
-
-**Funcionalidades:**
-- Listagem de todos os imóveis (tabela)
-- Criar novo imóvel (formulário)
-- Editar imóvel existente
-- **Toggle "Exibir na Vitrine"** (campo `show_in_vitrine`)
-- Upload de imagem para bucket `property-images`
-- Excluir imóvel
+Renderiza o **ProjectViewer** correspondente (Simulador, Permuta, H&BU, etc.) em modo somente leitura, mostrando todos os KPIs, gráficos e veredictos.
 
 ---
 
-## Componentes a Criar
+## Páginas a Modificar
 
-| Componente | Descrição |
-|------------|-----------|
-| `src/pages/Vitrine.tsx` | Página pública com grid de imóveis |
-| `src/pages/VitrineDetail.tsx` | Detalhes de um imóvel específico |
-| `src/pages/AdminImoveis.tsx` | Gestão de imóveis (admin) |
-| `src/components/vitrine/PropertyCard.tsx` | Card de imóvel (estilo Dashboard) |
-| `src/components/vitrine/PropertyFilters.tsx` | Filtros da vitrine |
-| `src/components/vitrine/PropertyForm.tsx` | Formulário de cadastro/edição |
-| `src/components/vitrine/VitrineDisclaimer.tsx` | Aviso legal obrigatório |
-| `src/hooks/useVitrineProperties.ts` | Hook para buscar imóveis públicos |
-| `src/hooks/useAdminProperties.ts` | Hook para CRUD de imóveis (admin) |
+### 1. `src/pages/Vitrine.tsx`
 
----
+- Buscar da tabela `toolbox_projects` onde `show_in_vitrine = true`
+- Renderizar cards com tipo, nome, métricas principais
+- Manter filtros por tipo de ferramenta
 
-## Arquivos a Modificar
+### 2. `src/pages/VitrineDetail.tsx`
 
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/App.tsx` | Adicionar rotas `/vitrine`, `/vitrine/:id`, `/admin/imoveis` |
-| `src/components/layout/AppSidebar.tsx` | Adicionar "Vitrine" no menu principal e "Imóveis" no admin |
-| `src/components/Navbar.tsx` | Adicionar link "Vitrine" na landing page |
-| `src/components/Footer.tsx` | Adicionar link "Vitrine" |
+- Buscar projeto específico
+- Usar `ProjectViewer` para renderizar (mesmo componente do admin)
+- Remover botões de edição/exclusão
+- Manter disclaimer legal
+
+### 3. `src/pages/AdminProjects.tsx`
+
+- Adicionar coluna "Vitrine" na tabela
+- Toggle para publicar/despublicar projetos
+- Possibilidade de editar título/descrição para vitrine
 
 ---
 
-## Disclaimer Legal Obrigatório
+## Hooks a Modificar
 
-Será exibido em todas as páginas da vitrine:
+### 1. `src/hooks/useVitrineProperties.ts` → `src/hooks/useVitrineProjects.ts`
 
-```text
-AVISO LEGAL: Esta vitrine tem caráter exclusivamente informativo.
-A intermediação de compra, venda ou locação de imóveis é realizada
-por corretor inscrito no CRECI. Esta plataforma não constitui oferta
-de valores mobiliários nos termos da regulamentação da CVM.
+Renomear e adaptar para buscar de `toolbox_projects`:
+
+```typescript
+export function useVitrineProjects(options: UseVitrineProjectsOptions = {}) {
+  return useQuery({
+    queryKey: ['vitrine-projects', options.projectType],
+    queryFn: async () => {
+      let query = supabase
+        .from('toolbox_projects')
+        .select('*')
+        .eq('show_in_vitrine', true)
+        .order('updated_at', { ascending: false });
+
+      if (options.projectType && options.projectType !== 'all') {
+        query = query.eq('project_type', options.projectType);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+  });
+}
 ```
 
 ---
 
-## Segurança e Permissões
+## Componentes a Modificar
 
-| Ação | Quem pode |
-|------|-----------|
-| Ver imóveis na vitrine | Qualquer pessoa |
-| Ver detalhes do imóvel | Qualquer pessoa |
-| Cadastrar imóvel | Apenas admin |
-| Editar imóvel | Apenas admin |
-| Excluir imóvel | Apenas admin |
-| Toggle exibir/ocultar | Apenas admin |
+### 1. `src/components/vitrine/PropertyCard.tsx` → `src/components/vitrine/ProjectCard.tsx`
+
+Card adaptado para mostrar projetos com:
+- Ícone e cor por tipo de ferramenta
+- Nome do projeto
+- Métricas principais (Cap Rate, TIR, Veredicto, etc.)
+- Botão "Ver Análise"
+
+### 2. `src/components/vitrine/PropertyFilters.tsx` → `src/components/vitrine/ProjectFilters.tsx`
+
+Filtros por tipo de ferramenta:
+- Todos
+- Simulador
+- Permuta
+- H&BU
+- Decisor
+- Preço Teto
+
+---
+
+## Arquivos a Excluir
+
+Os arquivos criados anteriormente para imóveis podem ser removidos ou adaptados:
+
+| Arquivo | Ação |
+|---------|------|
+| `src/pages/AdminImoveis.tsx` | **EXCLUIR** (usar AdminProjects) |
+| `src/hooks/useVitrineProperties.ts` | **SUBSTITUIR** por `useVitrineProjects.ts` |
+| `src/hooks/useAdminProperties.ts` | **MANTER** (pode ser útil para o cadastro de imóveis real no futuro) |
+| `src/components/vitrine/PropertyCard.tsx` | **RENOMEAR** para `ProjectCard.tsx` |
+| `src/components/vitrine/PropertyFilters.tsx` | **ADAPTAR** para filtrar por tipo de ferramenta |
+| `src/components/vitrine/PropertyForm.tsx` | **EXCLUIR** (não precisa de formulário) |
 
 ---
 
@@ -156,30 +175,38 @@ de valores mobiliários nos termos da regulamentação da CVM.
 
 | Arquivo | Ação |
 |---------|------|
-| Database migration | Adicionar `show_in_vitrine` e política RLS |
-| `src/pages/Vitrine.tsx` | **CRIAR** |
-| `src/pages/VitrineDetail.tsx` | **CRIAR** |
-| `src/pages/AdminImoveis.tsx` | **CRIAR** |
-| `src/components/vitrine/PropertyCard.tsx` | **CRIAR** |
-| `src/components/vitrine/PropertyFilters.tsx` | **CRIAR** |
-| `src/components/vitrine/PropertyForm.tsx` | **CRIAR** |
-| `src/components/vitrine/VitrineDisclaimer.tsx` | **CRIAR** |
-| `src/hooks/useVitrineProperties.ts` | **CRIAR** |
-| `src/hooks/useAdminProperties.ts` | **CRIAR** |
-| `src/App.tsx` | Modificar (adicionar rotas) |
-| `src/components/layout/AppSidebar.tsx` | Modificar (adicionar links) |
-| `src/components/Navbar.tsx` | Modificar (adicionar link) |
-| `src/components/Footer.tsx` | Modificar (adicionar link) |
+| Migration SQL | Adicionar `show_in_vitrine` em `toolbox_projects` + RLS |
+| `src/hooks/useVitrineProjects.ts` | **CRIAR** (substituindo useVitrineProperties) |
+| `src/components/vitrine/ProjectCard.tsx` | **CRIAR** (card de projeto) |
+| `src/components/vitrine/ProjectFilters.tsx` | **CRIAR** (filtros por ferramenta) |
+| `src/pages/Vitrine.tsx` | **MODIFICAR** (buscar projetos) |
+| `src/pages/VitrineDetail.tsx` | **MODIFICAR** (usar ProjectViewer) |
+| `src/pages/AdminProjects.tsx` | **MODIFICAR** (adicionar toggle vitrine) |
+| `src/pages/AdminImoveis.tsx` | **EXCLUIR** |
+| Arquivos `Property*.tsx` antigos | **EXCLUIR** ou renomear |
+
+---
+
+## Segurança e Permissões
+
+| Ação | Quem pode |
+|------|-----------|
+| Ver projetos na vitrine | Qualquer pessoa |
+| Ver detalhes do projeto | Qualquer pessoa |
+| Publicar projeto na vitrine | Apenas admin |
+| Editar projeto | Apenas dono do projeto |
+
+**Nota:** Projetos publicados são de leitura pública, mas o admin pode escolher quais publicar.
 
 ---
 
 ## Ordem de Implementação
 
-1. Migração do banco de dados (campo `show_in_vitrine` + política RLS)
-2. Hooks de dados (`useVitrineProperties`, `useAdminProperties`)
-3. Componentes reutilizáveis (PropertyCard, Disclaimer)
-4. Página admin `/admin/imoveis` (CRUD completo)
-5. Página pública `/vitrine` (listagem)
-6. Página de detalhes `/vitrine/:id`
-7. Navegação (sidebar, navbar, footer)
+1. Migração do banco (campo `show_in_vitrine` em `toolbox_projects` + RLS)
+2. Hook `useVitrineProjects.ts` para buscar projetos públicos
+3. Componente `ProjectCard.tsx` para renderizar cards
+4. Atualizar `AdminProjects.tsx` com toggle de publicação
+5. Atualizar `Vitrine.tsx` para listar projetos
+6. Atualizar `VitrineDetail.tsx` para usar ProjectViewer
+7. Limpar arquivos antigos de `properties`
 
