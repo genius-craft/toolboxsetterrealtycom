@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, FolderKanban, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VitrineDisclaimer } from '@/components/vitrine/VitrineDisclaimer';
+import { SoftLockOverlay } from '@/components/tools/SoftLockOverlay';
 import { useVitrineProjectDetail } from '@/hooks/useVitrineProjects';
 import { ProjectViewer } from '@/components/admin/ProjectViewer';
 import Navbar from '@/components/Navbar';
@@ -76,16 +77,18 @@ export default function VitrineDetail() {
         </div>
 
         {/* Project Viewer */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <ProjectViewer
-            projectType={project.project_type}
-            inputs={project.inputs}
-            results={project.results}
-            projectName={project.vitrine_title || project.name}
-            userName={null}
-            updatedAt={project.updated_at}
-          />
-        </div>
+        <SoftLockOverlay featureName="os detalhes desta análise">
+          <div className="bg-card border border-border rounded-xl p-6">
+            <ProjectViewer
+              projectType={project.project_type}
+              inputs={project.inputs}
+              results={project.results}
+              projectName={project.vitrine_title || project.name}
+              userName={null}
+              updatedAt={project.updated_at}
+            />
+          </div>
+        </SoftLockOverlay>
       </main>
 
       <VitrineDisclaimer variant="footer" />

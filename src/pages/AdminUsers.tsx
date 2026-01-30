@@ -11,7 +11,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Check, X, Loader2, Users, Clock, CheckCircle, Pencil, Trash2, UserPlus, Eye, EyeOff } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Check, X, Loader2, Users, Clock, CheckCircle, Pencil, Trash2, UserPlus, Eye, EyeOff, Shield } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -39,6 +40,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+type AppRole = 'admin' | 'super_admin' | 'user' | 'hunter';
+
 interface UserProfile {
   id: string;
   user_id: string;
@@ -65,17 +68,32 @@ const categoryOptions = [
   { value: 'rede_varejo', label: 'Rede de Varejo' },
 ];
 
+const roleLabels: Record<AppRole, string> = {
+  user: 'Usuário',
+  hunter: 'Hunter',
+  admin: 'Administrador',
+  super_admin: 'Super Administrador',
+};
+
+const roleOptions: { value: AppRole; label: string }[] = [
+  { value: 'user', label: 'Usuário' },
+  { value: 'hunter', label: 'Hunter' },
+  { value: 'admin', label: 'Administrador' },
+  { value: 'super_admin', label: 'Super Administrador' },
+];
+
 export default function AdminUsers() {
   const { user } = useAuth();
   const { toast } = useToast();
   
   // Server-side role verification
-  const { isLoading: roleLoading, isAuthorized } = useAdminRole({
+  const { isLoading: roleLoading, isAuthorized, isSuperAdmin } = useAdminRole({
     requiredRoles: ['admin', 'super_admin'],
     redirectTo: '/dashboard',
   });
 
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
+  const [userRoles, setUserRoles] = useState<Record<string, AppRole[]>>({});
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
@@ -92,10 +110,12 @@ export default function AdminUsers() {
   const [formCategory, setFormCategory] = useState('');
   const [formPassword, setFormPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [formRole, setFormRole] = useState<AppRole>('user');
 
   useEffect(() => {
     if (isAuthorized) {
       fetchProfiles();
+      fetchUserRoles();
     }
   }, [isAuthorized]);
 
@@ -118,6 +138,37 @@ export default function AdminUsers() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchUserRoles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+
+      if (error) throw error;
+      
+      // Group roles by user_id
+      const rolesMap: Record<string, AppRole[]> = {};
+      (data || []).forEach((row) => {
+        if (!rolesMap[row.user_id]) {
+          rolesMap[row.user_id] = [];
+        }
+        rolesMap[row.user_id].push(row.role as AppRole);
+      });
+      setUserRoles(rolesMap);
+    } catch (error) {
+      console.error('Error fetching user roles:', error);
+    }
+  };
+
+  // Get highest role for a user
+  const getHighestRole = (userId: string): AppRole => {
+    const roles = userRoles[userId] || [];
+    if (roles.includes('super_admin')) return 'super_admin';
+    if (roles.includes('admin')) return 'admin';
+    if (roles.includes('hunter')) return 'hunter';
+    return 'user';
   };
 
   const handleApprove = async (profile: UserProfile) => {
@@ -186,7 +237,52 @@ export default function AdminUsers() {
     setFormName(profile.name || '');
     setFormPhone(profile.phone || '');
     setFormCategory(profile.category || '');
+    setFormRole(getHighestRole(profile.user_id));
     setIsEditModalOpen(true);
+  };
+
+  // Handle role change
+  const handleRoleChange = async (userId: string, newRole: AppRole) => {
+    // Prevent self-demotion
+    if (userId === user?.id) {
+      toast({
+        title: 'Ação não permitida',
+        description: 'Você não pode alterar seu próprio perfil de acesso.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      // First, delete existing roles for this user (except 'user' which is implicit)
+      await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId);
+
+      // If new role is not 'user', insert the new role
+      if (newRole !== 'user') {
+        const { error } = await supabase
+          .from('user_roles')
+          .insert({ user_id: userId, role: newRole });
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: 'Perfil atualizado!',
+        description: `O usuário agora é ${roleLabels[newRole]}.`,
+      });
+
+      fetchUserRoles();
+    } catch (error) {
+      console.error('Error updating role:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível atualizar o perfil de acesso.',
+        variant: 'destructive',
+      });
+    }
   };
 
   // Handle edit save with validation
@@ -222,6 +318,11 @@ export default function AdminUsers() {
         .eq('id', editingUser.id);
 
       if (error) throw error;
+
+      // Update role if super_admin and role changed
+      if (isSuperAdmin && formRole !== getHighestRole(editingUser.user_id)) {
+        await handleRoleChange(editingUser.user_id, formRole);
+      }
 
       toast({
         title: 'Usuário atualizado!',
@@ -283,6 +384,7 @@ export default function AdminUsers() {
     setFormCategory('');
     setFormPassword('');
     setShowPassword(false);
+    setFormRole('user');
     setIsAddModalOpen(true);
   };
 
@@ -334,6 +436,13 @@ export default function AdminUsers() {
         throw new Error(response.data.error);
       }
 
+      // If super_admin and a role was selected, assign it
+      if (isSuperAdmin && formRole !== 'user' && response.data?.user?.id) {
+        await supabase
+          .from('user_roles')
+          .insert({ user_id: response.data.user.id, role: formRole });
+      }
+
       toast({
         title: 'Usuário criado!',
         description: `${formName || formEmail} foi adicionado com sucesso.`,
@@ -341,6 +450,7 @@ export default function AdminUsers() {
 
       setIsAddModalOpen(false);
       fetchProfiles();
+      fetchUserRoles();
     } catch (error: any) {
       console.error('Error creating user:', error);
       toast({
@@ -513,59 +623,80 @@ export default function AdminUsers() {
                   <TableHead>Nome</TableHead>
                   <TableHead>Telefone</TableHead>
                   <TableHead>Categoria</TableHead>
+                  <TableHead>Perfil</TableHead>
                   <TableHead>Data de Aprovação</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {approvedUsers.map((profile) => (
-                  <TableRow key={profile.id}>
-                    <TableCell className="font-medium">
-                      {profile.name || 'Sem nome'}
-                    </TableCell>
-                    <TableCell>{profile.phone || '-'}</TableCell>
-                    <TableCell>
-                      {profile.category ? (
-                        <Badge variant="outline" className="bg-muted">
-                          {categoryLabels[profile.category] || profile.category}
+                {approvedUsers.map((profile) => {
+                  const highestRole = getHighestRole(profile.user_id);
+                  return (
+                    <TableRow key={profile.id}>
+                      <TableCell className="font-medium">
+                        {profile.name || 'Sem nome'}
+                      </TableCell>
+                      <TableCell>{profile.phone || '-'}</TableCell>
+                      <TableCell>
+                        {profile.category ? (
+                          <Badge variant="outline" className="bg-muted">
+                            {categoryLabels[profile.category] || profile.category}
+                          </Badge>
+                        ) : '-'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant="outline" 
+                          className={
+                            highestRole === 'super_admin' 
+                              ? 'bg-purple-50 text-purple-700 border-purple-200' 
+                              : highestRole === 'admin'
+                              ? 'bg-blue-50 text-blue-700 border-blue-200'
+                              : highestRole === 'hunter'
+                              ? 'bg-orange-50 text-orange-700 border-orange-200'
+                              : 'bg-muted'
+                          }
+                        >
+                          {highestRole === 'super_admin' && <Shield className="h-3 w-3 mr-1" />}
+                          {roleLabels[highestRole]}
                         </Badge>
-                      ) : '-'}
-                    </TableCell>
-                    <TableCell>
-                      {profile.approved_at
-                        ? format(new Date(profile.approved_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
-                        : '-'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
-                        Aprovado
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                          onClick={() => openEditModal(profile)}
-                          disabled={actionLoading === profile.id}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                          onClick={() => setDeleteConfirmUser(profile)}
-                          disabled={actionLoading === profile.id}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                      <TableCell>
+                        {profile.approved_at
+                          ? format(new Date(profile.approved_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
+                          : '-'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                          Aprovado
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            onClick={() => openEditModal(profile)}
+                            disabled={actionLoading === profile.id}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            onClick={() => setDeleteConfirmUser(profile)}
+                            disabled={actionLoading === profile.id}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
@@ -612,6 +743,40 @@ export default function AdminUsers() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Role selection - only for super_admin */}
+            {isSuperAdmin && (
+              <>
+                <Separator />
+                <div className="space-y-2">
+                  <Label htmlFor="edit-role" className="flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-muted-foreground" />
+                    Perfil de Acesso
+                  </Label>
+                  <Select 
+                    value={formRole} 
+                    onValueChange={(value) => setFormRole(value as AppRole)}
+                    disabled={editingUser?.user_id === user?.id}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um perfil" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roleOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {editingUser?.user_id === user?.id && (
+                    <p className="text-xs text-muted-foreground">
+                      Você não pode alterar seu próprio perfil de acesso.
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
@@ -704,6 +869,34 @@ export default function AdminUsers() {
                 </Button>
               </div>
             </div>
+
+            {/* Role selection - only for super_admin */}
+            {isSuperAdmin && (
+              <>
+                <Separator />
+                <div className="space-y-2">
+                  <Label htmlFor="add-role" className="flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-muted-foreground" />
+                    Perfil de Acesso
+                  </Label>
+                  <Select 
+                    value={formRole} 
+                    onValueChange={(value) => setFormRole(value as AppRole)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um perfil" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roleOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
