@@ -21,9 +21,9 @@ export default function Vitrine() {
       <Navbar />
 
       {/* Header */}
-      <section className="pt-32 pb-12 bg-gradient-to-b from-primary to-primary/95">
+      <section className="pt-24 pb-12 bg-gradient-to-b from-primary to-primary/95">
         <div className="container mx-auto px-4">
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-3 mb-4 mt-4">
             <Link to="/">
               <Button variant="ghost" size="sm" className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10">
                 <ArrowLeft className="h-4 w-4 mr-2" />
