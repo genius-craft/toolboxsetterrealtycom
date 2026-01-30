@@ -1,4 +1,5 @@
 import { formatCurrency, formatPercentage } from '@/lib/formatters';
+import { GlossaryTooltip } from '@/components/tools/InfoTooltip';
 import { Calendar, User, Building, Store, Layers, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -125,7 +126,12 @@ export function ProjectViewerHBU({
             </thead>
             <tbody>
               <tr className="border-t border-border">
-                <td className="p-3 text-muted-foreground">VGV</td>
+                <td className="p-3">
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <span>VGV</span>
+                    <GlossaryTooltip term="vgv" />
+                  </div>
+                </td>
                 <td className={cn("p-3 text-right font-mono", winner === 'residencial' && "font-bold text-primary")}>
                   {formatCurrency(residencial.vgv)}
                 </td>
@@ -149,7 +155,12 @@ export function ProjectViewerHBU({
                 </td>
               </tr>
               <tr className="border-t border-border">
-                <td className="p-3 text-muted-foreground">VPL</td>
+                <td className="p-3">
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <span>VPL</span>
+                    <GlossaryTooltip term="npv" />
+                  </div>
+                </td>
                 <td className={cn("p-3 text-right font-mono", winner === 'residencial' && "font-bold text-primary")}>
                   {formatCurrency(residencial.npv)}
                 </td>
@@ -161,7 +172,12 @@ export function ProjectViewerHBU({
                 </td>
               </tr>
               <tr className="border-t border-border">
-                <td className="p-3 text-muted-foreground">Margem</td>
+                <td className="p-3">
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <span>Margem</span>
+                    <GlossaryTooltip term="margin" />
+                  </div>
+                </td>
                 <td className={cn("p-3 text-right font-mono", winner === 'residencial' && "font-bold text-primary")}>
                   {formatPercentage(residencial.margin)}
                 </td>
@@ -189,13 +205,19 @@ export function ProjectViewerHBU({
           )}
           <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="text-muted-foreground">VPL Esperado</p>
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <span>VPL Esperado</span>
+                <GlossaryTooltip term="npv" />
+              </div>
               <p className="font-mono font-bold text-lg text-primary">
                 {formatCurrency(winnerData.data.npv)}
               </p>
             </div>
             <div>
-              <p className="text-muted-foreground">Margem</p>
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <span>Margem</span>
+                <GlossaryTooltip term="margin" />
+              </div>
               <p className="font-mono font-bold text-lg text-primary">
                 {formatPercentage(winnerData.data.margin)}
               </p>

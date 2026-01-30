@@ -185,6 +185,28 @@ export const financialGlossary = {
     title: 'Condição do Ativo',
     description: 'Estado físico e funcional do imóvel. Considera idade, manutenção, sistemas (elétrico, hidráulico, ar-condicionado) e adequação às normas.',
   },
+  
+  // Additional KPIs
+  npv: {
+    title: 'VPL (Valor Presente Líquido)',
+    description: 'Soma de todos os fluxos de caixa futuros trazidos a valor presente, menos o investimento inicial. VPL positivo indica que o investimento gera valor.',
+  },
+  margin: {
+    title: 'Margem de Lucro',
+    description: 'Lucro bruto dividido pela receita total (VGV). Indica o percentual de cada real de venda que sobra como lucro.',
+  },
+  qualityScore: {
+    title: 'Score Qualitativo',
+    description: 'Pontuação de 0-100 baseada em fatores qualitativos: localização, risco do inquilino, liquidez e condição do ativo.',
+  },
+  yieldAnual: {
+    title: 'Yield Anual',
+    description: 'Retorno anual do investimento calculado como NOI dividido pelo investimento total. Similar ao Cap Rate, mas considera todos os custos de aquisição.',
+  },
+  carryingCost: {
+    title: 'Custo de Carrego',
+    description: 'Despesas para manter a propriedade durante o período de espera: IPTU, condomínio, segurança, manutenção. Reduz o valor líquido da permuta.',
+  },
 } as const;
 
 // Componente de tooltip com termo do glossário

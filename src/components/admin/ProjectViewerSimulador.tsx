@@ -1,5 +1,6 @@
 import { KPICard } from '@/components/tools/KPICard';
 import { VerdictBadge } from '@/components/tools/VerdictBadge';
+import { GlossaryTooltip } from '@/components/tools/InfoTooltip';
 import { formatCurrency, formatPercentage, formatMultiple } from '@/lib/formatters';
 import { Target, TrendingUp, BarChart3, Calendar, User } from 'lucide-react';
 
@@ -74,24 +75,28 @@ export function ProjectViewerSimulador({
           value={formatPercentage(entryCapRate)}
           icon={Target}
           variant={entryCapRate >= 0.08 ? 'success' : 'warning'}
+          tooltip={<GlossaryTooltip term="capRate" />}
         />
         <KPICard
           label="TIR"
           value={formatPercentage(irr)}
           icon={TrendingUp}
           variant={irr >= 0.15 ? 'success' : irr >= 0.1 ? 'warning' : 'danger'}
+          tooltip={<GlossaryTooltip term="irr" />}
         />
         <KPICard
           label="VPL"
           value={formatCurrency(npv)}
           icon={BarChart3}
           variant={npv > 0 ? 'success' : 'danger'}
+          tooltip={<GlossaryTooltip term="npv" />}
         />
         <KPICard
           label="Multiplicador"
           value={formatMultiple(equityMultiple)}
           icon={BarChart3}
           variant={equityMultiple >= 2 ? 'success' : equityMultiple >= 1.5 ? 'warning' : 'danger'}
+          tooltip={<GlossaryTooltip term="equityMultiple" />}
         />
       </div>
 
@@ -112,12 +117,18 @@ export function ProjectViewerSimulador({
             <span className="font-mono font-medium">{formatCurrency(totalInvestment)}</span>
           </div>
           <div className="h-px bg-border my-2" />
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">NOI Ano 1</span>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">NOI Ano 1</span>
+              <GlossaryTooltip term="noi" />
+            </div>
             <span className="font-mono font-medium">{formatCurrency(noi)}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Yield Anual</span>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">Yield Anual</span>
+              <GlossaryTooltip term="yieldAnual" />
+            </div>
             <span className="font-mono font-medium text-primary">
               {formatPercentage(totalInvestment > 0 ? noi / totalInvestment : 0)}
             </span>
@@ -129,12 +140,18 @@ export function ProjectViewerSimulador({
       <div className="bg-muted/50 rounded-lg p-4">
         <h4 className="text-sm font-medium mb-2">Premissas</h4>
         <div className="grid grid-cols-2 gap-4 text-sm">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Período de Holding</span>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">Período de Holding</span>
+              <GlossaryTooltip term="holdingPeriod" />
+            </div>
             <span className="font-mono">{holdingPeriod} anos</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Taxa de Desconto</span>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">Taxa de Desconto</span>
+              <GlossaryTooltip term="discountRate" />
+            </div>
             <span className="font-mono">{formatPercentage(discountRate)}</span>
           </div>
         </div>

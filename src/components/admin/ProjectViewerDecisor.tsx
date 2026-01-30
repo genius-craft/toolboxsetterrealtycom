@@ -1,4 +1,5 @@
 import { formatCurrency, formatCompactCurrency, formatPercentage } from '@/lib/formatters';
+import { GlossaryTooltip } from '@/components/tools/InfoTooltip';
 import { Calendar, User, Scale, CheckCircle, AlertTriangle, XCircle, MapPin, Users, TrendingUp, Wrench, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -85,10 +86,10 @@ export function ProjectViewerDecisor({
   const VerdictIcon = config.icon;
 
   const qualitativeItems = [
-    { label: 'Localização', value: locationQuality, icon: MapPin },
-    { label: 'Risco Inquilino', value: tenantRisk, icon: Users },
-    { label: 'Liquidez Futura', value: futureLiquidity, icon: TrendingUp },
-    { label: 'Condição do Ativo', value: assetCondition, icon: Wrench },
+    { label: 'Localização', value: locationQuality, icon: MapPin, term: 'locationQuality' as const },
+    { label: 'Risco Inquilino', value: tenantRisk, icon: Users, term: 'tenantRisk' as const },
+    { label: 'Liquidez Futura', value: futureLiquidity, icon: TrendingUp, term: 'futureLiquidity' as const },
+    { label: 'Condição do Ativo', value: assetCondition, icon: Wrench, term: 'assetCondition' as const },
   ];
 
   return (
@@ -132,7 +133,10 @@ export function ProjectViewerDecisor({
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-card rounded-lg border border-border p-4">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Cap Rate Implícito (mensal)</p>
+          <div className="flex items-center gap-1 mb-1">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Cap Rate Implícito (mensal)</p>
+            <GlossaryTooltip term="capRate" />
+          </div>
           <p className={cn(
             "text-2xl font-mono font-bold",
             impliedMonthlyCapRate >= targetMonthlyCapRate ? "text-green-600" : "text-amber-600"
@@ -141,7 +145,10 @@ export function ProjectViewerDecisor({
           </p>
         </div>
         <div className="bg-card rounded-lg border border-border p-4">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Score Qualitativo</p>
+          <div className="flex items-center gap-1 mb-1">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Score Qualitativo</p>
+            <GlossaryTooltip term="qualityScore" />
+          </div>
           <p className={cn(
             "text-2xl font-mono font-bold",
             qualityScore >= 70 ? "text-green-600" : qualityScore >= 50 ? "text-amber-600" : "text-red-600"
@@ -185,6 +192,7 @@ export function ProjectViewerDecisor({
               <div className="flex items-center gap-2">
                 <item.icon className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">{item.label}</span>
+                <GlossaryTooltip term={item.term} />
               </div>
               <div className="flex gap-0.5">
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -212,8 +220,11 @@ export function ProjectViewerDecisor({
             <span className="text-muted-foreground">Aluguel Mensal</span>
             <span className="font-mono">{formatCurrency(monthlyRent)}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">NOI Anual</span>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">NOI Anual</span>
+              <GlossaryTooltip term="noi" />
+            </div>
             <span className="font-mono text-primary">{formatCurrency(annualNOI)}</span>
           </div>
         </div>
