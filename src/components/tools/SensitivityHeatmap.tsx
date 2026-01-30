@@ -4,8 +4,11 @@ import { formatPercentage, formatCurrency } from '@/lib/formatters';
 
 interface SensitivityHeatmapProps {
   baseInvestment: number;
-  baseRent: number;
-  calculateCapRate: (investment: number, rent: number) => number;
+  baseMonthlyRent: number;
+  vacancyRate: number;
+  propertyTax: number;
+  condoFee: number;
+  managementFeeRate: number;
   className?: string;
 }
 
@@ -25,27 +28,38 @@ function getColorForCapRate(capRate: number): string {
 
 export function SensitivityHeatmap({ 
   baseInvestment, 
-  baseRent, 
-  calculateCapRate,
+  baseMonthlyRent, 
+  vacancyRate,
+  propertyTax,
+  condoFee,
+  managementFeeRate,
   className 
 }: SensitivityHeatmapProps) {
   const matrix = useMemo(() => {
     return VARIATIONS.map((rentVar) => {
       return VARIATIONS.map((invVar) => {
         const adjustedInvestment = baseInvestment * (1 + invVar);
-        const adjustedRent = baseRent * (1 + rentVar);
-        const annualRent = adjustedRent * 12;
-        // Simplified cap rate: annual rent / investment (no expenses for sensitivity)
-        const capRate = calculateCapRate(adjustedInvestment, annualRent);
+        const adjustedMonthlyRent = baseMonthlyRent * (1 + rentVar);
+        
+        // Calculate real NOI
+        const annualGrossRent = adjustedMonthlyRent * 12;
+        const effectiveRent = annualGrossRent * (1 - vacancyRate);
+        const managementFee = effectiveRent * managementFeeRate;
+        const totalOpex = propertyTax + condoFee + managementFee;
+        const noi = effectiveRent - totalOpex;
+        
+        // Cap Rate = NOI / Total Investment
+        const capRate = adjustedInvestment > 0 ? noi / adjustedInvestment : 0;
+        
         return {
           capRate,
           investment: adjustedInvestment,
-          rent: adjustedRent,
+          rent: adjustedMonthlyRent,
           isBase: invVar === 0 && rentVar === 0,
         };
       });
     });
-  }, [baseInvestment, baseRent, calculateCapRate]);
+  }, [baseInvestment, baseMonthlyRent, vacancyRate, propertyTax, condoFee, managementFeeRate]);
 
   return (
     <div className={cn('bg-card rounded-lg border border-border shadow-card overflow-hidden', className)}>

@@ -219,11 +219,6 @@ export default function Simulador() {
     return calculateAllScenarios(simuladorInputs);
   }, [simuladorInputs]);
 
-  // Sensitivity heatmap calculation function
-  const sensitivityCapRateCalc = useCallback((investment: number, annualRent: number) => {
-    // Simplified: just rent / investment for sensitivity
-    return investment > 0 ? annualRent / investment : 0;
-  }, []);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleLoadProject = useCallback((project: any, showToast = true) => {
@@ -494,8 +489,11 @@ export default function Simulador() {
       <SoftLockOverlay featureName="a análise de sensibilidade">
         <SensitivityHeatmap
           baseInvestment={calculations.totalInvestment}
-          baseRent={totalMonthlyRent}
-          calculateCapRate={sensitivityCapRateCalc}
+          baseMonthlyRent={totalMonthlyRent}
+          vacancyRate={vacancyRate}
+          propertyTax={propertyTax}
+          condoFee={condoFee}
+          managementFeeRate={managementFee}
         />
       </SoftLockOverlay>
 
