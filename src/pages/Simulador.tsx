@@ -158,7 +158,8 @@ export default function Simulador() {
     const annualManagement = effectiveGrossIncome * managementFee; // Taxa sobre valor recebido
     const operatingExpenses = propertyTax + condoFee + annualManagement;
     const noi = effectiveGrossIncome - operatingExpenses;
-    const entryCapRate = calculateCapRate(noi, purchasePrice);
+    // Cap Rate = NOI / Total Investment (not just purchase price)
+    const entryCapRate = calculateCapRate(noi, totalInvestment);
 
     const cashFlows = projectCashFlows({
       totalInvestment,
