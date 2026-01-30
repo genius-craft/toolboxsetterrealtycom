@@ -1,95 +1,32 @@
+# Plano: Ferramenta Preço Teto - IMPLEMENTADO ✓
 
+A ferramenta "Preço Teto" foi implementada com sucesso!
 
-# Plano: Atualização do Número de Ferramentas (4 → 5)
+## Arquivos Criados/Modificados
 
-## Objetivo
+| Arquivo | Status |
+|---------|--------|
+| `src/pages/PrecoTeto.tsx` | ✅ Criado |
+| `src/components/admin/ProjectViewerPrecoTeto.tsx` | ✅ Criado |
+| `src/lib/calculations.ts` | ✅ Adicionadas funções `calculateMaxPriceByCapRate`, `calculateMaxPriceByIRR`, `calculatePrecoTetoMetrics` |
+| `src/lib/pdfExport.ts` | ✅ Adicionada função `generatePrecoTetoPDF` |
+| `src/hooks/useProjects.ts` | ✅ Adicionado tipo `preco_teto` |
+| `src/hooks/useAdminProjects.ts` | ✅ Adicionado tipo `preco_teto` |
+| `src/App.tsx` | ✅ Adicionada rota `/preco-teto` |
+| `src/components/layout/AppSidebar.tsx` | ✅ Adicionado item "Preço Teto" com ícone `Target` |
+| `src/components/tools/InfoTooltip.tsx` | ✅ Adicionados termos `maxPrice`, `targetIRR`, `referencePrice` |
+| `src/components/admin/ProjectViewer.tsx` | ✅ Adicionado case `preco_teto` |
+| `src/pages/Dashboard.tsx` | ✅ Adicionado `preco_teto` ao config |
+| `src/components/HeroSection.tsx` | ✅ Mudado 4 → 5 ferramentas |
+| `src/components/ToolsSection.tsx` | ✅ Mudado 4 → 5 + card da ferramenta |
+| `src/components/Footer.tsx` | ✅ Adicionado link |
 
-Atualizar todas as referências ao número de ferramentas no projeto de **4** para **5**, refletindo a adição da nova calculadora "Preço Teto".
+## Funcionalidades
 
----
-
-## Alterações Necessárias
-
-### 1. `src/components/HeroSection.tsx` (Linha 78)
-
-**Antes:**
-```text
-4
-Ferramentas Pro
-```
-
-**Depois:**
-```text
-5
-Ferramentas Pro
-```
-
----
-
-### 2. `src/components/ToolsSection.tsx` (Linha 81)
-
-**Antes:**
-```text
-4 Calculadoras Profissionais
-```
-
-**Depois:**
-```text
-5 Calculadoras Profissionais
-```
-
-Também será necessário **adicionar o card da nova ferramenta** no array `tools`:
-
-```typescript
-{
-  icon: Target,
-  title: "Preço Teto",
-  path: "/preco-teto",
-  description:
-    "Descubra o valor máximo que pode pagar por um imóvel para atingir seu retorno alvo de TIR ou Cap Rate.",
-  features: [
-    "Cálculo por TIR ou Cap Rate",
-    "Busca binária otimizada",
-    "Margem de negociação",
-    "Comparativo visual",
-  ],
-  color: "from-rose-500/20 to-pink-500/10",
-}
-```
-
----
-
-### 3. `src/components/Footer.tsx` (Linhas 79-112)
-
-Adicionar link para a nova ferramenta na lista de Ferramentas do rodapé:
-
-**Adicionar após "Decisor Go/No-Go":**
-```tsx
-<li>
-  <Link
-    to="/preco-teto"
-    className="text-primary-foreground/40 hover:text-accent transition-colors"
-  >
-    Preço Teto
-  </Link>
-</li>
-```
-
----
-
-## Resumo das Alterações
-
-| Arquivo | Linha | Alteração |
-|---------|-------|-----------|
-| `src/components/HeroSection.tsx` | 78 | Mudar `4` para `5` |
-| `src/components/ToolsSection.tsx` | 81 | Mudar "4 Calculadoras" para "5 Calculadoras" |
-| `src/components/ToolsSection.tsx` | 5-62 | Adicionar card "Preço Teto" ao array |
-| `src/components/ToolsSection.tsx` | 1 | Adicionar import do ícone `Target` |
-| `src/components/Footer.tsx` | ~112 | Adicionar link "Preço Teto" |
-
----
-
-## Nota
-
-Essas alterações fazem parte da implementação completa da ferramenta "Preço Teto" que já foi planejada anteriormente. Serão implementadas junto com a criação da nova página e toda a lógica de cálculo.
-
+- Cálculo de preço máximo por Cap Rate (fórmula direta)
+- Cálculo de preço máximo por TIR (busca binária)
+- Comparativo com preço de referência
+- Margem de negociação
+- Exportação PDF
+- Salvamento no banco de dados
+- Visualização no admin

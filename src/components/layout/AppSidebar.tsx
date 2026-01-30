@@ -6,6 +6,7 @@ import {
   ArrowLeftRight, 
   BarChart3, 
   CheckCircle,
+  Target,
   LogOut,
   User,
   Users,
@@ -43,6 +44,7 @@ const navItems = [
   { title: 'Permuta', url: '/permuta', icon: ArrowLeftRight },
   { title: 'H&BU', url: '/highest-best-use', icon: BarChart3 },
   { title: 'Decisor', url: '/decisor', icon: CheckCircle },
+  { title: 'Preço Teto', url: '/preco-teto', icon: Target },
 ];
 
 export function AppSidebar() {

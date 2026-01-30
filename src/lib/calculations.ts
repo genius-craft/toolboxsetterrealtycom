@@ -810,3 +810,153 @@ export function calculateHBUv3(params: HBUv3Params): HBUv3Result {
     justification: justifications[winner],
   };
 }
+
+/**
+ * Preço Teto (Maximum Price) Calculator
+ * Calculates the maximum acquisition price to achieve a target return
+ */
+
+/**
+ * Calculate maximum price by target Cap Rate (direct formula)
+ * Cap Rate = NOI / Total Investment
+ * Total Investment = Price × (1 + closingCosts) + constructionCost
+ * Price = (NOI / targetCapRate - constructionCost) / (1 + closingCosts)
+ */
+export function calculateMaxPriceByCapRate(
+  noi: number,
+  targetCapRate: number,
+  closingCostsRate: number,
+  constructionCost: number
+): number {
+  if (targetCapRate <= 0) return 0;
+  const totalInvestmentNeeded = noi / targetCapRate;
+  const maxPrice = (totalInvestmentNeeded - constructionCost) / (1 + closingCostsRate);
+  return Math.max(0, maxPrice);
+}
+
+/**
+ * Calculate maximum price by target IRR (binary search)
+ * Uses binary search to find the price that results in the target IRR
+ */
+export interface MaxPriceByIRRParams {
+  targetIRR: number;
+  annualRent: number;
+  rentGrowth: number;
+  vacancyRate: number;
+  operatingExpenses: number;
+  holdingPeriod: number;
+  exitCapRate: number;
+  closingCostsRate: number;
+  constructionCost: number;
+}
+
+export function calculateMaxPriceByIRR(params: MaxPriceByIRRParams): number {
+  const {
+    targetIRR,
+    annualRent,
+    rentGrowth,
+    vacancyRate,
+    operatingExpenses,
+    holdingPeriod,
+    exitCapRate,
+    closingCostsRate,
+    constructionCost,
+  } = params;
+
+  // Binary search bounds
+  let minPrice = 100_000;      // R$ 100k
+  let maxPrice = 100_000_000;  // R$ 100M
+  const tolerance = 1000;      // R$ 1.000 precision
+
+  // Maximum iterations to prevent infinite loop
+  const maxIterations = 50;
+  let iterations = 0;
+
+  while (maxPrice - minPrice > tolerance && iterations < maxIterations) {
+    const midPrice = (minPrice + maxPrice) / 2;
+    
+    // Calculate total investment with this price
+    const totalInvestment = midPrice * (1 + closingCostsRate) + constructionCost;
+    
+    // Project cash flows
+    const cashFlows = projectCashFlows({
+      totalInvestment,
+      annualRent,
+      rentGrowth,
+      vacancyRate,
+      operatingExpenses,
+      expenseGrowth: 0.02, // Standard 2% expense growth
+      holdingPeriod,
+      exitCapRate,
+    });
+    
+    // Calculate resulting IRR
+    const irr = calculateIRR(cashFlows);
+    
+    if (isNaN(irr)) {
+      // If IRR calculation fails, try lower price
+      maxPrice = midPrice;
+    } else if (irr > targetIRR) {
+      // Price can be higher (IRR would decrease)
+      minPrice = midPrice;
+    } else {
+      // Price must be lower (need higher IRR)
+      maxPrice = midPrice;
+    }
+    
+    iterations++;
+  }
+  
+  return (minPrice + maxPrice) / 2;
+}
+
+/**
+ * Calculate full metrics for a given price in Preço Teto calculator
+ */
+export interface PrecoTetoMetrics {
+  totalInvestment: number;
+  noi: number;
+  capRate: number;
+  irr: number;
+  cashFlows: number[];
+}
+
+export function calculatePrecoTetoMetrics(
+  price: number,
+  params: {
+    closingCostsRate: number;
+    constructionCost: number;
+    annualRent: number;
+    rentGrowth: number;
+    vacancyRate: number;
+    operatingExpenses: number;
+    holdingPeriod: number;
+    exitCapRate: number;
+  }
+): PrecoTetoMetrics {
+  const totalInvestment = price * (1 + params.closingCostsRate) + params.constructionCost;
+  const effectiveRent = params.annualRent * (1 - params.vacancyRate);
+  const noi = effectiveRent - params.operatingExpenses;
+  const capRate = calculateCapRate(noi, totalInvestment);
+  
+  const cashFlows = projectCashFlows({
+    totalInvestment,
+    annualRent: params.annualRent,
+    rentGrowth: params.rentGrowth,
+    vacancyRate: params.vacancyRate,
+    operatingExpenses: params.operatingExpenses,
+    expenseGrowth: 0.02,
+    holdingPeriod: params.holdingPeriod,
+    exitCapRate: params.exitCapRate,
+  });
+  
+  const irr = calculateIRR(cashFlows);
+  
+  return {
+    totalInvestment,
+    noi,
+    capRate,
+    irr: isNaN(irr) ? 0 : irr,
+    cashFlows,
+  };
+}
