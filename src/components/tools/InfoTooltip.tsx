@@ -207,6 +207,10 @@ export const financialGlossary = {
     title: 'Custo de Carrego',
     description: 'Despesas para manter a propriedade durante o período de espera: IPTU, condomínio, segurança, manutenção. Reduz o valor líquido da permuta.',
   },
+  jCurve: {
+    title: 'Fluxo de Caixa (J-Curve)',
+    description: 'Gráfico que mostra os fluxos de caixa ao longo do período de investimento. Começa negativo (investimento inicial), segue com rendas positivas anuais, e termina com um pico na venda do ativo. O formato de "J" é típico de investimentos imobiliários.',
+  },
 } as const;
 
 // Componente de tooltip com termo do glossário

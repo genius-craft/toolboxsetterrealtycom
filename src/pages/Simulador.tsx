@@ -461,7 +461,10 @@ export default function Simulador() {
 
       {/* Cash Flow Chart */}
       <div className="bg-card rounded-lg border border-border p-4 shadow-card">
-        <h3 className="font-serif text-lg mb-4">Fluxo de Caixa (J-Curve)</h3>
+        <div className="flex items-center gap-2 mb-4">
+          <h3 className="font-serif text-lg">Fluxo de Caixa (J-Curve)</h3>
+          <GlossaryTooltip term="jCurve" />
+        </div>
         <SoftLockOverlay featureName="o gráfico completo">
           <CashFlowChart data={calculations.chartData} />
         </SoftLockOverlay>
