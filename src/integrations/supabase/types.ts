@@ -250,8 +250,11 @@ export type Database = {
           name: string
           project_type: string
           results: Json
+          show_in_vitrine: boolean | null
           updated_at: string
           user_id: string
+          vitrine_description: string | null
+          vitrine_title: string | null
         }
         Insert: {
           created_at?: string
@@ -260,8 +263,11 @@ export type Database = {
           name: string
           project_type: string
           results?: Json
+          show_in_vitrine?: boolean | null
           updated_at?: string
           user_id: string
+          vitrine_description?: string | null
+          vitrine_title?: string | null
         }
         Update: {
           created_at?: string
@@ -270,8 +276,11 @@ export type Database = {
           name?: string
           project_type?: string
           results?: Json
+          show_in_vitrine?: boolean | null
           updated_at?: string
           user_id?: string
+          vitrine_description?: string | null
+          vitrine_title?: string | null
         }
         Relationships: []
       }

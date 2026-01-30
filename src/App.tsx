@@ -14,7 +14,6 @@ import PrecoTeto from "./pages/PrecoTeto";
 import Dashboard from "./pages/Dashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminProjects from "./pages/AdminProjects";
-import AdminImoveis from "./pages/AdminImoveis";
 import Vitrine from "./pages/Vitrine";
 import VitrineDetail from "./pages/VitrineDetail";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -77,11 +76,6 @@ const App = () => (
             <Route path="/admin/projects" element={
               <AppLayout title="Projetos dos Usuários">
                 <AdminProjects />
-              </AppLayout>
-            } />
-            <Route path="/admin/imoveis" element={
-              <AppLayout title="Gestão de Imóveis">
-                <AdminImoveis />
               </AppLayout>
             } />
             
