@@ -2,6 +2,7 @@ import { ProjectViewerSimulador } from './ProjectViewerSimulador';
 import { ProjectViewerPermuta } from './ProjectViewerPermuta';
 import { ProjectViewerHBU } from './ProjectViewerHBU';
 import { ProjectViewerDecisor } from './ProjectViewerDecisor';
+import { ProjectViewerPrecoTeto } from './ProjectViewerPrecoTeto';
 import { Json } from '@/integrations/supabase/types';
 
 interface ProjectViewerProps {
@@ -62,6 +63,8 @@ export function ProjectViewer({
       return <ProjectViewerHBU {...commonProps} />;
     case 'decisor':
       return <ProjectViewerDecisor {...commonProps} />;
+    case 'preco_teto':
+      return <ProjectViewerPrecoTeto {...commonProps} />;
     default:
       return <FallbackJSONViewer inputs={inputs} results={results} />;
   }

@@ -9,6 +9,7 @@ import {
   Repeat2,
   Map,
   CheckCircle,
+  Target,
   Plus,
   Trash2,
   Eye,
@@ -52,6 +53,12 @@ const projectTypeConfig: Record<ProjectType, { label: string; icon: typeof Calcu
     icon: CheckCircle,
     path: '/decisor',
     color: 'text-amber-500',
+  },
+  preco_teto: {
+    label: 'Preço Teto',
+    icon: Target,
+    path: '/preco-teto',
+    color: 'text-rose-500',
   },
 };
 
@@ -244,6 +251,14 @@ export default function Dashboard() {
                           )}
                         >
                           {project.results.verdict}
+                        </span>
+                      </div>
+                    )}
+                    {project.project_type === 'preco_teto' && project.results.maxPrice && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Preço Teto</span>
+                        <span className="font-mono text-accent">
+                          {formatCompactCurrency(project.results.maxPrice as number)}
                         </span>
                       </div>
                     )}

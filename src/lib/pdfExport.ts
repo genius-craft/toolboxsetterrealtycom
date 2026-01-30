@@ -757,3 +757,101 @@ export async function generateHBUPDF(data: HBUPDFData): Promise<void> {
     ],
   });
 }
+
+/**
+ * Generate PDF for Preço Teto
+ */
+export interface PrecoTetoPDFData {
+  projectName: string;
+  calculationMode: 'capRate' | 'irr';
+  targetReturn: number;
+  maxPrice: number;
+  referencePrice: number | null;
+  kpis: {
+    resultingCapRate: number;
+    resultingIRR: number;
+    totalInvestment: number;
+    noi: number;
+  };
+  inputs: {
+    monthlyRent: number;
+    rentGrowth: number;
+    vacancyRate: number;
+    closingCosts: number;
+    constructionCost: number;
+    operatingExpenses: number;
+    holdingPeriod: number;
+    exitCapRate: number;
+  };
+}
+
+export async function generatePrecoTetoPDF(data: PrecoTetoPDFData): Promise<void> {
+  const modeLabel = data.calculationMode === 'irr' ? 'TIR' : 'Cap Rate';
+  
+  const sections: PDFSection[] = [
+    {
+      title: 'Resultado Principal',
+      type: 'kpi-grid',
+      data: [
+        { label: 'Preço Teto', value: formatCurrency(data.maxPrice), highlight: true },
+      ],
+    },
+    {
+      title: 'Retorno Alvo',
+      type: 'key-value',
+      data: [
+        { label: 'Modo de Cálculo', value: `Por ${modeLabel}` },
+        { label: `${modeLabel} Alvo`, value: formatPercentage(data.targetReturn), highlight: true },
+      ],
+    },
+    {
+      title: 'Métricas Resultantes',
+      type: 'kpi-grid',
+      data: [
+        { label: 'Cap Rate', value: formatPercentage(data.kpis.resultingCapRate) },
+        { label: 'TIR', value: formatPercentage(data.kpis.resultingIRR) },
+        { label: 'NOI Ano 1', value: formatCurrency(data.kpis.noi) },
+        { label: 'Investimento Total', value: formatCurrency(data.kpis.totalInvestment) },
+      ],
+    },
+  ];
+
+  // Add comparison section if reference price is provided
+  if (data.referencePrice) {
+    const margin = data.referencePrice - data.maxPrice;
+    const marginPercent = margin / data.referencePrice;
+    
+    sections.push({
+      title: 'Comparativo',
+      type: 'key-value',
+      data: [
+        { label: 'Preço de Referência', value: formatCurrency(data.referencePrice) },
+        { label: 'Preço Teto', value: formatCurrency(data.maxPrice), highlight: true },
+        { label: 'Margem de Negociação', value: `${formatCurrency(margin)} (${formatPercentage(marginPercent)})`, highlight: margin > 0 },
+      ],
+    });
+  }
+
+  // Add inputs section
+  sections.push({
+    title: 'Premissas Utilizadas',
+    type: 'key-value',
+    data: [
+      { label: 'Aluguel Mensal', value: formatCurrency(data.inputs.monthlyRent) },
+      { label: 'Crescimento Anual', value: formatPercentage(data.inputs.rentGrowth) },
+      { label: 'Vacância', value: formatPercentage(data.inputs.vacancyRate) },
+      { label: 'Custos de Fechamento', value: formatPercentage(data.inputs.closingCosts) },
+      { label: 'Custo de Obra', value: formatCurrency(data.inputs.constructionCost) },
+      { label: 'OPEX Anual', value: formatCurrency(data.inputs.operatingExpenses) },
+      { label: 'Período de Holding', value: `${data.inputs.holdingPeriod} anos` },
+      { label: 'Cap Rate de Saída', value: formatPercentage(data.inputs.exitCapRate) },
+    ],
+  });
+
+  await generatePDF({
+    title: 'Preço Teto',
+    assetName: data.projectName || 'Projeto sem nome',
+    date: new Date().toLocaleDateString('pt-BR'),
+    sections,
+  });
+}

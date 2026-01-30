@@ -211,6 +211,20 @@ export const financialGlossary = {
     title: 'Fluxo de Caixa (J-Curve)',
     description: 'Gráfico que mostra os fluxos de caixa ao longo do período de investimento. Começa negativo (investimento inicial), segue com rendas positivas anuais, e termina com um pico na venda do ativo. O formato de "J" é típico de investimentos imobiliários.',
   },
+  
+  // Preço Teto
+  maxPrice: {
+    title: 'Preço Teto',
+    description: 'Valor máximo que você pode pagar pelo imóvel para atingir o retorno alvo. Considera custos de fechamento, obra e projeções de receita/despesa.',
+  },
+  targetIRR: {
+    title: 'TIR Alvo',
+    description: 'Taxa Interna de Retorno desejada para o investimento. A calculadora encontra o preço que resulta exatamente nesta TIR.',
+  },
+  referencePrice: {
+    title: 'Preço de Referência',
+    description: 'Valor pedido pelo vendedor ou preço de mercado. Usado para calcular a margem de negociação em relação ao preço teto.',
+  },
 } as const;
 
 // Componente de tooltip com termo do glossário

@@ -10,6 +10,7 @@ import Simulador from "./pages/Simulador";
 import Permuta from "./pages/Permuta";
 import HighestBestUse from "./pages/HighestBestUse";
 import Decisor from "./pages/Decisor";
+import PrecoTeto from "./pages/PrecoTeto";
 import Dashboard from "./pages/Dashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminProjects from "./pages/AdminProjects";
@@ -51,6 +52,11 @@ const App = () => (
             <Route path="/decisor" element={
               <AppLayout title="Decisor Go/No-Go">
                 <Decisor />
+              </AppLayout>
+            } />
+            <Route path="/preco-teto" element={
+              <AppLayout title="Preço Teto">
+                <PrecoTeto />
               </AppLayout>
             } />
             <Route path="/dashboard" element={

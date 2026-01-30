@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Json } from '@/integrations/supabase/types';
 
-export type ProjectType = 'simulador' | 'permuta' | 'highest-best-use' | 'decisor';
+export type ProjectType = 'simulador' | 'permuta' | 'highest-best-use' | 'decisor' | 'preco_teto';
 
 export interface AdminProject {
   id: string;

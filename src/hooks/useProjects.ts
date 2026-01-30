@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { sanitizeErrorMessage } from '@/lib/errorMessages';
 
-export type ProjectType = 'simulador' | 'permuta' | 'hbu' | 'decisor';
+export type ProjectType = 'simulador' | 'permuta' | 'hbu' | 'decisor' | 'preco_teto';
 
 export interface ToolboxProject {
   id: string;
