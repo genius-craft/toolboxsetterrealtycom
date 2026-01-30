@@ -127,6 +127,14 @@ const Footer = () => {
             </h4>
             <ul className="space-y-4">
               <li>
+                <Link
+                  to="/vitrine"
+                  className="text-primary-foreground/40 hover:text-accent transition-colors"
+                >
+                  Vitrine de Imóveis
+                </Link>
+              </li>
+              <li>
                 <a
                   href="https://www.setterrealty.com/"
                   target="_blank"

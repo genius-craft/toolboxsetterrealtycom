@@ -46,6 +46,10 @@ const Navbar = () => {
                 Para Quem
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full" />
               </a>
+              <Link to="/vitrine" className="nav-link relative group">
+                Vitrine
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full" />
+              </Link>
             </div>
 
             {/* CTA Buttons */}
@@ -103,6 +107,9 @@ const Navbar = () => {
                 <a href="#publico" className="nav-link py-2" onClick={() => setIsMenuOpen(false)}>
                   Para Quem
                 </a>
+                <Link to="/vitrine" className="nav-link py-2" onClick={() => setIsMenuOpen(false)}>
+                  Vitrine
+                </Link>
                 <div className="flex flex-col gap-3 pt-6 border-t border-primary-foreground/10">
                   {user ? <>
                       <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>

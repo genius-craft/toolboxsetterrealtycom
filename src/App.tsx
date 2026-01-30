@@ -14,6 +14,9 @@ import PrecoTeto from "./pages/PrecoTeto";
 import Dashboard from "./pages/Dashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminProjects from "./pages/AdminProjects";
+import AdminImoveis from "./pages/AdminImoveis";
+import Vitrine from "./pages/Vitrine";
+import VitrineDetail from "./pages/VitrineDetail";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
 import NotFound from "./pages/NotFound";
@@ -32,6 +35,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/privacidade" element={<PrivacyPolicy />} />
             <Route path="/termos" element={<TermsOfUse />} />
+            <Route path="/vitrine" element={<Vitrine />} />
+            <Route path="/vitrine/:id" element={<VitrineDetail />} />
             
             {/* Tool routes with sidebar */}
             <Route path="/simulador" element={
@@ -72,6 +77,11 @@ const App = () => (
             <Route path="/admin/projects" element={
               <AppLayout title="Projetos dos Usuários">
                 <AdminProjects />
+              </AppLayout>
+            } />
+            <Route path="/admin/imoveis" element={
+              <AppLayout title="Gestão de Imóveis">
+                <AdminImoveis />
               </AppLayout>
             } />
             
