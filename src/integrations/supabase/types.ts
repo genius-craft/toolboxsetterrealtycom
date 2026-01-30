@@ -171,6 +171,7 @@ export type Database = {
           neighborhood: string | null
           price: number | null
           property_type: string | null
+          show_in_vitrine: boolean | null
           state: string | null
           status: string | null
           target_business_niche: string | null
@@ -200,6 +201,7 @@ export type Database = {
           neighborhood?: string | null
           price?: number | null
           property_type?: string | null
+          show_in_vitrine?: boolean | null
           state?: string | null
           status?: string | null
           target_business_niche?: string | null
@@ -229,6 +231,7 @@ export type Database = {
           neighborhood?: string | null
           price?: number | null
           property_type?: string | null
+          show_in_vitrine?: boolean | null
           state?: string | null
           status?: string | null
           target_business_niche?: string | null
