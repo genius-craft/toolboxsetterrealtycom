@@ -75,7 +75,7 @@ const HeroSection = () => {
                 </div>
                 <div className="text-left">
                   <span className="block text-3xl font-semibold text-primary-foreground font-mono">
-                    4
+                    5
                   </span>
                   <span className="text-sm text-primary-foreground/40 tracking-wide">
                     Ferramentas Pro
