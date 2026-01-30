@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ProjectCard } from '@/components/vitrine/ProjectCard';
 import { ProjectFilters } from '@/components/vitrine/ProjectFilters';
 import { VitrineDisclaimer } from '@/components/vitrine/VitrineDisclaimer';
+import { SoftLockOverlay } from '@/components/tools/SoftLockOverlay';
 import { useVitrineProjects } from '@/hooks/useVitrineProjects';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -92,11 +93,13 @@ export default function Vitrine() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects?.map((project) => (
-              <ProjectCard key={project.id} project={project} />
-            ))}
-          </div>
+          <SoftLockOverlay featureName="as análises da vitrine">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {projects?.map((project) => (
+                <ProjectCard key={project.id} project={project} />
+              ))}
+            </div>
+          </SoftLockOverlay>
         )}
       </main>
 
