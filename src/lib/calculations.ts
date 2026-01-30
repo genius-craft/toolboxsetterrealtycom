@@ -390,19 +390,31 @@ export function calculateAllScenarios(inputs: SimuladorInputs): {
  */
 export function generateSensitivityMatrix(
   baseInvestment: number,
-  baseRent: number,
+  baseMonthlyRent: number,
+  vacancyRate: number,
+  propertyTax: number,
+  condoFee: number,
+  managementFeeRate: number,
   variations: number[] = [-0.15, -0.10, -0.05, 0, 0.05, 0.10, 0.15]
 ): { capRate: number; investment: number; rent: number; isBase: boolean }[][] {
   return variations.map((rentVar) => {
     return variations.map((invVar) => {
       const adjustedInvestment = baseInvestment * (1 + invVar);
-      const adjustedRent = baseRent * (1 + rentVar);
-      const annualRent = adjustedRent * 12;
-      const capRate = annualRent / adjustedInvestment;
+      const adjustedMonthlyRent = baseMonthlyRent * (1 + rentVar);
+      
+      // Calculate real NOI
+      const annualGrossRent = adjustedMonthlyRent * 12;
+      const effectiveRent = annualGrossRent * (1 - vacancyRate);
+      const managementFee = effectiveRent * managementFeeRate;
+      const noi = effectiveRent - propertyTax - condoFee - managementFee;
+      
+      // Cap Rate = NOI / Investment
+      const capRate = adjustedInvestment > 0 ? noi / adjustedInvestment : 0;
+      
       return {
         capRate,
         investment: adjustedInvestment,
-        rent: adjustedRent,
+        rent: adjustedMonthlyRent,
         isBase: invVar === 0 && rentVar === 0,
       };
     });
