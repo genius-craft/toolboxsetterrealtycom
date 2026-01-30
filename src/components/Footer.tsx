@@ -109,6 +109,14 @@ const Footer = () => {
                   Decisor Go/No-Go
                 </Link>
               </li>
+              <li>
+                <Link
+                  to="/preco-teto"
+                  className="text-primary-foreground/40 hover:text-accent transition-colors"
+                >
+                  Preço Teto
+                </Link>
+              </li>
             </ul>
           </div>
 

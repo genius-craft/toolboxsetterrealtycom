@@ -1,4 +1,4 @@
-import { Calculator, ArrowRightLeft, Building2, CheckCircle, ArrowRight, ArrowUpRight } from "lucide-react";
+import { Calculator, ArrowRightLeft, Building2, CheckCircle, ArrowRight, ArrowUpRight, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
@@ -59,6 +59,20 @@ const tools = [
     ],
     color: "from-purple-500/20 to-violet-500/10",
   },
+  {
+    icon: Target,
+    title: "Preço Teto",
+    path: "/preco-teto",
+    description:
+      "Descubra o valor máximo que pode pagar por um imóvel para atingir seu retorno alvo de TIR ou Cap Rate.",
+    features: [
+      "Cálculo por TIR ou Cap Rate",
+      "Busca binária otimizada",
+      "Margem de negociação",
+      "Comparativo visual",
+    ],
+    color: "from-rose-500/20 to-pink-500/10",
+  },
 ];
 
 const ToolsSection = () => {
@@ -78,7 +92,7 @@ const ToolsSection = () => {
             </span>
           </div>
           <h2 className="section-title mb-6">
-            4 Calculadoras Profissionais
+            5 Calculadoras Profissionais
           </h2>
           <p className="section-subtitle mx-auto">
             Cada ferramenta foi desenvolvida para resolver um problema
