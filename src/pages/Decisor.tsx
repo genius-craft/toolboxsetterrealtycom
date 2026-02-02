@@ -94,6 +94,7 @@ export default function Decisor() {
   const [targetMonthlyCapRate, setTargetMonthlyCapRate] = useState(0.0067); // 0.67% mensal
 
   // OPEX inputs
+  const [vacancyRate, setVacancyRate] = useState(0.05); // 5%
   const [condoFee, setCondoFee] = useState(0); // mensal
   const [propertyTax, setPropertyTax] = useState(0); // anual
   const [managementFee, setManagementFee] = useState(0.08); // 8%
@@ -106,10 +107,11 @@ export default function Decisor() {
 
   // Convert monthly to annual for calculations
   const annualGrossRent = monthlyRent * 12;
+  const effectiveGrossIncome = annualGrossRent * (1 - vacancyRate); // Deduz vacância
   const annualCondoFee = condoFee * 12;
-  const annualManagementFee = annualGrossRent * managementFee;
+  const annualManagementFee = effectiveGrossIncome * managementFee; // Sobre receita efetiva
   const totalOpex = annualCondoFee + propertyTax + annualManagementFee;
-  const annualNOI = annualGrossRent - totalOpex;
+  const annualNOI = effectiveGrossIncome - totalOpex;
   const targetCapRate = targetMonthlyCapRate * 12;
 
   // Calculations
@@ -140,6 +142,7 @@ export default function Decisor() {
     setAskingPrice(inputs.askingPrice ?? 5000000);
     setMonthlyRent(inputs.monthlyRent ?? 33333);
     setTargetMonthlyCapRate(inputs.targetMonthlyCapRate ?? 0.0067);
+    setVacancyRate(inputs.vacancyRate ?? 0.05);
     setCondoFee(inputs.condoFee ?? 0);
     setPropertyTax(inputs.propertyTax ?? 0);
     setManagementFee(inputs.managementFee ?? 0.08);
@@ -170,6 +173,7 @@ export default function Decisor() {
         askingPrice,
         monthlyRent,
         targetMonthlyCapRate,
+        vacancyRate,
         condoFee,
         propertyTax,
         managementFee,
@@ -209,7 +213,9 @@ export default function Decisor() {
           condoFee,
           propertyTax,
           managementFee,
+          vacancyRate,
           annualGrossRent,
+          effectiveGrossIncome,
           totalOpex,
           annualNOI,
         },
@@ -314,6 +320,15 @@ export default function Decisor() {
             <span className="text-muted-foreground">Receita Bruta</span>
             <span className="font-mono">{formatCompactCurrency(annualGrossRent)}/ano</span>
           </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">- Vacância ({formatPercentage(vacancyRate)})</span>
+            <span className="font-mono text-red-500">-{formatCompactCurrency(annualGrossRent * vacancyRate)}/ano</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">= Receita Efetiva</span>
+            <span className="font-mono">{formatCompactCurrency(effectiveGrossIncome)}/ano</span>
+          </div>
+          <div className="h-px bg-border/50" />
           <div className="flex justify-between">
             <span className="text-muted-foreground">- Condomínio</span>
             <span className="font-mono text-red-500">-{formatCompactCurrency(annualCondoFee)}/ano</span>
@@ -473,6 +488,15 @@ export default function Decisor() {
 
       {/* OPEX Inputs */}
       <CollapsibleInputCard title="Custos Operacionais (OPEX)" icon={Receipt} defaultOpen={false}>
+        <PercentageSlider
+          label="Taxa de Vacância"
+          value={vacancyRate}
+          onChange={setVacancyRate}
+          min={0}
+          max={0.20}
+          step={0.01}
+          tooltip="vacancyRate"
+        />
         <CurrencyInput
           label="Condomínio (mensal)"
           value={condoFee}
