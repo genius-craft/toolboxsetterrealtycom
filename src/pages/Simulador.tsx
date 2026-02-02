@@ -498,27 +498,29 @@ export default function Simulador() {
       </SoftLockOverlay>
 
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-        <Button
-          variant="outline"
-          className="flex-1"
-          onClick={() => setOpenDialogOpen(true)}
-          disabled={!user || loadingProjects}
-        >
-          <FolderOpen className="h-4 w-4 mr-2" />
-          Abrir Projeto
-        </Button>
-        <Button
-          variant="gold"
-          className="flex-1"
-          onClick={handleSave}
-          disabled={!user || saveProject.isPending || updateProject.isPending}
-        >
-          <Save className="h-4 w-4 mr-2" />
-          {(saveProject.isPending || updateProject.isPending) ? 'Salvando...' : 'Salvar'}
-        </Button>
+      <div className="flex flex-col gap-2 pb-safe">
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="flex-1 touch-target"
+            onClick={() => setOpenDialogOpen(true)}
+            disabled={!user || loadingProjects}
+          >
+            <FolderOpen className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Abrir Projeto</span>
+          </Button>
+          <Button
+            variant="gold"
+            className="flex-1 touch-target"
+            onClick={handleSave}
+            disabled={!user || saveProject.isPending || updateProject.isPending}
+          >
+            <Save className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">{(saveProject.isPending || updateProject.isPending) ? 'Salvando...' : 'Salvar'}</span>
+          </Button>
+        </div>
         <Button 
-          className="flex-1 bg-[#E85D3D] hover:bg-[#D14D2D] text-white shadow-lg"
+          className="w-full bg-[#E85D3D] hover:bg-[#D14D2D] text-white shadow-lg touch-target"
           disabled={!user || isExportingPDF}
           onClick={handleExportPDF}
         >
