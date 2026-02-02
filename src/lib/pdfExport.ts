@@ -481,7 +481,7 @@ export async function generateSimuladorPDF(data: SimuladorPDFData): Promise<void
           { label: 'IPTU (Anual)', value: formatCurrency(data.opexBreakdown.propertyTax) },
           { label: 'Condomínio (Anual)', value: formatCurrency(data.opexBreakdown.condoFee) },
           { label: `Taxa Administração (${formatCurrency(totalMonthlyRent)} × ${formatPercentage(data.opexBreakdown.managementFee)})`, value: `${formatCurrency(data.opexBreakdown.managementAmount / 12)}/mês` },
-          { label: 'TOTAL OPEX (Total Efetivamente Recebido)', value: formatCurrency(totalOpex), highlight: true },
+          { label: 'TOTAL OPEX ANUAL', value: formatCurrency(totalOpex), highlight: true },
           { label: 'NOI Anual (Receita - OPEX)', value: formatCurrency(data.kpis.noi), highlight: true },
         ],
       },
@@ -511,7 +511,9 @@ export interface DecisorPDFData {
     condoFee: number;
     propertyTax: number;
     managementFee: number;
+    vacancyRate: number;
     annualGrossRent: number;
+    effectiveGrossIncome: number;
     totalOpex: number;
     annualNOI: number;
   };
@@ -563,16 +565,18 @@ export async function generateDecisorPDF(data: DecisorPDFData): Promise<void> {
     },
   ];
 
-  // Add OPEX section if data is provided
-  if (data.opex && data.opex.totalOpex > 0) {
+  // Add OPEX section if data is provided (show even if totalOpex is 0, since vacancy matters)
+  if (data.opex) {
     sections.push({
       title: 'Custos Operacionais (OPEX)',
       type: 'key-value',
       data: [
         { label: 'Receita Bruta Anual', value: formatCurrency(data.opex.annualGrossRent) },
+        { label: `Vacância (${formatPercentage(data.opex.vacancyRate)})`, value: `-${formatCurrency(data.opex.annualGrossRent * data.opex.vacancyRate)}` },
+        { label: 'Receita Efetiva', value: formatCurrency(data.opex.effectiveGrossIncome) },
         { label: 'Condomínio (anual)', value: `-${formatCurrency(data.opex.condoFee * 12)}` },
         { label: 'IPTU (anual)', value: `-${formatCurrency(data.opex.propertyTax)}` },
-        { label: `Taxa Adm (${formatPercentage(data.opex.managementFee)})`, value: `-${formatCurrency(data.opex.annualGrossRent * data.opex.managementFee)}` },
+        { label: `Taxa Adm (${formatPercentage(data.opex.managementFee)})`, value: `-${formatCurrency(data.opex.effectiveGrossIncome * data.opex.managementFee)}` },
         { label: 'NOI Líquido Anual', value: formatCurrency(data.opex.annualNOI), highlight: true },
       ],
     });
