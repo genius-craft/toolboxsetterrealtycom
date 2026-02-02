@@ -1,330 +1,209 @@
 
-# Plano: Otimização Máxima para Mobile
+# Plano: Correção de Erros na Revisão
 
-## Visão Geral
+## Resumo dos Erros Identificados
 
-Este plano aborda otimizações em **todos os componentes e páginas** para garantir uma experiência mobile fluida e profissional.
+| Erro | Arquivo | Gravidade |
+|------|---------|-----------|
+| Vacância não deduzida no NOI | `src/pages/Decisor.tsx` | **Crítico** |
+| Taxa Administração sobre Receita Bruta (deveria ser Efetiva) | `src/pages/Decisor.tsx` | Alto |
+| Label incorreto no PDF: "TOTAL OPEX (Total Efetivamente Recebido)" | `src/lib/pdfExport.ts` | Médio |
+| PDF do Decisor não mostra vacância no OPEX | `src/lib/pdfExport.ts` | Médio |
 
 ---
 
-## 1. Layout Principal (ToolLayout)
+## 1. Corrigir Cálculo do NOI no Decisor
 
-**Arquivo:** `src/components/tools/ToolLayout.tsx`
+**Arquivo:** `src/pages/Decisor.tsx`
 
-### Problemas Identificados:
-- Em mobile, o layout empilha os painéis verticalmente, mas o painel direito (Dashboard) fica muito extenso
-- Não há indicação visual de que existem mais resultados abaixo
-- O título não aparece em mobile
+### Problema Atual (linhas 107-112)
+```typescript
+const annualGrossRent = monthlyRent * 12;
+const annualCondoFee = condoFee * 12;
+const annualManagementFee = annualGrossRent * managementFee; // ❌ Sobre bruto
+const totalOpex = annualCondoFee + propertyTax + annualManagementFee;
+const annualNOI = annualGrossRent - totalOpex; // ❌ Sem vacância
+```
 
-### Solução:
-- Mostrar título em mobile no topo
-- Adicionar indicador visual de "swipe para ver mais"
-- Ajustar padding para telas menores
+### Solução
+Adicionar campo de vacância e corrigir a fórmula:
 
 ```typescript
-// Mudanças principais:
-- Exibir título em mobile: "lg:block" → sempre visível
-- Reduzir padding em mobile: "p-6" → "p-4 sm:p-6"
-- Altura mínima ajustada para mobile
+// Novo estado
+const [vacancyRate, setVacancyRate] = useState(0.05); // 5%
+
+// Cálculos corrigidos
+const annualGrossRent = monthlyRent * 12;
+const effectiveGrossIncome = annualGrossRent * (1 - vacancyRate); // ✅ Deduz vacância
+const annualCondoFee = condoFee * 12;
+const annualManagementFee = effectiveGrossIncome * managementFee; // ✅ Sobre efetivo
+const totalOpex = annualCondoFee + propertyTax + annualManagementFee;
+const annualNOI = effectiveGrossIncome - totalOpex; // ✅ NOI real
 ```
 
----
+### Adicionar Input de Vacância
 
-## 2. Grid de KPIs
-
-**Arquivo:** `src/pages/Simulador.tsx` (e outras ferramentas)
-
-### Problema:
-- Grid de 4 colunas em mobile fica apertado
-- Valores grandes são truncados
-
-### Solução:
-- Mobile: 2 colunas (grid-cols-2)
-- Tablet: 4 colunas
-- Desktop: 4 colunas
+Na seção "Custos Operacionais (OPEX)" (por volta da linha 475), adicionar:
 
 ```tsx
-// De:
-<div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-
-// Para:
-<div className="grid grid-cols-2 gap-3 sm:gap-4">
+<PercentageSlider
+  label="Taxa de Vacância"
+  value={vacancyRate}
+  onChange={setVacancyRate}
+  min={0}
+  max={0.20}
+  step={0.01}
+  tooltip="vacancyRate"
+/>
 ```
 
----
+### Atualizar Dashboard de OPEX
 
-## 3. KPICard Responsivo
-
-**Arquivo:** `src/components/tools/KPICard.tsx`
-
-### Problemas:
-- Padding excessivo em mobile
-- Fontes muito grandes para telas pequenas
-- Ícone ocupa muito espaço
-
-### Solução:
-```tsx
-// Ajustes já parcialmente implementados, mas reforçar:
-- Padding: "p-3 sm:p-4 lg:p-6"
-- Label: "text-[10px] sm:text-xs"
-- Value: "text-lg sm:text-xl lg:text-2xl"
-- Ícone: "h-4 w-4 sm:h-5 sm:w-5"
-```
-
-**Status:** Já implementado, mas validar consistência.
-
----
-
-## 4. Análise de Sensibilidade (Heatmap)
-
-**Arquivo:** `src/components/tools/SensitivityHeatmap.tsx`
-
-### Problema Crítico:
-- Tabela com `min-w-[500px]` força scroll horizontal
-- Células muito pequenas em mobile
-- Legenda ilegível
-
-### Solução:
-- Reduzir variações de 7 para 5 em mobile
-- Usar breakpoints para mostrar versão compacta
-- Legenda simplificada em mobile
+Na estrutura de custos no Dashboard (linhas 309-335), mostrar a vacância:
 
 ```tsx
-// Nova lógica:
-const isMobile = useIsMobile();
-const MOBILE_VARIATIONS = [-0.10, -0.05, 0, 0.05, 0.10]; // 5 colunas
-const DESKTOP_VARIATIONS = [-0.15, -0.10, -0.05, 0, 0.05, 0.10, 0.15]; // 7 colunas
-const VARIATIONS = isMobile ? MOBILE_VARIATIONS : DESKTOP_VARIATIONS;
-
-// Reduzir min-width e ajustar células
-<div className="min-w-[300px] sm:min-w-[500px]">
-  // Células: "min-h-[40px] sm:min-h-[48px]"
-</div>
-```
-
----
-
-## 5. Matriz de Cenários
-
-**Arquivo:** `src/components/tools/ScenarioMatrix.tsx`
-
-### Problema:
-- Tabela horizontal não cabe em telas pequenas
-- Headers ocupam muito espaço
-
-### Solução:
-- Em mobile, usar layout de cards empilhados ao invés de tabela
-- Cada cenário vira um card independente
-
-```tsx
-// Em mobile:
-{isMobile ? (
-  <div className="space-y-4">
-    {scenarios.map((scenario) => (
-      <ScenarioCard key={scenario.key} {...scenario} />
-    ))}
+<div className="space-y-2 text-sm">
+  <div className="flex justify-between">
+    <span className="text-muted-foreground">Receita Bruta</span>
+    <span className="font-mono">{formatCompactCurrency(annualGrossRent)}/ano</span>
   </div>
-) : (
-  <table>...</table>
-)}
-```
-
----
-
-## 6. Gráfico de Fluxo de Caixa
-
-**Arquivo:** `src/components/tools/CashFlowChart.tsx`
-
-### Problema:
-- YAxis ocupa 70px fixos, reduzindo área do gráfico
-- Rótulos podem sobrepor
-
-### Solução:
-```tsx
-// Ajustes responsivos:
-<YAxis width={isMobile ? 50 : 70} />
-<XAxis tick={{ fontSize: isMobile ? 10 : 12 }} />
-```
-
----
-
-## 7. Botões de Ação
-
-**Arquivo:** `src/pages/Simulador.tsx` (linhas 500-532)
-
-### Problema:
-- Em mobile, 3 botões lado a lado ficam apertados
-- Texto truncado
-
-### Solução:
-- Em mobile, empilhar verticalmente
-- Usar ícones sem texto em mobile compacto
-- Adicionar safe-area para iPhone (notch)
-
-```tsx
-// De:
-<div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-
-// Para:
-<div className="flex flex-col gap-2 pb-safe">
-  <div className="flex gap-2">
-    <Button className="flex-1">
-      <FolderOpen className="h-4 w-4 sm:mr-2" />
-      <span className="hidden sm:inline">Abrir Projeto</span>
-    </Button>
-    <Button className="flex-1">
-      <Save className="h-4 w-4 sm:mr-2" />
-      <span className="hidden sm:inline">Salvar</span>
-    </Button>
+  <div className="flex justify-between">
+    <span className="text-muted-foreground">- Vacância ({formatPercentage(vacancyRate)})</span>
+    <span className="font-mono text-red-500">-{formatCompactCurrency(annualGrossRent * vacancyRate)}/ano</span>
   </div>
-  <Button className="w-full">
-    <FileText className="h-4 w-4 mr-2" />
-    Exportar PDF
-  </Button>
+  <div className="flex justify-between">
+    <span className="text-muted-foreground">= Receita Efetiva</span>
+    <span className="font-mono">{formatCompactCurrency(effectiveGrossIncome)}/ano</span>
+  </div>
+  {/* ... resto dos custos ... */}
 </div>
 ```
 
+### Atualizar Funções de Save/Load/Export
+
+Adicionar `vacancyRate` e `effectiveGrossIncome` em:
+- `handleSave()` (inputs)
+- `handleLoadProject()` 
+- `handleExportPDF()`
+
 ---
 
-## 8. Inputs Colapsáveis
+## 2. Corrigir Label no PDF do Simulador
 
-**Arquivo:** `src/components/tools/CollapsibleInputCard.tsx`
+**Arquivo:** `src/lib/pdfExport.ts`
 
-### Problema:
-- Padding muito grande em mobile
-- Título pode quebrar em 2 linhas
+### Problema (linha 484)
+```typescript
+{ label: 'TOTAL OPEX (Total Efetivamente Recebido)', value: formatCurrency(totalOpex), highlight: true },
+```
 
-### Solução:
-```tsx
-// Ajustar padding:
-<button className="p-3 sm:p-4 lg:p-5">
-  <h3 className="font-serif text-base sm:text-lg">
+**"Total Efetivamente Recebido"** é uma descrição de RECEITA, não de DESPESA. Isso confunde o leitor.
+
+### Solução (linha 484)
+```typescript
+{ label: 'TOTAL OPEX ANUAL', value: formatCurrency(totalOpex), highlight: true },
 ```
 
 ---
 
-## 9. RentalUnitsCard (Unidades de Locação)
+## 3. Corrigir PDF do Decisor para Mostrar Vacância
 
-**Arquivo:** `src/components/tools/RentalUnitsCard.tsx`
+**Arquivo:** `src/lib/pdfExport.ts`
 
-### Problema:
-- Inputs de nome e valor lado a lado ficam apertados
-- Input de nome tem `max-w-[120px]` fixo
+### Atualizar Interface (linhas 510-517)
 
-### Solução:
-- Em mobile, empilhar nome sobre valor
-- Remover max-width do input de nome
-
-```tsx
-<div className="flex flex-col sm:flex-row sm:items-center gap-2">
-  <Input className="w-full sm:w-[120px]" /> {/* Nome */}
-  <Input className="w-full sm:flex-1" />    {/* Valor */}
-  <Button />
-</div>
+```typescript
+opex?: {
+  condoFee: number;
+  propertyTax: number;
+  managementFee: number;
+  vacancyRate: number;           // ✅ Novo
+  annualGrossRent: number;
+  effectiveGrossIncome: number;  // ✅ Novo
+  totalOpex: number;
+  annualNOI: number;
+};
 ```
 
----
+### Atualizar Seção OPEX no PDF (linhas 567-578)
 
-## 10. CSS Global - Safe Areas
-
-**Arquivo:** `src/index.css`
-
-### Adição para suporte a notch do iPhone:
-```css
-@layer utilities {
-  .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom, 16px);
-  }
-  
-  .pt-safe {
-    padding-top: env(safe-area-inset-top, 0px);
-  }
-}
-
-/* Melhorar touch targets */
-@media (max-width: 640px) {
-  .touch-target {
-    min-height: 44px;
-    min-width: 44px;
-  }
+```typescript
+if (data.opex && data.opex.totalOpex > 0) {
+  sections.push({
+    title: 'Custos Operacionais (OPEX)',
+    type: 'key-value',
+    data: [
+      { label: 'Receita Bruta Anual', value: formatCurrency(data.opex.annualGrossRent) },
+      { label: `Vacância (${formatPercentage(data.opex.vacancyRate)})`, value: `-${formatCurrency(data.opex.annualGrossRent * data.opex.vacancyRate)}` },
+      { label: 'Receita Efetiva', value: formatCurrency(data.opex.effectiveGrossIncome) },
+      { label: 'Condomínio (anual)', value: `-${formatCurrency(data.opex.condoFee * 12)}` },
+      { label: 'IPTU (anual)', value: `-${formatCurrency(data.opex.propertyTax)}` },
+      { label: `Taxa Adm (${formatPercentage(data.opex.managementFee)})`, value: `-${formatCurrency(data.opex.effectiveGrossIncome * data.opex.managementFee)}` },
+      { label: 'NOI Líquido Anual', value: formatCurrency(data.opex.annualNOI), highlight: true },
+    ],
+  });
 }
 ```
 
 ---
 
-## 11. Sliders e Inputs Touch-Friendly
+## 4. Atualizar Glossário com Termo de Vacância
 
-**Arquivo:** `src/components/tools/PercentageSlider.tsx`
+**Arquivo:** `src/components/tools/InfoTooltip.tsx`
 
-### Problema:
-- Thumb do slider muito pequeno para touch
-- Área de toque insuficiente
+O termo `vacancyRate` já existe no glossário, mas vamos validar que está correto:
 
-### Solução:
-```tsx
-// Aumentar área de toque
-<Slider className="cursor-pointer touch-none" />
-```
-
----
-
-## 12. Dialog em Mobile
-
-**Arquivo:** Todos os dialogs
-
-### Problema:
-- Dialogs podem ser difíceis de fechar em mobile
-
-### Solução:
-- Usar Drawer (vaul) em mobile ao invés de Dialog
-
-```tsx
-const isMobile = useIsMobile();
-
-{isMobile ? (
-  <Drawer open={open} onOpenChange={setOpen}>
-    <DrawerContent>...</DrawerContent>
-  </Drawer>
-) : (
-  <Dialog open={open} onOpenChange={setOpen}>
-    <DialogContent>...</DialogContent>
-  </Dialog>
-)}
+```typescript
+vacancyRate: {
+  title: 'Taxa de Vacância',
+  description: 'Percentual médio de desocupação esperado. Imóveis comerciais bem localizados: 3-5%. Imóveis em áreas secundárias: 8-15%.',
+},
 ```
 
 ---
 
 ## Resumo de Arquivos a Modificar
 
-| Arquivo | Prioridade | Alteração |
-|---------|------------|-----------|
-| `src/components/tools/ToolLayout.tsx` | Alta | Padding, título mobile, indicador scroll |
-| `src/components/tools/SensitivityHeatmap.tsx` | Alta | Versão compacta 5 colunas para mobile |
-| `src/components/tools/ScenarioMatrix.tsx` | Alta | Layout de cards em mobile |
-| `src/pages/Simulador.tsx` | Alta | Botões responsivos, grid KPIs |
-| `src/components/tools/KPICard.tsx` | Média | Validar padding/fontes |
-| `src/components/tools/CollapsibleInputCard.tsx` | Média | Padding mobile |
-| `src/components/tools/RentalUnitsCard.tsx` | Média | Inputs empilhados em mobile |
-| `src/components/tools/CashFlowChart.tsx` | Média | YAxis width responsivo |
-| `src/index.css` | Média | Safe areas, touch targets |
-| `src/pages/PrecoTeto.tsx` | Média | Mesmos ajustes do Simulador |
-| `src/pages/Decisor.tsx` | Média | Mesmos ajustes do Simulador |
-| `src/pages/HighestBestUse.tsx` | Média | Mesmos ajustes do Simulador |
-| `src/pages/Permuta.tsx` | Média | Mesmos ajustes do Simulador |
+| Arquivo | Alterações |
+|---------|------------|
+| `src/pages/Decisor.tsx` | Adicionar estado `vacancyRate`, corrigir cálculos NOI, atualizar UI do OPEX, atualizar save/load/export |
+| `src/lib/pdfExport.ts` | Corrigir label "TOTAL OPEX", adicionar vacância na interface e seção do Decisor |
 
 ---
 
-## Resultado Esperado
+## Comparativo Antes/Depois
 
-### Antes:
-- Conteúdo cortado em telas pequenas
-- Scroll horizontal forçado em tabelas
-- Botões apertados e difíceis de tocar
-- Textos truncados
+### Cálculo do NOI no Decisor
 
-### Depois:
-- Layout fluido que se adapta a qualquer tela
-- Tabelas transformadas em cards em mobile
-- Touch targets de 44px+ (padrão Apple)
-- Safe areas para iPhones com notch
-- Experiência nativa e profissional
+**Antes (incorreto):**
+```
+Aluguel Mensal: R$ 33.333
+Receita Bruta Anual: R$ 400.000
+Condomínio: R$ 0
+IPTU: R$ 0
+Taxa Adm (8%): R$ 32.000 (sobre bruto)
+NOI: R$ 400.000 - R$ 32.000 = R$ 368.000
+```
+
+**Depois (correto):**
+```
+Aluguel Mensal: R$ 33.333
+Receita Bruta Anual: R$ 400.000
+Vacância (5%): -R$ 20.000
+Receita Efetiva: R$ 380.000
+Condomínio: R$ 0
+IPTU: R$ 0
+Taxa Adm (8%): R$ 30.400 (sobre efetivo)
+NOI: R$ 380.000 - R$ 30.400 = R$ 349.600
+```
+
+**Diferença no NOI:** R$ 18.400/ano (5% a menos - impacto significativo na decisão de investimento!)
+
+---
+
+## Benefícios
+
+1. **Consistência**: Simulador e Decisor usarão a mesma lógica de cálculo
+2. **Precisão**: NOI refletirá a realidade do mercado imobiliário
+3. **Clareza**: Labels corretos no PDF evitam confusão
+4. **Profissionalismo**: Relatórios mais completos com detalhamento de vacância
