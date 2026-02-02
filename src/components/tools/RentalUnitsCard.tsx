@@ -90,18 +90,18 @@ export function RentalUnitsCard({
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <div className="bg-card rounded-lg border border-border shadow-card overflow-hidden">
         <CollapsibleTrigger asChild>
-          <button className="w-full flex items-center justify-between p-4 lg:p-5 hover:bg-secondary/50 transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-accent/10 rounded-lg">
-                <Coins className="h-5 w-5 text-accent" />
+          <button className="w-full flex items-center justify-between p-3 sm:p-4 lg:p-5 hover:bg-secondary/50 transition-colors touch-target">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 bg-accent/10 rounded-lg">
+                <Coins className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
               </div>
-              <h3 className="font-serif text-lg font-medium text-foreground">
+              <h3 className="font-serif text-base sm:text-lg font-medium text-foreground">
                 Receita de Locação
               </h3>
             </div>
             <ChevronDown
               className={cn(
-                'h-5 w-5 text-muted-foreground transition-transform duration-200',
+                'h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground transition-transform duration-200',
                 isOpen && 'rotate-180'
               )}
             />
@@ -109,7 +109,7 @@ export function RentalUnitsCard({
         </CollapsibleTrigger>
 
         <CollapsibleContent>
-          <div className="px-4 pb-4 lg:px-5 lg:pb-5 pt-0 space-y-4">
+          <div className="px-3 pb-3 sm:px-4 sm:pb-4 lg:px-5 lg:pb-5 pt-0 space-y-3 sm:space-y-4">
             {/* Índice de Reajuste */}
             <div className="space-y-2">
               <Label className="text-sm text-muted-foreground">Índice de Reajuste</Label>
@@ -160,45 +160,58 @@ export function RentalUnitsCard({
             </div>
 
             {/* Lista de Unidades */}
-            <div className="space-y-3">
-              <Label className="text-sm text-muted-foreground">Unidades Locadas</Label>
+            <div className="space-y-2 sm:space-y-3">
+              <Label className="text-xs sm:text-sm text-muted-foreground">Unidades Locadas</Label>
               
               {units.map((unit) => (
                 <div
                   key={unit.id}
-                  className="flex items-center gap-2 p-3 bg-muted/30 rounded-lg"
+                  className="flex flex-col sm:flex-row sm:items-center gap-2 p-2 sm:p-3 bg-muted/30 rounded-lg"
                 >
-                  <Input
-                    value={unit.name}
-                    onChange={(e) => updateUnitName(unit.id, e.target.value)}
-                    className="flex-1 max-w-[120px] h-9 text-sm"
-                    placeholder="Nome"
-                  />
-                  <Input
-                    type="text"
-                    inputMode="numeric"
-                    value={formatRentDisplay(unit.monthlyRent)}
-                    onChange={(e) => updateUnitRent(unit.id, e.target.value)}
-                    onFocus={(e) => {
-                      if (unit.monthlyRent > 0) {
-                        e.target.value = unit.monthlyRent.toString();
-                      }
-                    }}
-                    onBlur={(e) => {
-                      e.target.value = formatRentDisplay(unit.monthlyRent);
-                    }}
-                    className="flex-1 h-9 font-mono text-sm"
-                    placeholder="R$ 0"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeUnit(unit.id)}
-                    disabled={units.length === 1}
-                    className="h-9 w-9 text-muted-foreground hover:text-destructive"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <Input
+                      value={unit.name}
+                      onChange={(e) => updateUnitName(unit.id, e.target.value)}
+                      className="flex-1 sm:flex-none sm:w-[100px] lg:w-[120px] h-9 text-sm"
+                      placeholder="Nome"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeUnit(unit.id)}
+                      disabled={units.length === 1}
+                      className="h-9 w-9 text-muted-foreground hover:text-destructive sm:hidden touch-target"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-2 flex-1">
+                    <Input
+                      type="text"
+                      inputMode="numeric"
+                      value={formatRentDisplay(unit.monthlyRent)}
+                      onChange={(e) => updateUnitRent(unit.id, e.target.value)}
+                      onFocus={(e) => {
+                        if (unit.monthlyRent > 0) {
+                          e.target.value = unit.monthlyRent.toString();
+                        }
+                      }}
+                      onBlur={(e) => {
+                        e.target.value = formatRentDisplay(unit.monthlyRent);
+                      }}
+                      className="flex-1 h-9 font-mono text-sm"
+                      placeholder="R$ 0"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeUnit(unit.id)}
+                      disabled={units.length === 1}
+                      className="hidden sm:flex h-9 w-9 text-muted-foreground hover:text-destructive"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>

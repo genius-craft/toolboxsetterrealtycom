@@ -24,18 +24,18 @@ export function CollapsibleInputCard({
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className={className}>
       <div className="bg-card rounded-lg border border-border shadow-card overflow-hidden">
         <CollapsibleTrigger asChild>
-          <button className="w-full flex items-center justify-between p-4 lg:p-5 hover:bg-secondary/50 transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-accent/10 rounded-lg">
-                <Icon className="h-5 w-5 text-accent" />
+          <button className="w-full flex items-center justify-between p-3 sm:p-4 lg:p-5 hover:bg-secondary/50 transition-colors touch-target">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 bg-accent/10 rounded-lg">
+                <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
               </div>
-              <h3 className="font-serif text-lg font-medium text-foreground">
+              <h3 className="font-serif text-base sm:text-lg font-medium text-foreground">
                 {title}
               </h3>
             </div>
             <ChevronDown
               className={cn(
-                'h-5 w-5 text-muted-foreground transition-transform duration-200',
+                'h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground transition-transform duration-200',
                 isOpen && 'rotate-180'
               )}
             />
@@ -43,7 +43,7 @@ export function CollapsibleInputCard({
         </CollapsibleTrigger>
         
         <CollapsibleContent>
-          <div className="px-4 pb-4 lg:px-5 lg:pb-5 pt-0 space-y-4">
+          <div className="px-3 pb-3 sm:px-4 sm:pb-4 lg:px-5 lg:pb-5 pt-0 space-y-3 sm:space-y-4">
             {children}
           </div>
         </CollapsibleContent>

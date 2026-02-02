@@ -273,6 +273,21 @@
 }
 
 @layer utilities {
+  /* Safe area utilities for iPhone notch */
+  .pb-safe {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+  }
+  
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Touch target utility - minimum 44px for iOS guidelines */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
   .animate-fade-up {
     animation: fadeUp 0.6s ease-out forwards;
   }
