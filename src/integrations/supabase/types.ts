@@ -40,21 +40,21 @@ export type Database = {
       }
       insight_tags: {
         Row: {
-          color: string
+          color: string | null
           created_at: string
           id: string
           name: string
           slug: string
         }
         Insert: {
-          color?: string
+          color?: string | null
           created_at?: string
           id?: string
           name: string
           slug: string
         }
         Update: {
-          color?: string
+          color?: string | null
           created_at?: string
           id?: string
           name?: string
@@ -64,44 +64,35 @@ export type Database = {
       }
       insights: {
         Row: {
-          author_name: string
-          content: string
+          author_name: string | null
+          content: string | null
           created_at: string
-          created_by: string | null
           id: string
-          media_type: string | null
           media_url: string | null
           published: boolean
-          published_at: string | null
-          tags: string[] | null
+          tags: Json | null
           title: string
           updated_at: string
         }
         Insert: {
-          author_name: string
-          content: string
+          author_name?: string | null
+          content?: string | null
           created_at?: string
-          created_by?: string | null
           id?: string
-          media_type?: string | null
           media_url?: string | null
           published?: boolean
-          published_at?: string | null
-          tags?: string[] | null
+          tags?: Json | null
           title: string
           updated_at?: string
         }
         Update: {
-          author_name?: string
-          content?: string
+          author_name?: string | null
+          content?: string | null
           created_at?: string
-          created_by?: string | null
           id?: string
-          media_type?: string | null
           media_url?: string | null
           published?: boolean
-          published_at?: string | null
-          tags?: string[] | null
+          tags?: Json | null
           title?: string
           updated_at?: string
         }
@@ -114,11 +105,11 @@ export type Database = {
           approved_by: string | null
           avatar_url: string | null
           category: string | null
-          created_at: string | null
+          created_at: string
           id: string
           name: string | null
           phone: string | null
-          updated_at: string | null
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -127,11 +118,11 @@ export type Database = {
           approved_by?: string | null
           avatar_url?: string | null
           category?: string | null
-          created_at?: string | null
+          created_at?: string
           id?: string
           name?: string | null
           phone?: string | null
-          updated_at?: string | null
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -140,11 +131,11 @@ export type Database = {
           approved_by?: string | null
           avatar_url?: string | null
           category?: string | null
-          created_at?: string | null
+          created_at?: string
           id?: string
           name?: string | null
           phone?: string | null
-          updated_at?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -152,93 +143,93 @@ export type Database = {
       properties: {
         Row: {
           address: string | null
-          area_sqm: number | null
-          built_area_sqm: number | null
+          area_built: number | null
+          area_total: number | null
+          bathrooms: number | null
+          bedrooms: number | null
           cap_rate: number | null
           city: string | null
-          created_at: string | null
+          created_at: string
           created_by: string | null
           description: string | null
-          front_meters: number | null
-          google_maps_link: string | null
+          features: Json | null
+          gross_rent: number | null
           id: string
-          image_url: string | null
-          is_featured: boolean | null
-          is_opportunity: boolean | null
-          land_area_sqm: number | null
+          images: Json | null
           latitude: number | null
           longitude: number | null
           neighborhood: string | null
+          noi: number | null
+          parking_spots: number | null
           price: number | null
           property_type: string | null
-          show_in_vitrine: boolean | null
+          show_in_vitrine: boolean
           state: string | null
           status: string | null
-          target_business_niche: string | null
           title: string
-          transaction_type: string | null
-          updated_at: string | null
-          vocation: string | null
+          updated_at: string
+          vacancy_rate: number | null
+          zip_code: string | null
         }
         Insert: {
           address?: string | null
-          area_sqm?: number | null
-          built_area_sqm?: number | null
+          area_built?: number | null
+          area_total?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
           cap_rate?: number | null
           city?: string | null
-          created_at?: string | null
+          created_at?: string
           created_by?: string | null
           description?: string | null
-          front_meters?: number | null
-          google_maps_link?: string | null
+          features?: Json | null
+          gross_rent?: number | null
           id?: string
-          image_url?: string | null
-          is_featured?: boolean | null
-          is_opportunity?: boolean | null
-          land_area_sqm?: number | null
+          images?: Json | null
           latitude?: number | null
           longitude?: number | null
           neighborhood?: string | null
+          noi?: number | null
+          parking_spots?: number | null
           price?: number | null
           property_type?: string | null
-          show_in_vitrine?: boolean | null
+          show_in_vitrine?: boolean
           state?: string | null
           status?: string | null
-          target_business_niche?: string | null
           title: string
-          transaction_type?: string | null
-          updated_at?: string | null
-          vocation?: string | null
+          updated_at?: string
+          vacancy_rate?: number | null
+          zip_code?: string | null
         }
         Update: {
           address?: string | null
-          area_sqm?: number | null
-          built_area_sqm?: number | null
+          area_built?: number | null
+          area_total?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
           cap_rate?: number | null
           city?: string | null
-          created_at?: string | null
+          created_at?: string
           created_by?: string | null
           description?: string | null
-          front_meters?: number | null
-          google_maps_link?: string | null
+          features?: Json | null
+          gross_rent?: number | null
           id?: string
-          image_url?: string | null
-          is_featured?: boolean | null
-          is_opportunity?: boolean | null
-          land_area_sqm?: number | null
+          images?: Json | null
           latitude?: number | null
           longitude?: number | null
           neighborhood?: string | null
+          noi?: number | null
+          parking_spots?: number | null
           price?: number | null
           property_type?: string | null
-          show_in_vitrine?: boolean | null
+          show_in_vitrine?: boolean
           state?: string | null
           status?: string | null
-          target_business_niche?: string | null
           title?: string
-          transaction_type?: string | null
-          updated_at?: string | null
-          vocation?: string | null
+          updated_at?: string
+          vacancy_rate?: number | null
+          zip_code?: string | null
         }
         Relationships: []
       }
@@ -246,11 +237,11 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          inputs: Json
+          inputs: Json | null
           name: string
           project_type: string
-          results: Json
-          show_in_vitrine: boolean | null
+          results: Json | null
+          show_in_vitrine: boolean
           updated_at: string
           user_id: string
           vitrine_description: string | null
@@ -259,11 +250,11 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          inputs?: Json
+          inputs?: Json | null
           name: string
           project_type: string
-          results?: Json
-          show_in_vitrine?: boolean | null
+          results?: Json | null
+          show_in_vitrine?: boolean
           updated_at?: string
           user_id: string
           vitrine_description?: string | null
@@ -272,11 +263,11 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          inputs?: Json
+          inputs?: Json | null
           name?: string
           project_type?: string
-          results?: Json
-          show_in_vitrine?: boolean | null
+          results?: Json | null
+          show_in_vitrine?: boolean
           updated_at?: string
           user_id?: string
           vitrine_description?: string | null
@@ -286,19 +277,16 @@ export type Database = {
       }
       user_roles: {
         Row: {
-          created_at: string | null
           id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
-          created_at?: string | null
           id?: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
-          created_at?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
@@ -310,171 +298,177 @@ export type Database = {
       properties_authenticated: {
         Row: {
           address: string | null
-          area_sqm: number | null
-          built_area_sqm: number | null
+          area_built: number | null
+          area_total: number | null
+          bathrooms: number | null
+          bedrooms: number | null
           cap_rate: number | null
           city: string | null
           created_at: string | null
           description: string | null
-          front_meters: number | null
-          google_maps_link: string | null
+          features: Json | null
+          gross_rent: number | null
           id: string | null
-          image_url: string | null
-          is_featured: boolean | null
-          is_opportunity: boolean | null
-          land_area_sqm: number | null
+          images: Json | null
           latitude: number | null
           longitude: number | null
           neighborhood: string | null
+          noi: number | null
+          parking_spots: number | null
           price: number | null
           property_type: string | null
+          show_in_vitrine: boolean | null
           state: string | null
           status: string | null
-          target_business_niche: string | null
           title: string | null
-          transaction_type: string | null
           updated_at: string | null
-          vocation: string | null
+          vacancy_rate: number | null
+          zip_code: string | null
         }
         Insert: {
           address?: string | null
-          area_sqm?: number | null
-          built_area_sqm?: number | null
+          area_built?: number | null
+          area_total?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
           cap_rate?: number | null
           city?: string | null
           created_at?: string | null
           description?: string | null
-          front_meters?: number | null
-          google_maps_link?: string | null
+          features?: Json | null
+          gross_rent?: number | null
           id?: string | null
-          image_url?: string | null
-          is_featured?: boolean | null
-          is_opportunity?: boolean | null
-          land_area_sqm?: number | null
+          images?: Json | null
           latitude?: number | null
           longitude?: number | null
           neighborhood?: string | null
+          noi?: number | null
+          parking_spots?: number | null
           price?: number | null
           property_type?: string | null
+          show_in_vitrine?: boolean | null
           state?: string | null
           status?: string | null
-          target_business_niche?: string | null
           title?: string | null
-          transaction_type?: string | null
           updated_at?: string | null
-          vocation?: string | null
+          vacancy_rate?: number | null
+          zip_code?: string | null
         }
         Update: {
           address?: string | null
-          area_sqm?: number | null
-          built_area_sqm?: number | null
+          area_built?: number | null
+          area_total?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
           cap_rate?: number | null
           city?: string | null
           created_at?: string | null
           description?: string | null
-          front_meters?: number | null
-          google_maps_link?: string | null
+          features?: Json | null
+          gross_rent?: number | null
           id?: string | null
-          image_url?: string | null
-          is_featured?: boolean | null
-          is_opportunity?: boolean | null
-          land_area_sqm?: number | null
+          images?: Json | null
           latitude?: number | null
           longitude?: number | null
           neighborhood?: string | null
+          noi?: number | null
+          parking_spots?: number | null
           price?: number | null
           property_type?: string | null
+          show_in_vitrine?: boolean | null
           state?: string | null
           status?: string | null
-          target_business_niche?: string | null
           title?: string | null
-          transaction_type?: string | null
           updated_at?: string | null
-          vocation?: string | null
+          vacancy_rate?: number | null
+          zip_code?: string | null
         }
         Relationships: []
       }
       properties_public: {
         Row: {
-          area_sqm: number | null
-          built_area_sqm: number | null
+          area_built: number | null
+          area_total: number | null
+          bathrooms: number | null
+          bedrooms: number | null
           cap_rate: number | null
           city: string | null
           created_at: string | null
           description: string | null
-          front_meters: number | null
-          google_maps_link: string | null
+          features: Json | null
+          gross_rent: number | null
           id: string | null
-          image_url: string | null
-          is_featured: boolean | null
-          is_opportunity: boolean | null
-          land_area_sqm: number | null
+          images: Json | null
           latitude: number | null
           longitude: number | null
           neighborhood: string | null
+          noi: number | null
+          parking_spots: number | null
           price: number | null
           property_type: string | null
+          show_in_vitrine: boolean | null
           state: string | null
           status: string | null
-          target_business_niche: string | null
           title: string | null
-          transaction_type: string | null
           updated_at: string | null
-          vocation: string | null
+          vacancy_rate: number | null
+          zip_code: string | null
         }
         Insert: {
-          area_sqm?: number | null
-          built_area_sqm?: number | null
+          area_built?: number | null
+          area_total?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
           cap_rate?: number | null
           city?: string | null
           created_at?: string | null
           description?: string | null
-          front_meters?: number | null
-          google_maps_link?: string | null
+          features?: Json | null
+          gross_rent?: number | null
           id?: string | null
-          image_url?: string | null
-          is_featured?: boolean | null
-          is_opportunity?: boolean | null
-          land_area_sqm?: number | null
-          latitude?: never
-          longitude?: never
+          images?: Json | null
+          latitude?: number | null
+          longitude?: number | null
           neighborhood?: string | null
+          noi?: number | null
+          parking_spots?: number | null
           price?: number | null
           property_type?: string | null
+          show_in_vitrine?: boolean | null
           state?: string | null
           status?: string | null
-          target_business_niche?: string | null
           title?: string | null
-          transaction_type?: string | null
           updated_at?: string | null
-          vocation?: string | null
+          vacancy_rate?: number | null
+          zip_code?: string | null
         }
         Update: {
-          area_sqm?: number | null
-          built_area_sqm?: number | null
+          area_built?: number | null
+          area_total?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
           cap_rate?: number | null
           city?: string | null
           created_at?: string | null
           description?: string | null
-          front_meters?: number | null
-          google_maps_link?: string | null
+          features?: Json | null
+          gross_rent?: number | null
           id?: string | null
-          image_url?: string | null
-          is_featured?: boolean | null
-          is_opportunity?: boolean | null
-          land_area_sqm?: number | null
-          latitude?: never
-          longitude?: never
+          images?: Json | null
+          latitude?: number | null
+          longitude?: number | null
           neighborhood?: string | null
+          noi?: number | null
+          parking_spots?: number | null
           price?: number | null
           property_type?: string | null
+          show_in_vitrine?: boolean | null
           state?: string | null
           status?: string | null
-          target_business_niche?: string | null
           title?: string | null
-          transaction_type?: string | null
           updated_at?: string | null
-          vocation?: string | null
+          vacancy_rate?: number | null
+          zip_code?: string | null
         }
         Relationships: []
       }

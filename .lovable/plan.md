@@ -1,68 +1,209 @@
 
+# Plano: Correção de Erros na Revisão
 
-# Plano: Migrar do Supabase Externo para Lovable Cloud
+## Resumo dos Erros Identificados
 
-## Contexto
+| Erro | Arquivo | Gravidade |
+|------|---------|-----------|
+| Vacância não deduzida no NOI | `src/pages/Decisor.tsx` | **Crítico** |
+| Taxa Administração sobre Receita Bruta (deveria ser Efetiva) | `src/pages/Decisor.tsx` | Alto |
+| Label incorreto no PDF: "TOTAL OPEX (Total Efetivamente Recebido)" | `src/lib/pdfExport.ts` | Médio |
+| PDF do Decisor não mostra vacância no OPEX | `src/lib/pdfExport.ts` | Médio |
 
-O projeto Supabase externo (`bmvzdqqgafkdyrsounfa`) foi perdido. Todas as requests estao falhando. Vamos recriar toda a infraestrutura no Lovable Cloud.
+---
 
-## O que precisa ser recriado
+## 1. Corrigir Cálculo do NOI no Decisor
 
-### 1. Enum e Tabelas (via migrations)
+**Arquivo:** `src/pages/Decisor.tsx`
 
-**Enum:**
-- `app_role` — valores: `admin`, `user`, `super_admin`, `hunter`
+### Problema Atual (linhas 107-112)
+```typescript
+const annualGrossRent = monthlyRent * 12;
+const annualCondoFee = condoFee * 12;
+const annualManagementFee = annualGrossRent * managementFee; // ❌ Sobre bruto
+const totalOpex = annualCondoFee + propertyTax + annualManagementFee;
+const annualNOI = annualGrossRent - totalOpex; // ❌ Sem vacância
+```
 
-**Tabelas:**
-- `profiles` — user_id, name, phone, category, avatar_url, approved, approved_at, approved_by
-- `user_roles` — user_id, role (app_role enum), unique(user_id, role)
-- `toolbox_projects` — user_id, project_type, name, inputs (JSONB), results (JSONB), show_in_vitrine, vitrine_title, vitrine_description
-- `properties` — title + ~25 colunas (address, price, area, cap_rate, coordinates, etc.), show_in_vitrine
-- `insight_authors` — name, avatar_url, role
-- `insight_tags` — name, slug, color
-- `insights` — title, content, author_name, media_url, published, tags
+### Solução
+Adicionar campo de vacância e corrigir a fórmula:
 
-**Views:**
-- `properties_public` — exclui address e created_by (dados sensíveis)
-- `properties_authenticated` — exclui created_by
+```typescript
+// Novo estado
+const [vacancyRate, setVacancyRate] = useState(0.05); // 5%
 
-**Functions:**
-- `has_role(_user_id, _role)` — SECURITY DEFINER para checar roles sem recursão RLS
-- `update_updated_at_column()` — trigger function para updated_at automático
+// Cálculos corrigidos
+const annualGrossRent = monthlyRent * 12;
+const effectiveGrossIncome = annualGrossRent * (1 - vacancyRate); // ✅ Deduz vacância
+const annualCondoFee = condoFee * 12;
+const annualManagementFee = effectiveGrossIncome * managementFee; // ✅ Sobre efetivo
+const totalOpex = annualCondoFee + propertyTax + annualManagementFee;
+const annualNOI = effectiveGrossIncome - totalOpex; // ✅ NOI real
+```
 
-### 2. RLS Policies
+### Adicionar Input de Vacância
 
-- `profiles`: usuários veem/inserem próprio perfil; admins veem/atualizam todos
-- `user_roles`: usuários veem próprios roles; admins gerenciam
-- `toolbox_projects`: CRUD próprio + admins veem todos + público vê vitrine
-- `properties`: público vê vitrine; admins CRUD completo
-- `insights/tags/authors`: admins gerenciam; público lê publicados
+Na seção "Custos Operacionais (OPEX)" (por volta da linha 475), adicionar:
 
-### 3. Edge Function
+```tsx
+<PercentageSlider
+  label="Taxa de Vacância"
+  value={vacancyRate}
+  onChange={setVacancyRate}
+  min={0}
+  max={0.20}
+  step={0.01}
+  tooltip="vacancyRate"
+/>
+```
 
-- `create-user` — recriar com mesma lógica (validação, rate limit, super_admin check)
+### Atualizar Dashboard de OPEX
 
-### 4. Atualizar Client
+Na estrutura de custos no Dashboard (linhas 309-335), mostrar a vacância:
 
-- Remover credenciais hardcoded de `src/integrations/supabase/client.ts`
-- Apontar para o novo Lovable Cloud (credenciais automáticas)
+```tsx
+<div className="space-y-2 text-sm">
+  <div className="flex justify-between">
+    <span className="text-muted-foreground">Receita Bruta</span>
+    <span className="font-mono">{formatCompactCurrency(annualGrossRent)}/ano</span>
+  </div>
+  <div className="flex justify-between">
+    <span className="text-muted-foreground">- Vacância ({formatPercentage(vacancyRate)})</span>
+    <span className="font-mono text-red-500">-{formatCompactCurrency(annualGrossRent * vacancyRate)}/ano</span>
+  </div>
+  <div className="flex justify-between">
+    <span className="text-muted-foreground">= Receita Efetiva</span>
+    <span className="font-mono">{formatCompactCurrency(effectiveGrossIncome)}/ano</span>
+  </div>
+  {/* ... resto dos custos ... */}
+</div>
+```
 
-## Sequência de Implementação
+### Atualizar Funções de Save/Load/Export
 
-1. Conectar Lovable Cloud ao projeto
-2. Criar migration consolidada com todo o schema (enum, tabelas, views, functions, RLS)
-3. Recriar Edge Function `create-user`
-4. Atualizar `supabase/config.toml`
-5. Atualizar `client.ts` para usar credenciais do Lovable Cloud
-6. Regenerar types
+Adicionar `vacancyRate` e `effectiveGrossIncome` em:
+- `handleSave()` (inputs)
+- `handleLoadProject()` 
+- `handleExportPDF()`
 
-## Dados
+---
 
-Os dados do Supabase antigo foram perdidos. Será necessário recriar manualmente:
-- Pelo menos 1 usuário super_admin (via Edge Function ou SQL direto)
-- Quaisquer propriedades/projetos que existiam
+## 2. Corrigir Label no PDF do Simulador
 
-## Risco
+**Arquivo:** `src/lib/pdfExport.ts`
 
-Baixo — é uma recriação limpa. O código da aplicação não muda, apenas o backend é substituído.
+### Problema (linha 484)
+```typescript
+{ label: 'TOTAL OPEX (Total Efetivamente Recebido)', value: formatCurrency(totalOpex), highlight: true },
+```
 
+**"Total Efetivamente Recebido"** é uma descrição de RECEITA, não de DESPESA. Isso confunde o leitor.
+
+### Solução (linha 484)
+```typescript
+{ label: 'TOTAL OPEX ANUAL', value: formatCurrency(totalOpex), highlight: true },
+```
+
+---
+
+## 3. Corrigir PDF do Decisor para Mostrar Vacância
+
+**Arquivo:** `src/lib/pdfExport.ts`
+
+### Atualizar Interface (linhas 510-517)
+
+```typescript
+opex?: {
+  condoFee: number;
+  propertyTax: number;
+  managementFee: number;
+  vacancyRate: number;           // ✅ Novo
+  annualGrossRent: number;
+  effectiveGrossIncome: number;  // ✅ Novo
+  totalOpex: number;
+  annualNOI: number;
+};
+```
+
+### Atualizar Seção OPEX no PDF (linhas 567-578)
+
+```typescript
+if (data.opex && data.opex.totalOpex > 0) {
+  sections.push({
+    title: 'Custos Operacionais (OPEX)',
+    type: 'key-value',
+    data: [
+      { label: 'Receita Bruta Anual', value: formatCurrency(data.opex.annualGrossRent) },
+      { label: `Vacância (${formatPercentage(data.opex.vacancyRate)})`, value: `-${formatCurrency(data.opex.annualGrossRent * data.opex.vacancyRate)}` },
+      { label: 'Receita Efetiva', value: formatCurrency(data.opex.effectiveGrossIncome) },
+      { label: 'Condomínio (anual)', value: `-${formatCurrency(data.opex.condoFee * 12)}` },
+      { label: 'IPTU (anual)', value: `-${formatCurrency(data.opex.propertyTax)}` },
+      { label: `Taxa Adm (${formatPercentage(data.opex.managementFee)})`, value: `-${formatCurrency(data.opex.effectiveGrossIncome * data.opex.managementFee)}` },
+      { label: 'NOI Líquido Anual', value: formatCurrency(data.opex.annualNOI), highlight: true },
+    ],
+  });
+}
+```
+
+---
+
+## 4. Atualizar Glossário com Termo de Vacância
+
+**Arquivo:** `src/components/tools/InfoTooltip.tsx`
+
+O termo `vacancyRate` já existe no glossário, mas vamos validar que está correto:
+
+```typescript
+vacancyRate: {
+  title: 'Taxa de Vacância',
+  description: 'Percentual médio de desocupação esperado. Imóveis comerciais bem localizados: 3-5%. Imóveis em áreas secundárias: 8-15%.',
+},
+```
+
+---
+
+## Resumo de Arquivos a Modificar
+
+| Arquivo | Alterações |
+|---------|------------|
+| `src/pages/Decisor.tsx` | Adicionar estado `vacancyRate`, corrigir cálculos NOI, atualizar UI do OPEX, atualizar save/load/export |
+| `src/lib/pdfExport.ts` | Corrigir label "TOTAL OPEX", adicionar vacância na interface e seção do Decisor |
+
+---
+
+## Comparativo Antes/Depois
+
+### Cálculo do NOI no Decisor
+
+**Antes (incorreto):**
+```
+Aluguel Mensal: R$ 33.333
+Receita Bruta Anual: R$ 400.000
+Condomínio: R$ 0
+IPTU: R$ 0
+Taxa Adm (8%): R$ 32.000 (sobre bruto)
+NOI: R$ 400.000 - R$ 32.000 = R$ 368.000
+```
+
+**Depois (correto):**
+```
+Aluguel Mensal: R$ 33.333
+Receita Bruta Anual: R$ 400.000
+Vacância (5%): -R$ 20.000
+Receita Efetiva: R$ 380.000
+Condomínio: R$ 0
+IPTU: R$ 0
+Taxa Adm (8%): R$ 30.400 (sobre efetivo)
+NOI: R$ 380.000 - R$ 30.400 = R$ 349.600
+```
+
+**Diferença no NOI:** R$ 18.400/ano (5% a menos - impacto significativo na decisão de investimento!)
+
+---
+
+## Benefícios
+
+1. **Consistência**: Simulador e Decisor usarão a mesma lógica de cálculo
+2. **Precisão**: NOI refletirá a realidade do mercado imobiliário
+3. **Clareza**: Labels corretos no PDF evitam confusão
+4. **Profissionalismo**: Relatórios mais completos com detalhamento de vacância
