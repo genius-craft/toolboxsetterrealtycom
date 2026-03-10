@@ -14,16 +14,476 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      insight_authors: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          name: string
+          role: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          role?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          role?: string | null
+        }
+        Relationships: []
+      }
+      insight_tags: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      insights: {
+        Row: {
+          author_name: string | null
+          content: string | null
+          created_at: string
+          id: string
+          media_url: string | null
+          published: boolean
+          tags: Json | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_name?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          media_url?: string | null
+          published?: boolean
+          tags?: Json | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_name?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          media_url?: string | null
+          published?: boolean
+          tags?: Json | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          approved: boolean
+          approved_at: string | null
+          approved_by: string | null
+          avatar_url: string | null
+          category: string | null
+          created_at: string
+          id: string
+          name: string | null
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved?: boolean
+          approved_at?: string | null
+          approved_by?: string | null
+          avatar_url?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved?: boolean
+          approved_at?: string | null
+          approved_by?: string | null
+          avatar_url?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      properties: {
+        Row: {
+          address: string | null
+          area_built: number | null
+          area_total: number | null
+          bathrooms: number | null
+          bedrooms: number | null
+          cap_rate: number | null
+          city: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          features: Json | null
+          gross_rent: number | null
+          id: string
+          images: Json | null
+          latitude: number | null
+          longitude: number | null
+          neighborhood: string | null
+          noi: number | null
+          parking_spots: number | null
+          price: number | null
+          property_type: string | null
+          show_in_vitrine: boolean
+          state: string | null
+          status: string | null
+          title: string
+          updated_at: string
+          vacancy_rate: number | null
+          zip_code: string | null
+        }
+        Insert: {
+          address?: string | null
+          area_built?: number | null
+          area_total?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          cap_rate?: number | null
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          features?: Json | null
+          gross_rent?: number | null
+          id?: string
+          images?: Json | null
+          latitude?: number | null
+          longitude?: number | null
+          neighborhood?: string | null
+          noi?: number | null
+          parking_spots?: number | null
+          price?: number | null
+          property_type?: string | null
+          show_in_vitrine?: boolean
+          state?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string
+          vacancy_rate?: number | null
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string | null
+          area_built?: number | null
+          area_total?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          cap_rate?: number | null
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          features?: Json | null
+          gross_rent?: number | null
+          id?: string
+          images?: Json | null
+          latitude?: number | null
+          longitude?: number | null
+          neighborhood?: string | null
+          noi?: number | null
+          parking_spots?: number | null
+          price?: number | null
+          property_type?: string | null
+          show_in_vitrine?: boolean
+          state?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string
+          vacancy_rate?: number | null
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
+      toolbox_projects: {
+        Row: {
+          created_at: string
+          id: string
+          inputs: Json | null
+          name: string
+          project_type: string
+          results: Json | null
+          show_in_vitrine: boolean
+          updated_at: string
+          user_id: string
+          vitrine_description: string | null
+          vitrine_title: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inputs?: Json | null
+          name: string
+          project_type: string
+          results?: Json | null
+          show_in_vitrine?: boolean
+          updated_at?: string
+          user_id: string
+          vitrine_description?: string | null
+          vitrine_title?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inputs?: Json | null
+          name?: string
+          project_type?: string
+          results?: Json | null
+          show_in_vitrine?: boolean
+          updated_at?: string
+          user_id?: string
+          vitrine_description?: string | null
+          vitrine_title?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      properties_authenticated: {
+        Row: {
+          address: string | null
+          area_built: number | null
+          area_total: number | null
+          bathrooms: number | null
+          bedrooms: number | null
+          cap_rate: number | null
+          city: string | null
+          created_at: string | null
+          description: string | null
+          features: Json | null
+          gross_rent: number | null
+          id: string | null
+          images: Json | null
+          latitude: number | null
+          longitude: number | null
+          neighborhood: string | null
+          noi: number | null
+          parking_spots: number | null
+          price: number | null
+          property_type: string | null
+          show_in_vitrine: boolean | null
+          state: string | null
+          status: string | null
+          title: string | null
+          updated_at: string | null
+          vacancy_rate: number | null
+          zip_code: string | null
+        }
+        Insert: {
+          address?: string | null
+          area_built?: number | null
+          area_total?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          cap_rate?: number | null
+          city?: string | null
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          gross_rent?: number | null
+          id?: string | null
+          images?: Json | null
+          latitude?: number | null
+          longitude?: number | null
+          neighborhood?: string | null
+          noi?: number | null
+          parking_spots?: number | null
+          price?: number | null
+          property_type?: string | null
+          show_in_vitrine?: boolean | null
+          state?: string | null
+          status?: string | null
+          title?: string | null
+          updated_at?: string | null
+          vacancy_rate?: number | null
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string | null
+          area_built?: number | null
+          area_total?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          cap_rate?: number | null
+          city?: string | null
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          gross_rent?: number | null
+          id?: string | null
+          images?: Json | null
+          latitude?: number | null
+          longitude?: number | null
+          neighborhood?: string | null
+          noi?: number | null
+          parking_spots?: number | null
+          price?: number | null
+          property_type?: string | null
+          show_in_vitrine?: boolean | null
+          state?: string | null
+          status?: string | null
+          title?: string | null
+          updated_at?: string | null
+          vacancy_rate?: number | null
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
+      properties_public: {
+        Row: {
+          area_built: number | null
+          area_total: number | null
+          bathrooms: number | null
+          bedrooms: number | null
+          cap_rate: number | null
+          city: string | null
+          created_at: string | null
+          description: string | null
+          features: Json | null
+          gross_rent: number | null
+          id: string | null
+          images: Json | null
+          latitude: number | null
+          longitude: number | null
+          neighborhood: string | null
+          noi: number | null
+          parking_spots: number | null
+          price: number | null
+          property_type: string | null
+          show_in_vitrine: boolean | null
+          state: string | null
+          status: string | null
+          title: string | null
+          updated_at: string | null
+          vacancy_rate: number | null
+          zip_code: string | null
+        }
+        Insert: {
+          area_built?: number | null
+          area_total?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          cap_rate?: number | null
+          city?: string | null
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          gross_rent?: number | null
+          id?: string | null
+          images?: Json | null
+          latitude?: number | null
+          longitude?: number | null
+          neighborhood?: string | null
+          noi?: number | null
+          parking_spots?: number | null
+          price?: number | null
+          property_type?: string | null
+          show_in_vitrine?: boolean | null
+          state?: string | null
+          status?: string | null
+          title?: string | null
+          updated_at?: string | null
+          vacancy_rate?: number | null
+          zip_code?: string | null
+        }
+        Update: {
+          area_built?: number | null
+          area_total?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          cap_rate?: number | null
+          city?: string | null
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          gross_rent?: number | null
+          id?: string | null
+          images?: Json | null
+          latitude?: number | null
+          longitude?: number | null
+          neighborhood?: string | null
+          noi?: number | null
+          parking_spots?: number | null
+          price?: number | null
+          property_type?: string | null
+          show_in_vitrine?: boolean | null
+          state?: string | null
+          status?: string | null
+          title?: string | null
+          updated_at?: string | null
+          vacancy_rate?: number | null
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user" | "super_admin" | "hunter"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +610,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user", "super_admin", "hunter"],
+    },
   },
 } as const
