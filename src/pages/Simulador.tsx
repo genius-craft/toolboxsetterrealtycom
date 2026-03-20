@@ -227,6 +227,8 @@ export default function Simulador() {
     const inputs = project.inputs || {};
     setProjectName(inputs.projectName || project.name || '');
     setInvestmentType(inputs.investmentType || 'ready');
+    setShowAddress(inputs.showAddress ?? false);
+    setGoogleMapsLink(inputs.googleMapsLink ?? '');
     setPurchasePrice(inputs.purchasePrice ?? 2000000);
     setClosingCosts(inputs.closingCosts ?? 0.03);
     
