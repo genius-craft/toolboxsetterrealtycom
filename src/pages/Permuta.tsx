@@ -113,6 +113,8 @@ export default function Permuta() {
   const handleLoadProject = useCallback((project: any, showToast = true) => {
     const inputs = project.inputs || {};
     setAssetName(inputs.assetName || project.name || '');
+    setShowAddress(inputs.showAddress ?? false);
+    setGoogleMapsLink(inputs.googleMapsLink ?? '');
     setVendaOferta(inputs.vendaOferta ?? 8000000);
     setValorImovelParceria(inputs.valorImovelParceria ?? 12000000);
     setPercentualUnidades(inputs.percentualUnidades ?? 50);
