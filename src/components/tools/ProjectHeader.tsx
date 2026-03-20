@@ -1,8 +1,9 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
-import { Building2, Hammer } from 'lucide-react';
+import { Building2, Hammer, MapPin } from 'lucide-react';
 
 type InvestmentType = 'ready' | 'build-to-suit';
 
@@ -11,6 +12,10 @@ interface ProjectHeaderProps {
   onProjectNameChange: (name: string) => void;
   investmentType: InvestmentType;
   onInvestmentTypeChange: (type: InvestmentType) => void;
+  showAddress?: boolean;
+  onShowAddressChange?: (show: boolean) => void;
+  googleMapsLink?: string;
+  onGoogleMapsLinkChange?: (link: string) => void;
   className?: string;
 }
 
@@ -19,6 +24,10 @@ export function ProjectHeader({
   onProjectNameChange,
   investmentType,
   onInvestmentTypeChange,
+  showAddress,
+  onShowAddressChange,
+  googleMapsLink,
+  onGoogleMapsLinkChange,
   className,
 }: ProjectHeaderProps) {
   return (
@@ -69,6 +78,30 @@ export function ProjectHeader({
           </button>
         </div>
       </div>
+
+      {/* Google Maps Address Toggle */}
+      {onShowAddressChange && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <Label className="text-sm font-medium">Endereço do Imóvel</Label>
+            </div>
+            <Switch
+              checked={showAddress ?? false}
+              onCheckedChange={onShowAddressChange}
+            />
+          </div>
+          {showAddress && onGoogleMapsLinkChange && (
+            <Input
+              placeholder="Cole o link do Google Maps aqui"
+              value={googleMapsLink ?? ''}
+              onChange={(e) => onGoogleMapsLinkChange(e.target.value)}
+              className="text-sm"
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }

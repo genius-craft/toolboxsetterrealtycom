@@ -28,6 +28,7 @@ export interface PDFConfig {
   title: string;
   subtitle?: string;
   assetName?: string;
+  googleMapsLink?: string;
   date: string;
   sections: PDFSection[];
   footer?: string;
@@ -106,6 +107,19 @@ export async function generatePDF(config: PDFConfig): Promise<void> {
     doc.text('Ativo:', margin, yPosition);
     doc.setFont('helvetica', 'normal');
     doc.text(config.assetName, margin + 15, yPosition);
+    yPosition += 6;
+  }
+
+  if (config.googleMapsLink) {
+    doc.setFont('helvetica', 'bold');
+    doc.text('Endereço:', margin, yPosition);
+    doc.setFont('helvetica', 'normal');
+    const linkText = config.googleMapsLink.length > 70
+      ? config.googleMapsLink.substring(0, 67) + '...'
+      : config.googleMapsLink;
+    doc.setTextColor(41, 98, 255);
+    doc.textWithLink(linkText, margin + 22, yPosition, { url: config.googleMapsLink });
+    doc.setTextColor(...COLORS.dark);
     yPosition += 6;
   }
 
@@ -358,6 +372,7 @@ export interface ScenarioData {
 
 export interface SimuladorPDFData {
   projectName: string;
+  googleMapsLink?: string;
   kpis: {
     entryCapRate: number;
     monthlyCapRate: number;
@@ -437,6 +452,7 @@ export async function generateSimuladorPDF(data: SimuladorPDFData): Promise<void
   await generatePDF({
     title: 'Simulador de Viabilidade',
     assetName: data.projectName || 'Projeto sem nome',
+    googleMapsLink: data.googleMapsLink,
     date: new Date().toLocaleDateString('pt-BR'),
     sections: [
       // Único KPI - Cap Rate Mensal (Estimado) centralizado
@@ -496,6 +512,7 @@ export async function generateSimuladorPDF(data: SimuladorPDFData): Promise<void
  */
 export interface DecisorPDFData {
   assetName: string;
+  googleMapsLink?: string;
   verdict: 'GO' | 'NEGOTIATE' | 'NO-GO';
   kpis: {
     impliedCapRate: number;
@@ -599,6 +616,7 @@ export async function generateDecisorPDF(data: DecisorPDFData): Promise<void> {
   await generatePDF({
     title: 'Decisor Go/No-Go',
     assetName: data.assetName || 'Ativo sem nome',
+    googleMapsLink: data.googleMapsLink,
     date: new Date().toLocaleDateString('pt-BR'),
     sections,
   });
@@ -609,6 +627,7 @@ export async function generateDecisorPDF(data: DecisorPDFData): Promise<void> {
  */
 export interface PermutaPDFData {
   assetName: string;
+  googleMapsLink?: string;
   vendaOferta: number;
   calculations: {
     valorUnidades: number;
@@ -642,6 +661,7 @@ export async function generatePermutaPDF(data: PermutaPDFData): Promise<void> {
   await generatePDF({
     title: 'Calculadora de Permuta',
     assetName: data.assetName || 'Terreno sem nome',
+    googleMapsLink: data.googleMapsLink,
     date: new Date().toLocaleDateString('pt-BR'),
     sections: [
       {
@@ -694,6 +714,7 @@ export async function generatePermutaPDF(data: PermutaPDFData): Promise<void> {
  * Generate PDF for Highest & Best Use
  */
 export interface HBUPDFData {
+  googleMapsLink?: string;
   landParams: {
     landArea: number;
     far: number;
@@ -719,6 +740,7 @@ export async function generateHBUPDF(data: HBUPDFData): Promise<void> {
   await generatePDF({
     title: 'Highest & Best Use',
     subtitle: 'Análise de Melhor Uso do Terreno',
+    googleMapsLink: data.googleMapsLink,
     date: new Date().toLocaleDateString('pt-BR'),
     sections: [
       {
@@ -769,6 +791,7 @@ export async function generateHBUPDF(data: HBUPDFData): Promise<void> {
  */
 export interface PrecoTetoPDFData {
   projectName: string;
+  googleMapsLink?: string;
   calculationMode: 'capRate' | 'irr';
   targetReturn: number;
   maxPrice: number;
@@ -857,6 +880,7 @@ export async function generatePrecoTetoPDF(data: PrecoTetoPDFData): Promise<void
   await generatePDF({
     title: 'Preço Teto',
     assetName: data.projectName || 'Projeto sem nome',
+    googleMapsLink: data.googleMapsLink,
     date: new Date().toLocaleDateString('pt-BR'),
     sections,
   });

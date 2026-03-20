@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSaveProject, useProject } from '@/hooks/useProjects';
@@ -29,6 +30,7 @@ import {
   Settings,
   Download,
   Loader2,
+  MapPin,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -42,6 +44,10 @@ export default function HighestBestUse() {
   const projectIdFromUrl = searchParams.get('id');
   const { data: projectFromUrl, isLoading: loadingProjectFromUrl } = useProject(projectIdFromUrl || '');
   const [hasLoadedFromUrl, setHasLoadedFromUrl] = useState(false);
+
+  // Address
+  const [showAddress, setShowAddress] = useState(false);
+  const [googleMapsLink, setGoogleMapsLink] = useState('');
 
   // Terreno
   const [landArea, setLandArea] = useState(1000);
@@ -102,6 +108,8 @@ export default function HighestBestUse() {
     const comercial = inputs.comercial || {};
     const gerais = inputs.gerais || {};
     
+    setShowAddress(inputs.showAddress ?? false);
+    setGoogleMapsLink(inputs.googleMapsLink ?? '');
     setLandArea(terreno.landArea ?? 1000);
     setFar(terreno.far ?? 2);
     setOccupancyRate(terreno.occupancyRate ?? 0.5);
@@ -131,6 +139,8 @@ export default function HighestBestUse() {
   }, [projectFromUrl, loadingProjectFromUrl, hasLoadedFromUrl, handleLoadProject]);
 
   const handleReset = () => {
+    setShowAddress(false);
+    setGoogleMapsLink('');
     setLandArea(1000);
     setFar(2);
     setOccupancyRate(0.5);
@@ -153,6 +163,8 @@ export default function HighestBestUse() {
       project_type: 'hbu',
       name: `H&BU ${new Date().toLocaleDateString('pt-BR')}`,
       inputs: {
+        showAddress,
+        googleMapsLink,
         terreno: { landArea, far, occupancyRate, location, zoning },
         residencial: { pricePerSqm: residencialPricePerSqm, costPerSqm: residencialCostPerSqm, absorptionMonths: residencialAbsorptionMonths },
         comercial: { pricePerSqm: comercialPricePerSqm, costPerSqm: comercialCostPerSqm, absorptionMonths: comercialAbsorptionMonths },
@@ -172,6 +184,7 @@ export default function HighestBestUse() {
     setIsExportingPDF(true);
     try {
       await generateHBUPDF({
+        googleMapsLink: showAddress ? googleMapsLink : undefined,
         landParams: { landArea, far, occupancyRate, location },
         results: {
           residencial: { score: results.residencial.score, vgv: results.residencial.vgv, profit: results.residencial.grossProfit, npv: results.residencial.npv, margin: results.residencial.margin },
@@ -273,6 +286,28 @@ export default function HighestBestUse() {
 
   return (
     <ToolLayout title="Highest & Best Use" rightPanel={Dashboard}>
+      {/* Address Toggle */}
+      <div className="bg-card rounded-lg border border-border p-4 shadow-card space-y-2 mb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-muted-foreground" />
+            <Label className="text-sm font-medium">Endereço do Imóvel</Label>
+          </div>
+          <Switch
+            checked={showAddress}
+            onCheckedChange={setShowAddress}
+          />
+        </div>
+        {showAddress && (
+          <Input
+            placeholder="Cole o link do Google Maps aqui"
+            value={googleMapsLink}
+            onChange={(e) => setGoogleMapsLink(e.target.value)}
+            className="text-sm"
+          />
+        )}
+      </div>
+
       {/* Terreno */}
       <CollapsibleInputCard title="Terreno" icon={Map} defaultOpen>
         <div className="space-y-2">

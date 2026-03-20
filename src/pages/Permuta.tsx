@@ -13,8 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Banknote, Building2, RefreshCcw, Save, FileDown, AlertTriangle, FolderOpen, Loader2 } from "lucide-react";
+import { Banknote, Building2, RefreshCcw, Save, FileDown, AlertTriangle, FolderOpen, Loader2, MapPin } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import { generatePermutaPDF } from "@/lib/pdfExport";
 import { useAuth } from "@/contexts/AuthContext";
@@ -39,6 +40,8 @@ export default function Permuta() {
 
   // === Estado: Nome do Ativo ===
   const [assetName, setAssetName] = useState('');
+  const [showAddress, setShowAddress] = useState(false);
+  const [googleMapsLink, setGoogleMapsLink] = useState('');
 
   // === Estados: Venda à Vista ===
   const [vendaOferta, setVendaOferta] = useState(8000000);
@@ -86,6 +89,8 @@ export default function Permuta() {
 
   const handleReset = () => {
     setAssetName('');
+    setShowAddress(false);
+    setGoogleMapsLink('');
     setVendaOferta(8000000); setValorImovelParceria(12000000); setPercentualUnidades(50);
     setAprovacaoMeses(12); setConstrucaoMeses(36); setVendaMeses(12); setTaxaDesconto(12);
     setPrecoUnidade(500000); setCustoMensalUnidade(1500);
@@ -98,7 +103,7 @@ export default function Permuta() {
       await saveProject.mutateAsync({
         name: projectName,
         project_type: "permuta",
-        inputs: { assetName, vendaOferta, valorImovelParceria, percentualUnidades, aprovacaoMeses,
+        inputs: { assetName, showAddress, googleMapsLink, vendaOferta, valorImovelParceria, percentualUnidades, aprovacaoMeses,
                   construcaoMeses, vendaMeses, taxaDesconto, precoUnidade, custoMensalUnidade },
         results: calculations,
       });
@@ -109,6 +114,8 @@ export default function Permuta() {
   const handleLoadProject = useCallback((project: any, showToast = true) => {
     const inputs = project.inputs || {};
     setAssetName(inputs.assetName || project.name || '');
+    setShowAddress(inputs.showAddress ?? false);
+    setGoogleMapsLink(inputs.googleMapsLink ?? '');
     setVendaOferta(inputs.vendaOferta ?? 8000000);
     setValorImovelParceria(inputs.valorImovelParceria ?? 12000000);
     setPercentualUnidades(inputs.percentualUnidades ?? 50);
@@ -137,6 +144,7 @@ export default function Permuta() {
     try {
       await generatePermutaPDF({
         assetName: assetName || 'Terreno sem nome',
+        googleMapsLink: showAddress ? googleMapsLink : undefined,
         vendaOferta,
         calculations,
         inputs: {
@@ -158,18 +166,40 @@ export default function Permuta() {
   const InputsPanel = (
     <div className="space-y-6">
       {/* Nome do Ativo */}
-      <div className="bg-card rounded-lg border border-border p-4 shadow-card">
-        <Label htmlFor="assetName" className="text-sm font-medium mb-2 block">
-          Nome do Ativo
-        </Label>
-        <Input
-          id="assetName"
-          placeholder="Ex: Terreno Av. Paulista"
-          value={assetName}
-          onChange={(e) => setAssetName(e.target.value)}
-          className="bg-background"
-          maxLength={100}
-        />
+      <div className="bg-card rounded-lg border border-border p-4 shadow-card space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="assetName" className="text-sm font-medium">
+            Nome do Ativo
+          </Label>
+          <Input
+            id="assetName"
+            placeholder="Ex: Terreno Av. Paulista"
+            value={assetName}
+            onChange={(e) => setAssetName(e.target.value)}
+            className="bg-background"
+            maxLength={100}
+          />
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <Label className="text-sm font-medium">Endereço do Imóvel</Label>
+            </div>
+            <Switch
+              checked={showAddress}
+              onCheckedChange={setShowAddress}
+            />
+          </div>
+          {showAddress && (
+            <Input
+              placeholder="Cole o link do Google Maps aqui"
+              value={googleMapsLink}
+              onChange={(e) => setGoogleMapsLink(e.target.value)}
+              className="text-sm"
+            />
+          )}
+        </div>
       </div>
 
       <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-4">

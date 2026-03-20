@@ -10,6 +10,7 @@ import { GlossaryTooltip } from '@/components/tools/InfoTooltip';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSaveProject, useProject } from '@/hooks/useProjects';
 import { calculateGoNoGo } from '@/lib/calculations';
@@ -87,6 +88,8 @@ export default function Decisor() {
 
   // Project name
   const [assetName, setAssetName] = useState('');
+  const [showAddress, setShowAddress] = useState(false);
+  const [googleMapsLink, setGoogleMapsLink] = useState('');
 
   // Financial inputs
   const [askingPrice, setAskingPrice] = useState(5000000);
@@ -139,6 +142,8 @@ export default function Decisor() {
   const handleLoadProject = useCallback((project: any, showToast = true) => {
     const inputs = project.inputs || {};
     setAssetName(inputs.assetName || project.name || '');
+    setShowAddress(inputs.showAddress ?? false);
+    setGoogleMapsLink(inputs.googleMapsLink ?? '');
     setAskingPrice(inputs.askingPrice ?? 5000000);
     setMonthlyRent(inputs.monthlyRent ?? 33333);
     setTargetMonthlyCapRate(inputs.targetMonthlyCapRate ?? 0.0067);
@@ -170,6 +175,8 @@ export default function Decisor() {
       name: projectName,
       inputs: {
         assetName,
+        showAddress,
+        googleMapsLink,
         askingPrice,
         monthlyRent,
         targetMonthlyCapRate,
@@ -196,6 +203,7 @@ export default function Decisor() {
     try {
       await generateDecisorPDF({
         assetName: assetName || 'Ativo sem nome',
+        googleMapsLink: showAddress ? googleMapsLink : undefined,
         verdict: result.verdict,
         kpis: {
           impliedCapRate: result.impliedCapRate,
@@ -447,18 +455,40 @@ export default function Decisor() {
   return (
     <ToolLayout title="Decisor Go/No-Go" rightPanel={Dashboard}>
       {/* Asset Name */}
-      <div className="bg-card rounded-lg border border-border p-4 shadow-card mb-4">
-        <Label htmlFor="assetName" className="text-sm font-medium mb-2 block">
-          Nome do Ativo
-        </Label>
-        <Input
-          id="assetName"
-          placeholder="Ex: Galpão Logístico ABC"
-          value={assetName}
-          onChange={(e) => setAssetName(e.target.value)}
-          className="bg-background"
-          maxLength={100}
-        />
+      <div className="bg-card rounded-lg border border-border p-4 shadow-card mb-4 space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="assetName" className="text-sm font-medium">
+            Nome do Ativo
+          </Label>
+          <Input
+            id="assetName"
+            placeholder="Ex: Galpão Logístico ABC"
+            value={assetName}
+            onChange={(e) => setAssetName(e.target.value)}
+            className="bg-background"
+            maxLength={100}
+          />
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <Label className="text-sm font-medium">Endereço do Imóvel</Label>
+            </div>
+            <Switch
+              checked={showAddress}
+              onCheckedChange={setShowAddress}
+            />
+          </div>
+          {showAddress && (
+            <Input
+              placeholder="Cole o link do Google Maps aqui"
+              value={googleMapsLink}
+              onChange={(e) => setGoogleMapsLink(e.target.value)}
+              className="text-sm"
+            />
+          )}
+        </div>
       </div>
 
       {/* Financial Inputs */}
