@@ -219,6 +219,8 @@ export default function PrecoTeto() {
       name: projectName || `Preço Teto ${new Date().toLocaleDateString('pt-BR')}`,
       inputs: {
         projectName,
+        showAddress,
+        googleMapsLink,
         calculationMode,
         targetCapRate,
         targetIRR,
