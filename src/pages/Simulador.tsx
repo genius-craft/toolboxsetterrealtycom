@@ -280,6 +280,8 @@ export default function Simulador() {
       inputs: {
         projectName,
         investmentType,
+        showAddress,
+        googleMapsLink,
         purchasePrice,
         closingCosts,
         builtArea,
