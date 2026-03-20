@@ -747,6 +747,7 @@ export async function generatePermutaPDF(data: PermutaPDFData): Promise<void> {
  */
 export interface HBUPDFData {
   googleMapsLink?: string;
+  observations?: string;
   landParams: {
     landArea: number;
     far: number;
