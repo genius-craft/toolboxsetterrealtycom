@@ -286,6 +286,28 @@ export default function HighestBestUse() {
 
   return (
     <ToolLayout title="Highest & Best Use" rightPanel={Dashboard}>
+      {/* Address Toggle */}
+      <div className="bg-card rounded-lg border border-border p-4 shadow-card space-y-2 mb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-muted-foreground" />
+            <Label className="text-sm font-medium">Endereço do Imóvel</Label>
+          </div>
+          <Switch
+            checked={showAddress}
+            onCheckedChange={setShowAddress}
+          />
+        </div>
+        {showAddress && (
+          <Input
+            placeholder="Cole o link do Google Maps aqui"
+            value={googleMapsLink}
+            onChange={(e) => setGoogleMapsLink(e.target.value)}
+            className="text-sm"
+          />
+        )}
+      </div>
+
       {/* Terreno */}
       <CollapsibleInputCard title="Terreno" icon={Map} defaultOpen>
         <div className="space-y-2">
