@@ -341,6 +341,7 @@ export default function Simulador() {
       await generateSimuladorPDF({
         projectName: projectName || 'Projeto sem nome',
         googleMapsLink: showAddress ? googleMapsLink : undefined,
+        observations: observations.trim() || undefined,
         kpis: {
           entryCapRate: calculations.entryCapRate,
           monthlyCapRate,
