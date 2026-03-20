@@ -179,6 +179,7 @@ export default function Decisor() {
         assetName,
         showAddress,
         googleMapsLink,
+        observations,
         askingPrice,
         monthlyRent,
         targetMonthlyCapRate,
