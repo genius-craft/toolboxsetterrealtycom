@@ -574,6 +574,10 @@ export default function Simulador() {
         onProjectNameChange={setProjectName}
         investmentType={investmentType}
         onInvestmentTypeChange={setInvestmentType}
+        showAddress={showAddress}
+        onShowAddressChange={setShowAddress}
+        googleMapsLink={googleMapsLink}
+        onGoogleMapsLinkChange={setGoogleMapsLink}
       />
 
       {/* CAPEX Card */}
