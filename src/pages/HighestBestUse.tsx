@@ -48,6 +48,7 @@ export default function HighestBestUse() {
   // Address
   const [showAddress, setShowAddress] = useState(false);
   const [googleMapsLink, setGoogleMapsLink] = useState('');
+  const [observations, setObservations] = useState('');
 
   // Terreno
   const [landArea, setLandArea] = useState(1000);
