@@ -111,6 +111,7 @@ export default function HighestBestUse() {
     
     setShowAddress(inputs.showAddress ?? false);
     setGoogleMapsLink(inputs.googleMapsLink ?? '');
+    setObservations(inputs.observations ?? '');
     setLandArea(terreno.landArea ?? 1000);
     setFar(terreno.far ?? 2);
     setOccupancyRate(terreno.occupancyRate ?? 0.5);
