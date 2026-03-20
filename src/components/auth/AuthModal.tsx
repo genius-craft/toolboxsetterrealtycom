@@ -8,6 +8,38 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Mail, Lock, User, Eye, EyeOff, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { sanitizeErrorMessage } from '@/lib/errorMessages';
+import { cn } from '@/lib/utils';
+
+function PasswordStrength({ password }: { password: string }) {
+  const checks = [
+    password.length >= 6,
+    /[A-Z]/.test(password),
+    /[0-9]/.test(password),
+    /[^A-Za-z0-9]/.test(password),
+  ];
+  const score = checks.filter(Boolean).length;
+  const labels = ['Fraca', 'Fraca', 'Razoável', 'Boa', 'Forte'];
+  const colors = ['bg-red-500', 'bg-red-500', 'bg-amber-500', 'bg-emerald-500', 'bg-green-500'];
+
+  return (
+    <div className="space-y-1.5 mt-2">
+      <div className="flex gap-1">
+        {[0, 1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className={cn(
+              'h-1 flex-1 rounded-full transition-all duration-300',
+              i < score ? colors[score] : 'bg-muted'
+            )}
+          />
+        ))}
+      </div>
+      <p className={cn('text-xs', score <= 1 ? 'text-red-500' : score === 2 ? 'text-amber-500' : 'text-green-600')}>
+        Senha {labels[score]}
+      </p>
+    </div>
+  );
+}
 
 const categories = [
   { value: 'corretor', label: 'Corretor' },
@@ -228,8 +260,11 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                 Entrar
               </button>
             </>
-          )}
-        </div>
+              )}
+            </div>
+            {mode === 'signup' && password.length > 0 && (
+              <PasswordStrength password={password} />
+            )}
       </DialogContent>
     </Dialog>
   );
