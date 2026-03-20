@@ -372,6 +372,7 @@ export interface ScenarioData {
 
 export interface SimuladorPDFData {
   projectName: string;
+  googleMapsLink?: string;
   kpis: {
     entryCapRate: number;
     monthlyCapRate: number;
