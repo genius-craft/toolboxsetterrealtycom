@@ -1,46 +1,48 @@
 
 
-# Plano: Toggle de Endereço Google Maps nas Ferramentas
+# Plano: Campo de Observações nas Ferramentas + PDF
 
-## Problema
-O usuário quer poder incluir opcionalmente um link compartilhável do Google Maps nos projetos das ferramentas. Se ativo, o endereço aparece; se desativado, não.
+## O que será feito
+Adicionar um campo de texto "Observações" nas ferramentas (Simulador, Decisor, PrecoTeto, HighestBestUse, Permuta) e incluí-lo no final do PDF exportado, antes do rodapé.
 
 ## Mudanças
 
 ### 1. `src/components/tools/ProjectHeader.tsx`
-- Adicionar props opcionais: `googleMapsLink`, `onGoogleMapsLinkChange`, `showAddress`, `onShowAddressChange`
-- Adicionar um toggle (Switch) com label "Endereço do imóvel"
-- Quando ativo, mostrar campo de texto para colar o link do Google Maps
-- Placeholder: "Cole o link do Google Maps aqui"
+- Adicionar props opcionais `observations` e `onObservationsChange`
+- Renderizar `Textarea` com label "Observações" e placeholder "Anotações, premissas, contexto..."
+- Só aparece se `onObservationsChange` for passado (retrocompatível)
 
-### 2. Páginas das ferramentas (Simulador, Decisor, PrecoTeto, HighestBestUse, Permuta)
-- Adicionar estados `showAddress` (boolean) e `googleMapsLink` (string)
-- Passar para o ProjectHeader (ou incluir inline onde ProjectHeader não é usado)
-- Incluir nos inputs salvos no banco e no carregamento de projetos
-- Incluir no export PDF (se link estiver preenchido, mostrar no cabeçalho do relatório)
+### 2. Páginas das ferramentas (5 arquivos)
+- Adicionar estado `observations` (string) em cada ferramenta
+- Passar para `ProjectHeader` (ou inline no Permuta que não usa ProjectHeader)
+- Incluir em `inputs` ao salvar e restaurar ao carregar
+- Incluir no `handleReset`
+- Passar `observations` para a função de export PDF
 
 ### 3. `src/lib/pdfExport.ts`
-- Receber `googleMapsLink` opcional nos parâmetros
-- Se presente, exibir o endereço/link abaixo do nome do projeto no PDF
+- Adicionar `observations?: string` na interface `PDFConfig`
+- Antes do rodapé, se `observations` estiver preenchido, renderizar uma seção "OBSERVAÇÕES" com o texto em caixa com fundo bege
+- Usar `checkNewPage` para garantir espaço
 
-## Layout do toggle no ProjectHeader
+### Layout no PDF
 
 ```text
-┌─────────────────────────────────────┐
-│ Nome do Projeto                     │
-│ [___________________________]       │
-│                                     │
-│ Tipo de Investimento                │
-│ [Compra Pronta] [Build-to-Suit]     │
-│                                     │
-│ Endereço do Imóvel  [toggle ○]      │
-│ (quando ativo:)                     │
-│ [Cole o link do Google Maps aqui__] │
-└─────────────────────────────────────┘
+┌──────────────────────────────────────────┐
+│ (seções existentes...)                   │
+│                                          │
+│ ▌ OBSERVAÇÕES                            │
+│ ┌──────────────────────────────────────┐ │
+│ │ Texto livre escrito pelo usuário...  │ │
+│ └──────────────────────────────────────┘ │
+│                                          │
+│ ─────────────────────────────────────── │
+│ Disclaimer...                            │
+│ Contato: (19) 97122-3648 | setter.realty │
+└──────────────────────────────────────────┘
 ```
 
 ## Detalhes técnicos
-- Props opcionais no ProjectHeader para não quebrar ferramentas que não usam
-- Dados salvos no JSONB `inputs` dos projetos (sem migration necessária)
-- O link é armazenado como string simples no state
+- Dados salvos no JSONB `inputs` — sem migration
+- Textarea com `maxLength={500}`
+- `doc.splitTextToSize()` usado para quebrar linhas no PDF
 
