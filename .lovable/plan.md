@@ -1,25 +1,46 @@
 
 
-# Plano: Adicionar telefone da Setter no rodapé do PDF
+# Plano: Toggle de Endereço Google Maps nas Ferramentas
 
-## Mudança
+## Problema
+O usuário quer poder incluir opcionalmente um link compartilhável do Google Maps nos projetos das ferramentas. Se ativo, o endereço aparece; se desativado, não.
 
-**Arquivo:** `src/lib/pdfExport.ts` (linhas 154-167)
+## Mudanças
 
-Adicionar o telefone de contato `(19) 97122-3648` no rodapé de todos os PDFs exportados, entre o disclaimer e o "Gerado por Setter Toolbox".
+### 1. `src/components/tools/ProjectHeader.tsx`
+- Adicionar props opcionais: `googleMapsLink`, `onGoogleMapsLinkChange`, `showAddress`, `onShowAddressChange`
+- Adicionar um toggle (Switch) com label "Endereço do imóvel"
+- Quando ativo, mostrar campo de texto para colar o link do Google Maps
+- Placeholder: "Cole o link do Google Maps aqui"
 
-### Layout do rodapé atualizado
+### 2. Páginas das ferramentas (Simulador, Decisor, PrecoTeto, HighestBestUse, Permuta)
+- Adicionar estados `showAddress` (boolean) e `googleMapsLink` (string)
+- Passar para o ProjectHeader (ou incluir inline onde ProjectHeader não é usado)
+- Incluir nos inputs salvos no banco e no carregamento de projetos
+- Incluir no export PDF (se link estiver preenchido, mostrar no cabeçalho do relatório)
+
+### 3. `src/lib/pdfExport.ts`
+- Receber `googleMapsLink` opcional nos parâmetros
+- Se presente, exibir o endereço/link abaixo do nome do projeto no PDF
+
+## Layout do toggle no ProjectHeader
 
 ```text
-─────────────────────────────────────────────────────────
-Este relatório é para fins informativos...
-Contato: (19) 97122-3648 | setter.realty                    Gerado por Setter Toolbox
+┌─────────────────────────────────────┐
+│ Nome do Projeto                     │
+│ [___________________________]       │
+│                                     │
+│ Tipo de Investimento                │
+│ [Compra Pronta] [Build-to-Suit]     │
+│                                     │
+│ Endereço do Imóvel  [toggle ○]      │
+│ (quando ativo:)                     │
+│ [Cole o link do Google Maps aqui__] │
+└─────────────────────────────────────┘
 ```
 
-### Detalhes técnicos
-
-- Adicionar uma segunda linha no footer com o telefone formatado
-- Ajustar `footerY` para acomodar 2 linhas (mover de `pageHeight - 15` para `pageHeight - 20`)
-- Linha 1: disclaimer (já existe)
-- Linha 2: telefone + site à esquerda, "Gerado por Setter Toolbox" à direita
+## Detalhes técnicos
+- Props opcionais no ProjectHeader para não quebrar ferramentas que não usam
+- Dados salvos no JSONB `inputs` dos projetos (sem migration necessária)
+- O link é armazenado como string simples no state
 
