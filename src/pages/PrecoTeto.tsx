@@ -225,6 +225,7 @@ export default function PrecoTeto() {
         projectName,
         showAddress,
         googleMapsLink,
+        observations,
         calculationMode,
         targetCapRate,
         targetIRR,
