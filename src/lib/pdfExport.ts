@@ -880,6 +880,7 @@ export async function generatePrecoTetoPDF(data: PrecoTetoPDFData): Promise<void
   await generatePDF({
     title: 'Preço Teto',
     assetName: data.projectName || 'Projeto sem nome',
+    googleMapsLink: data.googleMapsLink,
     date: new Date().toLocaleDateString('pt-BR'),
     sections,
   });
