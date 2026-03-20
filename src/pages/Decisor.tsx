@@ -90,6 +90,7 @@ export default function Decisor() {
   const [assetName, setAssetName] = useState('');
   const [showAddress, setShowAddress] = useState(false);
   const [googleMapsLink, setGoogleMapsLink] = useState('');
+  const [observations, setObservations] = useState('');
 
   // Financial inputs
   const [askingPrice, setAskingPrice] = useState(5000000);
@@ -144,6 +145,7 @@ export default function Decisor() {
     setAssetName(inputs.assetName || project.name || '');
     setShowAddress(inputs.showAddress ?? false);
     setGoogleMapsLink(inputs.googleMapsLink ?? '');
+    setObservations(inputs.observations ?? '');
     setAskingPrice(inputs.askingPrice ?? 5000000);
     setMonthlyRent(inputs.monthlyRent ?? 33333);
     setTargetMonthlyCapRate(inputs.targetMonthlyCapRate ?? 0.0067);
@@ -177,6 +179,7 @@ export default function Decisor() {
         assetName,
         showAddress,
         googleMapsLink,
+        observations,
         askingPrice,
         monthlyRent,
         targetMonthlyCapRate,
@@ -204,6 +207,7 @@ export default function Decisor() {
       await generateDecisorPDF({
         assetName: assetName || 'Ativo sem nome',
         googleMapsLink: showAddress ? googleMapsLink : undefined,
+        observations: observations.trim() || undefined,
         verdict: result.verdict,
         kpis: {
           impliedCapRate: result.impliedCapRate,
@@ -486,8 +490,22 @@ export default function Decisor() {
               value={googleMapsLink}
               onChange={(e) => setGoogleMapsLink(e.target.value)}
               className="text-sm"
-            />
-          )}
+           />
+         )}
+        </div>
+        {/* Observations */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Label className="text-sm font-medium">Observações</Label>
+          </div>
+          <textarea
+            placeholder="Anotações, premissas, contexto..."
+            value={observations}
+            onChange={(e) => setObservations(e.target.value)}
+            maxLength={500}
+            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-y"
+          />
+          <p className="text-xs text-muted-foreground text-right">{observations.length}/500</p>
         </div>
       </div>
 

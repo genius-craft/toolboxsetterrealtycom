@@ -73,6 +73,7 @@ export default function Simulador() {
   const [investmentType, setInvestmentType] = useState<'ready' | 'build-to-suit'>('ready');
   const [showAddress, setShowAddress] = useState(false);
   const [googleMapsLink, setGoogleMapsLink] = useState('');
+  const [observations, setObservations] = useState('');
 
   // Investment (CAPEX)
   const [purchasePrice, setPurchasePrice] = useState(2000000);
@@ -229,6 +230,7 @@ export default function Simulador() {
     setInvestmentType(inputs.investmentType || 'ready');
     setShowAddress(inputs.showAddress ?? false);
     setGoogleMapsLink(inputs.googleMapsLink ?? '');
+    setObservations(inputs.observations ?? '');
     setPurchasePrice(inputs.purchasePrice ?? 2000000);
     setClosingCosts(inputs.closingCosts ?? 0.03);
     
@@ -282,6 +284,7 @@ export default function Simulador() {
         investmentType,
         showAddress,
         googleMapsLink,
+        observations,
         purchasePrice,
         closingCosts,
         builtArea,
@@ -338,6 +341,7 @@ export default function Simulador() {
       await generateSimuladorPDF({
         projectName: projectName || 'Projeto sem nome',
         googleMapsLink: showAddress ? googleMapsLink : undefined,
+        observations: observations.trim() || undefined,
         kpis: {
           entryCapRate: calculations.entryCapRate,
           monthlyCapRate,
@@ -583,6 +587,8 @@ export default function Simulador() {
         onShowAddressChange={setShowAddress}
         googleMapsLink={googleMapsLink}
         onGoogleMapsLinkChange={setGoogleMapsLink}
+        observations={observations}
+        onObservationsChange={setObservations}
       />
 
       {/* CAPEX Card */}

@@ -29,6 +29,7 @@ export interface PDFConfig {
   subtitle?: string;
   assetName?: string;
   googleMapsLink?: string;
+  observations?: string;
   date: string;
   sections: PDFSection[];
   footer?: string;
@@ -163,6 +164,31 @@ export async function generatePDF(config: PDFConfig): Promise<void> {
     }
 
     yPosition += 8;
+  }
+
+  // === OBSERVATIONS ===
+  if (config.observations && config.observations.trim()) {
+    const obsLines = doc.splitTextToSize(config.observations, contentWidth - 16);
+    const obsBoxHeight = 14 + obsLines.length * 5;
+    checkNewPage(obsBoxHeight + 10);
+
+    // Section title bar
+    doc.setFillColor(...COLORS.primary);
+    doc.rect(margin, yPosition, contentWidth, 8, 'F');
+    doc.setTextColor(...COLORS.white);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('OBSERVAÇÕES', margin + 4, yPosition + 5.5);
+    yPosition += 14;
+
+    // Observations box with warm background
+    doc.setFillColor(...COLORS.warmBg);
+    doc.roundedRect(margin, yPosition, contentWidth, obsBoxHeight - 6, 3, 3, 'F');
+    doc.setTextColor(...COLORS.dark);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(obsLines, margin + 8, yPosition + 8);
+    yPosition += obsBoxHeight;
   }
 
   // === FOOTER ===
@@ -373,6 +399,7 @@ export interface ScenarioData {
 export interface SimuladorPDFData {
   projectName: string;
   googleMapsLink?: string;
+  observations?: string;
   kpis: {
     entryCapRate: number;
     monthlyCapRate: number;
@@ -389,11 +416,11 @@ export interface SimuladorPDFData {
     purchasePrice: number;
     closingCostsAmount: number;
     closingCostsPercent: number;
-    builtArea: number;           // Metros quadrados
-    costPerSqm: number;          // Custo por m²
-    shellCost: number;           // Total shell
+    builtArea: number;
+    costPerSqm: number;
+    shellCost: number;
     turnkeyCost: number;
-    totalConstructionCost: number;  // Shell + turnkey
+    totalConstructionCost: number;
   };
   
   // Rental Units
@@ -402,7 +429,7 @@ export interface SimuladorPDFData {
     monthlyRent: number;
   }>;
   
-  // Total Monthly Rent (for fee formula display)
+  // Total Monthly Rent
   totalMonthlyRent: number;
   
   // OPEX Breakdown
@@ -453,6 +480,7 @@ export async function generateSimuladorPDF(data: SimuladorPDFData): Promise<void
     title: 'Simulador de Viabilidade',
     assetName: data.projectName || 'Projeto sem nome',
     googleMapsLink: data.googleMapsLink,
+    observations: data.observations,
     date: new Date().toLocaleDateString('pt-BR'),
     sections: [
       // Único KPI - Cap Rate Mensal (Estimado) centralizado
@@ -513,6 +541,7 @@ export async function generateSimuladorPDF(data: SimuladorPDFData): Promise<void
 export interface DecisorPDFData {
   assetName: string;
   googleMapsLink?: string;
+  observations?: string;
   verdict: 'GO' | 'NEGOTIATE' | 'NO-GO';
   kpis: {
     impliedCapRate: number;
@@ -617,6 +646,7 @@ export async function generateDecisorPDF(data: DecisorPDFData): Promise<void> {
     title: 'Decisor Go/No-Go',
     assetName: data.assetName || 'Ativo sem nome',
     googleMapsLink: data.googleMapsLink,
+    observations: data.observations,
     date: new Date().toLocaleDateString('pt-BR'),
     sections,
   });
@@ -628,6 +658,7 @@ export async function generateDecisorPDF(data: DecisorPDFData): Promise<void> {
 export interface PermutaPDFData {
   assetName: string;
   googleMapsLink?: string;
+  observations?: string;
   vendaOferta: number;
   calculations: {
     valorUnidades: number;
@@ -715,6 +746,7 @@ export async function generatePermutaPDF(data: PermutaPDFData): Promise<void> {
  */
 export interface HBUPDFData {
   googleMapsLink?: string;
+  observations?: string;
   landParams: {
     landArea: number;
     far: number;
@@ -741,6 +773,7 @@ export async function generateHBUPDF(data: HBUPDFData): Promise<void> {
     title: 'Highest & Best Use',
     subtitle: 'Análise de Melhor Uso do Terreno',
     googleMapsLink: data.googleMapsLink,
+    observations: data.observations,
     date: new Date().toLocaleDateString('pt-BR'),
     sections: [
       {
@@ -792,6 +825,7 @@ export async function generateHBUPDF(data: HBUPDFData): Promise<void> {
 export interface PrecoTetoPDFData {
   projectName: string;
   googleMapsLink?: string;
+  observations?: string;
   calculationMode: 'capRate' | 'irr';
   targetReturn: number;
   maxPrice: number;
@@ -881,6 +915,7 @@ export async function generatePrecoTetoPDF(data: PrecoTetoPDFData): Promise<void
     title: 'Preço Teto',
     assetName: data.projectName || 'Projeto sem nome',
     googleMapsLink: data.googleMapsLink,
+    observations: data.observations,
     date: new Date().toLocaleDateString('pt-BR'),
     sections,
   });

@@ -42,6 +42,7 @@ export default function Permuta() {
   const [assetName, setAssetName] = useState('');
   const [showAddress, setShowAddress] = useState(false);
   const [googleMapsLink, setGoogleMapsLink] = useState('');
+  const [observations, setObservations] = useState('');
 
   // === Estados: Venda à Vista ===
   const [vendaOferta, setVendaOferta] = useState(8000000);
@@ -91,6 +92,7 @@ export default function Permuta() {
     setAssetName('');
     setShowAddress(false);
     setGoogleMapsLink('');
+    setObservations('');
     setVendaOferta(8000000); setValorImovelParceria(12000000); setPercentualUnidades(50);
     setAprovacaoMeses(12); setConstrucaoMeses(36); setVendaMeses(12); setTaxaDesconto(12);
     setPrecoUnidade(500000); setCustoMensalUnidade(1500);
@@ -103,7 +105,7 @@ export default function Permuta() {
       await saveProject.mutateAsync({
         name: projectName,
         project_type: "permuta",
-        inputs: { assetName, showAddress, googleMapsLink, vendaOferta, valorImovelParceria, percentualUnidades, aprovacaoMeses,
+        inputs: { assetName, showAddress, googleMapsLink, observations, vendaOferta, valorImovelParceria, percentualUnidades, aprovacaoMeses,
                   construcaoMeses, vendaMeses, taxaDesconto, precoUnidade, custoMensalUnidade },
         results: calculations,
       });
@@ -116,6 +118,7 @@ export default function Permuta() {
     setAssetName(inputs.assetName || project.name || '');
     setShowAddress(inputs.showAddress ?? false);
     setGoogleMapsLink(inputs.googleMapsLink ?? '');
+    setObservations(inputs.observations ?? '');
     setVendaOferta(inputs.vendaOferta ?? 8000000);
     setValorImovelParceria(inputs.valorImovelParceria ?? 12000000);
     setPercentualUnidades(inputs.percentualUnidades ?? 50);
@@ -145,6 +148,7 @@ export default function Permuta() {
       await generatePermutaPDF({
         assetName: assetName || 'Terreno sem nome',
         googleMapsLink: showAddress ? googleMapsLink : undefined,
+        observations: observations.trim() || undefined,
         vendaOferta,
         calculations,
         inputs: {
@@ -197,8 +201,22 @@ export default function Permuta() {
               value={googleMapsLink}
               onChange={(e) => setGoogleMapsLink(e.target.value)}
               className="text-sm"
-            />
+           />
           )}
+        </div>
+        {/* Observations */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Label className="text-sm font-medium">Observações</Label>
+          </div>
+          <textarea
+            placeholder="Anotações, premissas, contexto..."
+            value={observations}
+            onChange={(e) => setObservations(e.target.value)}
+            maxLength={500}
+            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-y"
+          />
+          <p className="text-xs text-muted-foreground text-right">{observations.length}/500</p>
         </div>
       </div>
 

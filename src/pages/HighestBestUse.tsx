@@ -48,6 +48,7 @@ export default function HighestBestUse() {
   // Address
   const [showAddress, setShowAddress] = useState(false);
   const [googleMapsLink, setGoogleMapsLink] = useState('');
+  const [observations, setObservations] = useState('');
 
   // Terreno
   const [landArea, setLandArea] = useState(1000);
@@ -110,6 +111,7 @@ export default function HighestBestUse() {
     
     setShowAddress(inputs.showAddress ?? false);
     setGoogleMapsLink(inputs.googleMapsLink ?? '');
+    setObservations(inputs.observations ?? '');
     setLandArea(terreno.landArea ?? 1000);
     setFar(terreno.far ?? 2);
     setOccupancyRate(terreno.occupancyRate ?? 0.5);
@@ -141,6 +143,7 @@ export default function HighestBestUse() {
   const handleReset = () => {
     setShowAddress(false);
     setGoogleMapsLink('');
+    setObservations('');
     setLandArea(1000);
     setFar(2);
     setOccupancyRate(0.5);
@@ -165,6 +168,7 @@ export default function HighestBestUse() {
       inputs: {
         showAddress,
         googleMapsLink,
+        observations,
         terreno: { landArea, far, occupancyRate, location, zoning },
         residencial: { pricePerSqm: residencialPricePerSqm, costPerSqm: residencialCostPerSqm, absorptionMonths: residencialAbsorptionMonths },
         comercial: { pricePerSqm: comercialPricePerSqm, costPerSqm: comercialCostPerSqm, absorptionMonths: comercialAbsorptionMonths },
@@ -185,6 +189,7 @@ export default function HighestBestUse() {
     try {
       await generateHBUPDF({
         googleMapsLink: showAddress ? googleMapsLink : undefined,
+        observations: observations.trim() || undefined,
         landParams: { landArea, far, occupancyRate, location },
         results: {
           residencial: { score: results.residencial.score, vgv: results.residencial.vgv, profit: results.residencial.grossProfit, npv: results.residencial.npv, margin: results.residencial.margin },
@@ -305,7 +310,21 @@ export default function HighestBestUse() {
             onChange={(e) => setGoogleMapsLink(e.target.value)}
             className="text-sm"
           />
-        )}
+         )}
+        {/* Observations */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Label className="text-sm font-medium">Observações</Label>
+          </div>
+          <textarea
+            placeholder="Anotações, premissas, contexto..."
+            value={observations}
+            onChange={(e) => setObservations(e.target.value)}
+            maxLength={500}
+            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-y"
+          />
+          <p className="text-xs text-muted-foreground text-right">{observations.length}/500</p>
+        </div>
       </div>
 
       {/* Terreno */}

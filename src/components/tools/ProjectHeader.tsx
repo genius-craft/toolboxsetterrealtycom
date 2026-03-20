@@ -2,8 +2,9 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { Building2, Hammer, MapPin } from 'lucide-react';
+import { Building2, Hammer, MapPin, StickyNote } from 'lucide-react';
 
 type InvestmentType = 'ready' | 'build-to-suit';
 
@@ -16,6 +17,8 @@ interface ProjectHeaderProps {
   onShowAddressChange?: (show: boolean) => void;
   googleMapsLink?: string;
   onGoogleMapsLinkChange?: (link: string) => void;
+  observations?: string;
+  onObservationsChange?: (obs: string) => void;
   className?: string;
 }
 
@@ -28,6 +31,8 @@ export function ProjectHeader({
   onShowAddressChange,
   googleMapsLink,
   onGoogleMapsLinkChange,
+  observations,
+  onObservationsChange,
   className,
 }: ProjectHeaderProps) {
   return (
@@ -100,6 +105,26 @@ export function ProjectHeader({
               className="text-sm"
             />
           )}
+        </div>
+      )}
+
+      {/* Observations */}
+      {onObservationsChange && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <StickyNote className="h-4 w-4 text-muted-foreground" />
+            <Label className="text-sm font-medium">Observações</Label>
+          </div>
+          <Textarea
+            placeholder="Anotações, premissas, contexto..."
+            value={observations ?? ''}
+            onChange={(e) => onObservationsChange(e.target.value)}
+            maxLength={500}
+            className="text-sm min-h-[80px] resize-y"
+          />
+          <p className="text-xs text-muted-foreground text-right">
+            {(observations ?? '').length}/500
+          </p>
         </div>
       )}
     </div>
