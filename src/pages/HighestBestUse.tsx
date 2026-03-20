@@ -106,6 +106,8 @@ export default function HighestBestUse() {
     const comercial = inputs.comercial || {};
     const gerais = inputs.gerais || {};
     
+    setShowAddress(inputs.showAddress ?? false);
+    setGoogleMapsLink(inputs.googleMapsLink ?? '');
     setLandArea(terreno.landArea ?? 1000);
     setFar(terreno.far ?? 2);
     setOccupancyRate(terreno.occupancyRate ?? 0.5);
