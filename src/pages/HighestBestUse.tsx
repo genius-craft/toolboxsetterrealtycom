@@ -159,6 +159,8 @@ export default function HighestBestUse() {
       project_type: 'hbu',
       name: `H&BU ${new Date().toLocaleDateString('pt-BR')}`,
       inputs: {
+        showAddress,
+        googleMapsLink,
         terreno: { landArea, far, occupancyRate, location, zoning },
         residencial: { pricePerSqm: residencialPricePerSqm, costPerSqm: residencialCostPerSqm, absorptionMonths: residencialAbsorptionMonths },
         comercial: { pricePerSqm: comercialPricePerSqm, costPerSqm: comercialCostPerSqm, absorptionMonths: comercialAbsorptionMonths },
