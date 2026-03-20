@@ -826,6 +826,7 @@ export async function generateHBUPDF(data: HBUPDFData): Promise<void> {
 export interface PrecoTetoPDFData {
   projectName: string;
   googleMapsLink?: string;
+  observations?: string;
   calculationMode: 'capRate' | 'irr';
   targetReturn: number;
   maxPrice: number;
