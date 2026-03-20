@@ -88,6 +88,8 @@ export default function Permuta() {
 
   const handleReset = () => {
     setAssetName('');
+    setShowAddress(false);
+    setGoogleMapsLink('');
     setVendaOferta(8000000); setValorImovelParceria(12000000); setPercentualUnidades(50);
     setAprovacaoMeses(12); setConstrucaoMeses(36); setVendaMeses(12); setTaxaDesconto(12);
     setPrecoUnidade(500000); setCustoMensalUnidade(1500);
