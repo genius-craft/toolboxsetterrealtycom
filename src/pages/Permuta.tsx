@@ -102,7 +102,7 @@ export default function Permuta() {
       await saveProject.mutateAsync({
         name: projectName,
         project_type: "permuta",
-        inputs: { assetName, vendaOferta, valorImovelParceria, percentualUnidades, aprovacaoMeses,
+        inputs: { assetName, showAddress, googleMapsLink, vendaOferta, valorImovelParceria, percentualUnidades, aprovacaoMeses,
                   construcaoMeses, vendaMeses, taxaDesconto, precoUnidade, custoMensalUnidade },
         results: calculations,
       });
