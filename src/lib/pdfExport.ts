@@ -661,6 +661,7 @@ export async function generatePermutaPDF(data: PermutaPDFData): Promise<void> {
   await generatePDF({
     title: 'Calculadora de Permuta',
     assetName: data.assetName || 'Terreno sem nome',
+    googleMapsLink: data.googleMapsLink,
     date: new Date().toLocaleDateString('pt-BR'),
     sections: [
       {
