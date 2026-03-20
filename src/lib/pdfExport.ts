@@ -152,7 +152,7 @@ export async function generatePDF(config: PDFConfig): Promise<void> {
   }
 
   // === FOOTER ===
-  const footerY = pageHeight - 15;
+  const footerY = pageHeight - 20;
   doc.setDrawColor(...COLORS.lightGray);
   doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
 
@@ -164,7 +164,9 @@ export async function generatePDF(config: PDFConfig): Promise<void> {
     margin,
     footerY
   );
-  doc.text('Gerado por Setter Toolbox', pageWidth - margin, footerY, { align: 'right' });
+  doc.setFont('helvetica', 'normal');
+  doc.text('Contato: (19) 97122-3648 | setter.realty', margin, footerY + 5);
+  doc.text('Gerado por Setter Toolbox', pageWidth - margin, footerY + 5, { align: 'right' });
 
   // === SAVE ===
   const safeName = (config.assetName || config.title).replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30);
