@@ -230,6 +230,7 @@ export default function Simulador() {
     setInvestmentType(inputs.investmentType || 'ready');
     setShowAddress(inputs.showAddress ?? false);
     setGoogleMapsLink(inputs.googleMapsLink ?? '');
+    setObservations(inputs.observations ?? '');
     setPurchasePrice(inputs.purchasePrice ?? 2000000);
     setClosingCosts(inputs.closingCosts ?? 0.03);
     
