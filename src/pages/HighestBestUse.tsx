@@ -143,6 +143,7 @@ export default function HighestBestUse() {
   const handleReset = () => {
     setShowAddress(false);
     setGoogleMapsLink('');
+    setObservations('');
     setLandArea(1000);
     setFar(2);
     setOccupancyRate(0.5);
