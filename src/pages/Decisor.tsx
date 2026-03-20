@@ -141,6 +141,8 @@ export default function Decisor() {
   const handleLoadProject = useCallback((project: any, showToast = true) => {
     const inputs = project.inputs || {};
     setAssetName(inputs.assetName || project.name || '');
+    setShowAddress(inputs.showAddress ?? false);
+    setGoogleMapsLink(inputs.googleMapsLink ?? '');
     setAskingPrice(inputs.askingPrice ?? 5000000);
     setMonthlyRent(inputs.monthlyRent ?? 33333);
     setTargetMonthlyCapRate(inputs.targetMonthlyCapRate ?? 0.0067);
