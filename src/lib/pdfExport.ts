@@ -110,6 +110,19 @@ export async function generatePDF(config: PDFConfig): Promise<void> {
     yPosition += 6;
   }
 
+  if (config.googleMapsLink) {
+    doc.setFont('helvetica', 'bold');
+    doc.text('Endereço:', margin, yPosition);
+    doc.setFont('helvetica', 'normal');
+    const linkText = config.googleMapsLink.length > 70
+      ? config.googleMapsLink.substring(0, 67) + '...'
+      : config.googleMapsLink;
+    doc.setTextColor(41, 98, 255);
+    doc.textWithLink(linkText, margin + 22, yPosition, { url: config.googleMapsLink });
+    doc.setTextColor(...COLORS.dark);
+    yPosition += 6;
+  }
+
   doc.setFont('helvetica', 'bold');
   doc.text('Data:', margin, yPosition);
   doc.setFont('helvetica', 'normal');
