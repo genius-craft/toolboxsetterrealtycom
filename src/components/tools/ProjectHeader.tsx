@@ -105,7 +105,6 @@ export function ProjectHeader({
     </div>
   );
 }
-
 export function ProjectHeader({
   projectName,
   onProjectNameChange,
