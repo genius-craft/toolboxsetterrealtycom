@@ -66,6 +66,7 @@ export default function PrecoTeto() {
   const [projectName, setProjectName] = useState('');
   const [showAddress, setShowAddress] = useState(false);
   const [googleMapsLink, setGoogleMapsLink] = useState('');
+  const [observations, setObservations] = useState('');
 
   // Target Return
   const [calculationMode, setCalculationMode] = useState<'capRate' | 'irr'>('capRate');
