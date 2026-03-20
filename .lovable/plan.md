@@ -1,48 +1,102 @@
 
 
-# Plano: Campo de Observações nas Ferramentas + PDF
+# Plano: Melhorias de UX em Todo o App
 
-## O que será feito
-Adicionar um campo de texto "Observações" nas ferramentas (Simulador, Decisor, PrecoTeto, HighestBestUse, Permuta) e incluí-lo no final do PDF exportado, antes do rodapé.
+## Resumo
+Conjunto de melhorias de experiência do usuário aplicadas em toda a plataforma, focando em feedback visual, navegação, micro-interacoes, loading states e acessibilidade.
 
-## Mudanças
+---
 
-### 1. `src/components/tools/ProjectHeader.tsx`
-- Adicionar props opcionais `observations` e `onObservationsChange`
-- Renderizar `Textarea` com label "Observações" e placeholder "Anotações, premissas, contexto..."
-- Só aparece se `onObservationsChange` for passado (retrocompatível)
+## 1. Loading States e Skeleton Screens Melhorados
 
-### 2. Páginas das ferramentas (5 arquivos)
-- Adicionar estado `observations` (string) em cada ferramenta
-- Passar para `ProjectHeader` (ou inline no Permuta que não usa ProjectHeader)
-- Incluir em `inputs` ao salvar e restaurar ao carregar
-- Incluir no `handleReset`
-- Passar `observations` para a função de export PDF
+**Arquivos:** `Dashboard.tsx`, `Vitrine.tsx`, `VitrineDetail.tsx`
 
-### 3. `src/lib/pdfExport.ts`
-- Adicionar `observations?: string` na interface `PDFConfig`
-- Antes do rodapé, se `observations` estiver preenchido, renderizar uma seção "OBSERVAÇÕES" com o texto em caixa com fundo bege
-- Usar `checkNewPage` para garantir espaço
+- Substituir skeletons genéricos por skeletons que imitam o layout real dos cards (ícone + título + stats)
+- Adicionar animação de shimmer nos skeletons em vez de apenas `animate-pulse`
+- No `VitrineDetail`, adicionar skeleton completo em vez de apenas um spinner centralizado
 
-### Layout no PDF
+---
 
-```text
-┌──────────────────────────────────────────┐
-│ (seções existentes...)                   │
-│                                          │
-│ ▌ OBSERVAÇÕES                            │
-│ ┌──────────────────────────────────────┐ │
-│ │ Texto livre escrito pelo usuário...  │ │
-│ └──────────────────────────────────────┘ │
-│                                          │
-│ ─────────────────────────────────────── │
-│ Disclaimer...                            │
-│ Contato: (19) 97122-3648 | setter.realty │
-└──────────────────────────────────────────┘
-```
+## 2. Transicoes de Pagina e Animacoes de Entrada
 
-## Detalhes técnicos
-- Dados salvos no JSONB `inputs` — sem migration
-- Textarea com `maxLength={500}`
-- `doc.splitTextToSize()` usado para quebrar linhas no PDF
+**Arquivos:** `ToolLayout.tsx`, `AppLayout.tsx`, `Dashboard.tsx`
+
+- Adicionar `animate-fade-up` nas seções principais ao montar
+- Stagger nas listas de cards (projetos, ferramentas) para entrada sequencial
+- Transição suave no conteúdo do sidebar ao expandir/colapsar
+
+---
+
+## 3. Feedback Visual nas Ações do Usuário
+
+**Arquivos:** `Simulador.tsx`, `Decisor.tsx`, `Permuta.tsx`, `PrecoTeto.tsx`, `HighestBestUse.tsx`
+
+- Botão "Salvar" com estado de loading (spinner) e texto dinâmico ("Salvando..." -> "Salvo!")
+- Botão "Exportar PDF" com barra de progresso ou spinner durante geração
+- Toast de sucesso com ícone de check animado
+- Desabilitar botões duplicados durante operações assíncronas
+
+---
+
+## 4. Navegação e Orientação
+
+**Arquivos:** `AppSidebar.tsx`, `AppLayout.tsx`
+
+- Adicionar breadcrumb na header do AppLayout (ex: "Dashboard > Simulador")
+- Tooltip nos itens do sidebar quando colapsado (já existe, verificar se funciona)
+- Highlight mais visível no item ativo do sidebar (borda lateral dourada em vez de fundo solid)
+- Adicionar link "Voltar ao site" no sidebar footer
+
+---
+
+## 5. Empty States Mais Atraentes
+
+**Arquivos:** `Dashboard.tsx`
+
+- Redesenhar empty state com ilustração ou ícone maior
+- Adicionar CTA mais claro: "Crie sua primeira análise" com cards clicáveis das ferramentas
+- Adicionar descrição breve de cada ferramenta no empty state
+
+---
+
+## 6. Melhorias Mobile
+
+**Arquivos:** `ToolLayout.tsx`, `Navbar.tsx`, `CookieConsent.tsx`, `WhatsAppButton.tsx`
+
+- Cookie consent: posicionar acima do botão WhatsApp para não sobrepor
+- WhatsApp button: z-index mais alto e posição que não obstrui conteúdo
+- Mobile menu no Navbar: adicionar backdrop escuro ao abrir
+- ToolLayout mobile: substituir "Resultados abaixo" estático por botão "Ver Resultados" que faz smooth scroll
+
+---
+
+## 7. Formulários e Inputs
+
+**Arquivos:** `AuthModal.tsx`, `ProjectHeader.tsx`, `CurrencyInput.tsx`
+
+- AuthModal: adicionar indicador de força da senha no signup
+- AuthModal: melhorar transição entre login/signup com animação
+- ProjectHeader: campo de nome com auto-focus ao montar
+- Inputs monetários: feedback visual quando o valor muda (flash sutil)
+
+---
+
+## 8. Micro-interações
+
+**Arquivos:** `CollapsibleInputCard.tsx`, `KPICard.tsx`, `VerdictBadge.tsx`
+
+- CollapsibleInputCard: animação de rotação mais suave no chevron
+- KPICard: animação de contagem (count-up) nos números ao montar
+- VerdictBadge: animação de entrada com scale + bounce
+
+---
+
+## Detalhes Técnicos
+
+- Todas as animações usam CSS/Tailwind (sem lib extra)
+- Prioridade em performance: `will-change` e `transform` para animações GPU
+- Nenhuma migration de banco necessária
+- Mudanças retrocompatíveis
+- Total de ~12-15 arquivos modificados
+- Utilização de `framer-motion` nao necessária — tudo com CSS transitions e keyframes
 
