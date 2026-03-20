@@ -137,6 +137,8 @@ export default function HighestBestUse() {
   }, [projectFromUrl, loadingProjectFromUrl, hasLoadedFromUrl, handleLoadProject]);
 
   const handleReset = () => {
+    setShowAddress(false);
+    setGoogleMapsLink('');
     setLandArea(1000);
     setFar(2);
     setOccupancyRate(0.5);
