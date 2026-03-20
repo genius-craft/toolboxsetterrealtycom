@@ -168,6 +168,7 @@ export default function HighestBestUse() {
       inputs: {
         showAddress,
         googleMapsLink,
+        observations,
         terreno: { landArea, far, occupancyRate, location, zoning },
         residencial: { pricePerSqm: residencialPricePerSqm, costPerSqm: residencialCostPerSqm, absorptionMonths: residencialAbsorptionMonths },
         comercial: { pricePerSqm: comercialPricePerSqm, costPerSqm: comercialCostPerSqm, absorptionMonths: comercialAbsorptionMonths },
