@@ -30,6 +30,7 @@ import {
   Settings,
   Download,
   Loader2,
+  MapPin,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
