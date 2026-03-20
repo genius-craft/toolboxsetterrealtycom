@@ -202,6 +202,7 @@ export default function Decisor() {
     try {
       await generateDecisorPDF({
         assetName: assetName || 'Ativo sem nome',
+        googleMapsLink: showAddress ? googleMapsLink : undefined,
         verdict: result.verdict,
         kpis: {
           impliedCapRate: result.impliedCapRate,
