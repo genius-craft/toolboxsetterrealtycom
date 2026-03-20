@@ -228,8 +228,11 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                 Entrar
               </button>
             </>
-          )}
-        </div>
+              )}
+            </div>
+            {mode === 'signup' && password.length > 0 && (
+              <PasswordStrength password={password} />
+            )}
       </DialogContent>
     </Dialog>
   );
