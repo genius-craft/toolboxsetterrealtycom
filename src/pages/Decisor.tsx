@@ -174,6 +174,8 @@ export default function Decisor() {
       name: projectName,
       inputs: {
         assetName,
+        showAddress,
+        googleMapsLink,
         askingPrice,
         monthlyRent,
         targetMonthlyCapRate,
