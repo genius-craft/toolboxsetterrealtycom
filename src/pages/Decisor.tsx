@@ -454,18 +454,40 @@ export default function Decisor() {
   return (
     <ToolLayout title="Decisor Go/No-Go" rightPanel={Dashboard}>
       {/* Asset Name */}
-      <div className="bg-card rounded-lg border border-border p-4 shadow-card mb-4">
-        <Label htmlFor="assetName" className="text-sm font-medium mb-2 block">
-          Nome do Ativo
-        </Label>
-        <Input
-          id="assetName"
-          placeholder="Ex: Galpão Logístico ABC"
-          value={assetName}
-          onChange={(e) => setAssetName(e.target.value)}
-          className="bg-background"
-          maxLength={100}
-        />
+      <div className="bg-card rounded-lg border border-border p-4 shadow-card mb-4 space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="assetName" className="text-sm font-medium">
+            Nome do Ativo
+          </Label>
+          <Input
+            id="assetName"
+            placeholder="Ex: Galpão Logístico ABC"
+            value={assetName}
+            onChange={(e) => setAssetName(e.target.value)}
+            className="bg-background"
+            maxLength={100}
+          />
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <Label className="text-sm font-medium">Endereço do Imóvel</Label>
+            </div>
+            <Switch
+              checked={showAddress}
+              onCheckedChange={setShowAddress}
+            />
+          </div>
+          {showAddress && (
+            <Input
+              placeholder="Cole o link do Google Maps aqui"
+              value={googleMapsLink}
+              onChange={(e) => setGoogleMapsLink(e.target.value)}
+              className="text-sm"
+            />
+          )}
+        </div>
       </div>
 
       {/* Financial Inputs */}

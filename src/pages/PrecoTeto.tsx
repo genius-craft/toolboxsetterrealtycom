@@ -262,6 +262,7 @@ export default function PrecoTeto() {
     try {
       await generatePrecoTetoPDF({
         projectName: projectName || 'Projeto sem nome',
+        googleMapsLink: showAddress ? googleMapsLink : undefined,
         calculationMode,
         targetReturn: calculationMode === 'irr' ? targetIRR : targetCapRate,
         maxPrice: calculations.maxPrice,
