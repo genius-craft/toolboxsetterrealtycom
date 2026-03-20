@@ -186,6 +186,7 @@ export default function PrecoTeto() {
     setProjectName(inputs.projectName || project.name || '');
     setShowAddress(inputs.showAddress ?? false);
     setGoogleMapsLink(inputs.googleMapsLink ?? '');
+    setObservations(inputs.observations ?? '');
     setCalculationMode(inputs.calculationMode || 'capRate');
     setTargetCapRate(inputs.targetCapRate ?? 0.08);
     setTargetIRR(inputs.targetIRR ?? 0.15);
