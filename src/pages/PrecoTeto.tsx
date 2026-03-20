@@ -181,6 +181,8 @@ export default function PrecoTeto() {
   const handleLoadProject = useCallback((project: any, showToast = true) => {
     const inputs = project.inputs || {};
     setProjectName(inputs.projectName || project.name || '');
+    setShowAddress(inputs.showAddress ?? false);
+    setGoogleMapsLink(inputs.googleMapsLink ?? '');
     setCalculationMode(inputs.calculationMode || 'capRate');
     setTargetCapRate(inputs.targetCapRate ?? 0.08);
     setTargetIRR(inputs.targetIRR ?? 0.15);
