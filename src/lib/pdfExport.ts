@@ -774,6 +774,7 @@ export async function generateHBUPDF(data: HBUPDFData): Promise<void> {
     title: 'Highest & Best Use',
     subtitle: 'Análise de Melhor Uso do Terreno',
     googleMapsLink: data.googleMapsLink,
+    observations: data.observations,
     date: new Date().toLocaleDateString('pt-BR'),
     sections: [
       {
