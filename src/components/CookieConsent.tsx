@@ -9,7 +9,6 @@ const CookieConsent = () => {
   useEffect(() => {
     const consent = localStorage.getItem("cookie-consent");
     if (!consent) {
-      // Small delay for better UX
       const timer = setTimeout(() => setShowBanner(true), 1000);
       return () => clearTimeout(timer);
     }
@@ -28,9 +27,9 @@ const CookieConsent = () => {
   if (!showBanner) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 animate-fade-up">
+    <div className="fixed bottom-32 sm:bottom-0 left-0 right-0 z-50 p-4 animate-slide-up">
       <div className="container mx-auto max-w-4xl">
-        <div className="glass-card p-6 rounded-2xl border border-border/50 shadow-2xl">
+        <div className="bg-card/95 backdrop-blur-lg p-6 rounded-2xl border border-border shadow-card-hover">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
             {/* Icon */}
             <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
@@ -61,7 +60,7 @@ const CookieConsent = () => {
                 variant="outline"
                 size="sm"
                 onClick={handleReject}
-                className="flex-1 md:flex-none"
+                className="flex-1 md:flex-none active:scale-[0.97] transition-all"
               >
                 Rejeitar
               </Button>
@@ -69,7 +68,7 @@ const CookieConsent = () => {
                 variant="gold"
                 size="sm"
                 onClick={handleAccept}
-                className="flex-1 md:flex-none"
+                className="flex-1 md:flex-none active:scale-[0.97] transition-all"
               >
                 Aceitar Cookies
               </Button>
@@ -78,7 +77,7 @@ const CookieConsent = () => {
             {/* Close button (mobile) */}
             <button 
               onClick={handleReject}
-              className="absolute top-3 right-3 md:hidden text-muted-foreground hover:text-foreground"
+              className="absolute top-3 right-3 md:hidden text-muted-foreground hover:text-foreground transition-colors"
             >
               <X className="w-5 h-5" />
             </button>

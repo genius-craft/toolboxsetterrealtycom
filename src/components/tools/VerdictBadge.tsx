@@ -93,7 +93,7 @@ export function VerdictBadge({
   return (
     <div
       className={cn(
-        'inline-flex items-center rounded-lg border font-medium tracking-premium uppercase',
+        'inline-flex items-center rounded-lg border font-medium tracking-premium uppercase animate-scale-in',
         sizeStyles[size],
         config.bgColor,
         config.borderColor,

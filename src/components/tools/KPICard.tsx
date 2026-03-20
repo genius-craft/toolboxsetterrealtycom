@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { LucideIcon } from 'lucide-react';
 
@@ -23,6 +23,20 @@ export function KPICard({
   className,
   tooltip,
 }: KPICardProps) {
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setIsVisible(true); observer.disconnect(); } },
+      { threshold: 0.3 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   const variantStyles = {
     default: 'border-border',
     success: 'border-green-500/30 bg-green-500/5',
@@ -39,8 +53,9 @@ export function KPICard({
 
   return (
     <div
+      ref={ref}
       className={cn(
-        'relative bg-card rounded-lg border p-3 sm:p-4 lg:p-6 shadow-card transition-shadow hover:shadow-card-hover min-w-0',
+        'relative bg-card rounded-lg border p-3 sm:p-4 lg:p-6 shadow-card transition-all duration-300 hover:shadow-card-hover min-w-0',
         variantStyles[variant],
         className
       )}
@@ -61,7 +76,11 @@ export function KPICard({
             </p>
             {tooltip}
           </div>
-          <p className={cn('font-mono text-lg sm:text-xl lg:text-2xl font-semibold truncate', valueStyles[variant])}>
+          <p className={cn(
+            'font-mono text-lg sm:text-xl lg:text-2xl font-semibold truncate transition-all duration-500',
+            valueStyles[variant],
+            isVisible ? 'animate-count-up' : 'opacity-0'
+          )}>
             {value}
           </p>
           {subValue && (

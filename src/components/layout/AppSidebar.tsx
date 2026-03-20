@@ -13,7 +13,8 @@ import {
   FolderKanban,
   ChevronLeft,
   ChevronRight,
-  Store
+  Store,
+  ExternalLink
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,6 +39,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const navItems = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
@@ -114,16 +116,18 @@ export function AppSidebar() {
                     asChild
                     isActive={isActive(item.url)}
                     tooltip={item.title}
-                    className={`
-                      transition-all duration-200
-                      ${isActive(item.url) 
-                        ? 'bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90' 
+                    className={cn(
+                      'transition-all duration-200 relative',
+                      isActive(item.url) 
+                        ? 'bg-sidebar-accent text-sidebar-foreground font-medium' 
                         : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent'
-                      }
-                    `}
+                    )}
                   >
                     <Link to={item.url} className="flex items-center gap-3">
-                      <item.icon className="h-4 w-4 shrink-0" />
+                      {isActive(item.url) && (
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-accent" />
+                      )}
+                      <item.icon className={cn('h-4 w-4 shrink-0', isActive(item.url) && 'text-accent')} />
                       <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
@@ -145,16 +149,18 @@ export function AppSidebar() {
                     asChild
                     isActive={isActive('/admin/users')}
                     tooltip="Gestão de Usuários"
-                    className={`
-                      transition-all duration-200
-                      ${isActive('/admin/users') 
-                        ? 'bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90' 
+                    className={cn(
+                      'transition-all duration-200 relative',
+                      isActive('/admin/users') 
+                        ? 'bg-sidebar-accent text-sidebar-foreground font-medium' 
                         : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent'
-                      }
-                    `}
+                    )}
                   >
                     <Link to="/admin/users" className="flex items-center gap-3">
-                      <Users className="h-4 w-4 shrink-0" />
+                      {isActive('/admin/users') && (
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-accent" />
+                      )}
+                      <Users className={cn('h-4 w-4 shrink-0', isActive('/admin/users') && 'text-accent')} />
                       <span>Usuários</span>
                     </Link>
                   </SidebarMenuButton>
@@ -164,16 +170,18 @@ export function AppSidebar() {
                     asChild
                     isActive={isActive('/admin/projects')}
                     tooltip="Projetos dos Usuários"
-                    className={`
-                      transition-all duration-200
-                      ${isActive('/admin/projects') 
-                        ? 'bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90' 
+                    className={cn(
+                      'transition-all duration-200 relative',
+                      isActive('/admin/projects') 
+                        ? 'bg-sidebar-accent text-sidebar-foreground font-medium' 
                         : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent'
-                      }
-                    `}
+                    )}
                   >
                     <Link to="/admin/projects" className="flex items-center gap-3">
-                      <FolderKanban className="h-4 w-4 shrink-0" />
+                      {isActive('/admin/projects') && (
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-accent" />
+                      )}
+                      <FolderKanban className={cn('h-4 w-4 shrink-0', isActive('/admin/projects') && 'text-accent')} />
                       <span>Projetos</span>
                     </Link>
                   </SidebarMenuButton>
@@ -184,7 +192,17 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-2">
+      <SidebarFooter className="border-t border-sidebar-border p-2 space-y-1">
+        {/* Back to site link */}
+        {!isCollapsed && (
+          <Link
+            to="/"
+            className="flex items-center gap-2 px-3 py-2 text-xs text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors rounded-md hover:bg-sidebar-accent"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Voltar ao site
+          </Link>
+        )}
         {user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

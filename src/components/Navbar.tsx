@@ -99,7 +99,13 @@ const Navbar = () => {
           </nav>
 
           {/* Mobile Menu */}
-          {isMenuOpen && <div className="md:hidden py-6 border-t border-primary-foreground/10 animate-fade-in">
+          {isMenuOpen && <>
+              {/* Backdrop */}
+              <div 
+                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[-1] animate-fade-in md:hidden"
+                onClick={() => setIsMenuOpen(false)}
+              />
+              <div className="md:hidden py-6 border-t border-primary-foreground/10 animate-fade-in">
               <div className="flex flex-col gap-4">
                 <a href="#ferramentas" className="nav-link py-2" onClick={() => setIsMenuOpen(false)}>
                   Ferramentas
@@ -138,7 +144,8 @@ const Navbar = () => {
                     </>}
                 </div>
               </div>
-            </div>}
+            </div>
+            </>}
         </div>
       </header>
 
