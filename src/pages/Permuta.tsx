@@ -165,18 +165,40 @@ export default function Permuta() {
   const InputsPanel = (
     <div className="space-y-6">
       {/* Nome do Ativo */}
-      <div className="bg-card rounded-lg border border-border p-4 shadow-card">
-        <Label htmlFor="assetName" className="text-sm font-medium mb-2 block">
-          Nome do Ativo
-        </Label>
-        <Input
-          id="assetName"
-          placeholder="Ex: Terreno Av. Paulista"
-          value={assetName}
-          onChange={(e) => setAssetName(e.target.value)}
-          className="bg-background"
-          maxLength={100}
-        />
+      <div className="bg-card rounded-lg border border-border p-4 shadow-card space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="assetName" className="text-sm font-medium">
+            Nome do Ativo
+          </Label>
+          <Input
+            id="assetName"
+            placeholder="Ex: Terreno Av. Paulista"
+            value={assetName}
+            onChange={(e) => setAssetName(e.target.value)}
+            className="bg-background"
+            maxLength={100}
+          />
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <Label className="text-sm font-medium">Endereço do Imóvel</Label>
+            </div>
+            <Switch
+              checked={showAddress}
+              onCheckedChange={setShowAddress}
+            />
+          </div>
+          {showAddress && (
+            <Input
+              placeholder="Cole o link do Google Maps aqui"
+              value={googleMapsLink}
+              onChange={(e) => setGoogleMapsLink(e.target.value)}
+              className="text-sm"
+            />
+          )}
+        </div>
       </div>
 
       <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-4">
