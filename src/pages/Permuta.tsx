@@ -39,6 +39,8 @@ export default function Permuta() {
 
   // === Estado: Nome do Ativo ===
   const [assetName, setAssetName] = useState('');
+  const [showAddress, setShowAddress] = useState(false);
+  const [googleMapsLink, setGoogleMapsLink] = useState('');
 
   // === Estados: Venda à Vista ===
   const [vendaOferta, setVendaOferta] = useState(8000000);

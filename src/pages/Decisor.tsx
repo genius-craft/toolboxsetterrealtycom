@@ -87,6 +87,8 @@ export default function Decisor() {
 
   // Project name
   const [assetName, setAssetName] = useState('');
+  const [showAddress, setShowAddress] = useState(false);
+  const [googleMapsLink, setGoogleMapsLink] = useState('');
 
   // Financial inputs
   const [askingPrice, setAskingPrice] = useState(5000000);

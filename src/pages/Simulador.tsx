@@ -71,6 +71,8 @@ export default function Simulador() {
   // Project Info
   const [projectName, setProjectName] = useState('');
   const [investmentType, setInvestmentType] = useState<'ready' | 'build-to-suit'>('ready');
+  const [showAddress, setShowAddress] = useState(false);
+  const [googleMapsLink, setGoogleMapsLink] = useState('');
 
   // Investment (CAPEX)
   const [purchasePrice, setPurchasePrice] = useState(2000000);

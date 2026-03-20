@@ -28,6 +28,7 @@ export interface PDFConfig {
   title: string;
   subtitle?: string;
   assetName?: string;
+  googleMapsLink?: string;
   date: string;
   sections: PDFSection[];
   footer?: string;
