@@ -646,6 +646,7 @@ export async function generateDecisorPDF(data: DecisorPDFData): Promise<void> {
     title: 'Decisor Go/No-Go',
     assetName: data.assetName || 'Ativo sem nome',
     googleMapsLink: data.googleMapsLink,
+    observations: data.observations,
     date: new Date().toLocaleDateString('pt-BR'),
     sections,
   });
