@@ -658,6 +658,7 @@ export async function generateDecisorPDF(data: DecisorPDFData): Promise<void> {
 export interface PermutaPDFData {
   assetName: string;
   googleMapsLink?: string;
+  observations?: string;
   vendaOferta: number;
   calculations: {
     valorUnidades: number;
