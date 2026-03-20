@@ -43,6 +43,10 @@ export default function HighestBestUse() {
   const { data: projectFromUrl, isLoading: loadingProjectFromUrl } = useProject(projectIdFromUrl || '');
   const [hasLoadedFromUrl, setHasLoadedFromUrl] = useState(false);
 
+  // Address
+  const [showAddress, setShowAddress] = useState(false);
+  const [googleMapsLink, setGoogleMapsLink] = useState('');
+
   // Terreno
   const [landArea, setLandArea] = useState(1000);
   const [far, setFar] = useState(2);
