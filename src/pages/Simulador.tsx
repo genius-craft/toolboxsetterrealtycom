@@ -284,6 +284,7 @@ export default function Simulador() {
         investmentType,
         showAddress,
         googleMapsLink,
+        observations,
         purchasePrice,
         closingCosts,
         builtArea,
