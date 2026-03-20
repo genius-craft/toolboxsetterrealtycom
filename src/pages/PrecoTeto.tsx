@@ -458,17 +458,39 @@ export default function PrecoTeto() {
   const Inputs = (
     <div className="space-y-4">
       {/* Simple Project Name Input */}
-      <div className="bg-card rounded-lg border border-border p-4 shadow-card space-y-2">
-        <Label htmlFor="project-name" className="text-sm font-medium">
-          Nome do Projeto
-        </Label>
-        <input
-          id="project-name"
-          placeholder="Ex: Loja Centro SP"
-          value={projectName}
-          onChange={(e) => setProjectName(e.target.value)}
-          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 font-medium"
-        />
+      <div className="bg-card rounded-lg border border-border p-4 shadow-card space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="project-name" className="text-sm font-medium">
+            Nome do Projeto
+          </Label>
+          <input
+            id="project-name"
+            placeholder="Ex: Loja Centro SP"
+            value={projectName}
+            onChange={(e) => setProjectName(e.target.value)}
+            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 font-medium"
+          />
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <Label className="text-sm font-medium">Endereço do Imóvel</Label>
+            </div>
+            <Switch
+              checked={showAddress}
+              onCheckedChange={setShowAddress}
+            />
+          </div>
+          {showAddress && (
+            <input
+              placeholder="Cole o link do Google Maps aqui"
+              value={googleMapsLink}
+              onChange={(e) => setGoogleMapsLink(e.target.value)}
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            />
+          )}
+        </div>
       </div>
 
       {/* Target Return */}

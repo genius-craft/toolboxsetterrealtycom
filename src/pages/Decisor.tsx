@@ -10,6 +10,7 @@ import { GlossaryTooltip } from '@/components/tools/InfoTooltip';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSaveProject, useProject } from '@/hooks/useProjects';
 import { calculateGoNoGo } from '@/lib/calculations';
