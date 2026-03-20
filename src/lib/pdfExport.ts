@@ -541,6 +541,7 @@ export async function generateSimuladorPDF(data: SimuladorPDFData): Promise<void
 export interface DecisorPDFData {
   assetName: string;
   googleMapsLink?: string;
+  observations?: string;
   verdict: 'GO' | 'NEGOTIATE' | 'NO-GO';
   kpis: {
     impliedCapRate: number;
