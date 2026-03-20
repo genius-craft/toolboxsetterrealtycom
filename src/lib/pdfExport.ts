@@ -399,6 +399,7 @@ export interface ScenarioData {
 export interface SimuladorPDFData {
   projectName: string;
   googleMapsLink?: string;
+  observations?: string;
   kpis: {
     entryCapRate: number;
     monthlyCapRate: number;
@@ -415,11 +416,11 @@ export interface SimuladorPDFData {
     purchasePrice: number;
     closingCostsAmount: number;
     closingCostsPercent: number;
-    builtArea: number;           // Metros quadrados
-    costPerSqm: number;          // Custo por m²
-    shellCost: number;           // Total shell
+    builtArea: number;
+    costPerSqm: number;
+    shellCost: number;
     turnkeyCost: number;
-    totalConstructionCost: number;  // Shell + turnkey
+    totalConstructionCost: number;
   };
   
   // Rental Units
@@ -428,7 +429,7 @@ export interface SimuladorPDFData {
     monthlyRent: number;
   }>;
   
-  // Total Monthly Rent (for fee formula display)
+  // Total Monthly Rent
   totalMonthlyRent: number;
   
   // OPEX Breakdown
