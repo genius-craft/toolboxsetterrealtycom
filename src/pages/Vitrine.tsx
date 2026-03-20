@@ -9,6 +9,31 @@ import { SoftLockOverlay } from '@/components/tools/SoftLockOverlay';
 import { useVitrineProjects } from '@/hooks/useVitrineProjects';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { cn } from '@/lib/utils';
+
+function VitrineSkeleton() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <div
+          key={i}
+          className={cn(
+            'bg-card border border-border rounded-xl overflow-hidden animate-fade-up',
+            `delay-${i * 75}`
+          )}
+        >
+          <div className="h-24 skeleton-shimmer" />
+          <div className="p-4 space-y-3">
+            <div className="h-4 skeleton-shimmer rounded w-1/3" />
+            <div className="h-5 skeleton-shimmer rounded w-3/4" />
+            <div className="h-4 skeleton-shimmer rounded w-1/2" />
+            <div className="h-6 skeleton-shimmer rounded w-1/3" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function Vitrine() {
   const [projectType, setProjectType] = useState('all');
@@ -24,7 +49,7 @@ export default function Vitrine() {
       {/* Header */}
       <section className="pt-24 pb-12 bg-gradient-to-b from-primary to-primary/95">
         <div className="container mx-auto px-4">
-          <div className="flex items-center gap-3 mb-4 mt-4">
+          <div className="flex items-center gap-3 mb-4 mt-4 animate-fade-in">
             <Link to="/">
               <Button variant="ghost" size="sm" className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10">
                 <ArrowLeft className="h-4 w-4 mr-2" />
@@ -32,7 +57,7 @@ export default function Vitrine() {
               </Button>
             </Link>
           </div>
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-4 mb-4 animate-fade-up delay-100">
             <div className="h-14 w-14 rounded-2xl bg-accent flex items-center justify-center">
               <FolderKanban className="h-7 w-7 text-accent-foreground" />
             </div>
@@ -51,12 +76,12 @@ export default function Vitrine() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         {/* Disclaimer */}
-        <div className="mb-8">
+        <div className="mb-8 animate-fade-up delay-200">
           <VitrineDisclaimer />
         </div>
 
         {/* Filters */}
-        <div className="mb-8">
+        <div className="mb-8 animate-fade-up delay-300">
           <ProjectFilters
             projectType={projectType}
             onProjectTypeChange={setProjectType}
@@ -65,27 +90,15 @@ export default function Vitrine() {
 
         {/* Projects Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-card border border-border rounded-xl overflow-hidden animate-pulse">
-                <div className="h-24 bg-muted" />
-                <div className="p-4 space-y-3">
-                  <div className="h-4 bg-muted rounded w-1/3" />
-                  <div className="h-5 bg-muted rounded w-3/4" />
-                  <div className="h-4 bg-muted rounded w-1/2" />
-                  <div className="h-6 bg-muted rounded w-1/3" />
-                </div>
-              </div>
-            ))}
-          </div>
+          <VitrineSkeleton />
         ) : error ? (
-          <div className="text-center py-16">
+          <div className="text-center py-16 animate-fade-up">
             <FolderKanban className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
             <h2 className="text-xl font-semibold mb-2">Erro ao carregar análises</h2>
             <p className="text-muted-foreground">Tente novamente mais tarde.</p>
           </div>
         ) : projects?.length === 0 ? (
-          <div className="text-center py-16">
+          <div className="text-center py-16 animate-fade-up">
             <FolderKanban className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
             <h2 className="text-xl font-semibold mb-2">Nenhuma análise encontrada</h2>
             <p className="text-muted-foreground">
@@ -95,8 +108,10 @@ export default function Vitrine() {
         ) : (
           <SoftLockOverlay featureName="as análises da vitrine">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {projects?.map((project) => (
-                <ProjectCard key={project.id} project={project} />
+              {projects?.map((project, i) => (
+                <div key={project.id} className={cn('animate-fade-up', `delay-${Math.min(i, 5) * 75}`)}>
+                  <ProjectCard project={project} />
+                </div>
               ))}
             </div>
           </SoftLockOverlay>
