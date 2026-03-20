@@ -143,6 +143,7 @@ export default function Permuta() {
     try {
       await generatePermutaPDF({
         assetName: assetName || 'Terreno sem nome',
+        googleMapsLink: showAddress ? googleMapsLink : undefined,
         vendaOferta,
         calculations,
         inputs: {
