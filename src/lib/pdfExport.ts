@@ -480,6 +480,7 @@ export async function generateSimuladorPDF(data: SimuladorPDFData): Promise<void
     title: 'Simulador de Viabilidade',
     assetName: data.projectName || 'Projeto sem nome',
     googleMapsLink: data.googleMapsLink,
+    observations: data.observations,
     date: new Date().toLocaleDateString('pt-BR'),
     sections: [
       // Único KPI - Cap Rate Mensal (Estimado) centralizado
