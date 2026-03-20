@@ -166,6 +166,31 @@ export async function generatePDF(config: PDFConfig): Promise<void> {
     yPosition += 8;
   }
 
+  // === OBSERVATIONS ===
+  if (config.observations && config.observations.trim()) {
+    const obsLines = doc.splitTextToSize(config.observations, contentWidth - 16);
+    const obsBoxHeight = 14 + obsLines.length * 5;
+    checkNewPage(obsBoxHeight + 10);
+
+    // Section title bar
+    doc.setFillColor(...COLORS.primary);
+    doc.rect(margin, yPosition, contentWidth, 8, 'F');
+    doc.setTextColor(...COLORS.white);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('OBSERVAÇÕES', margin + 4, yPosition + 5.5);
+    yPosition += 14;
+
+    // Observations box with warm background
+    doc.setFillColor(...COLORS.warmBg);
+    doc.roundedRect(margin, yPosition, contentWidth, obsBoxHeight - 6, 3, 3, 'F');
+    doc.setTextColor(...COLORS.dark);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(obsLines, margin + 8, yPosition + 8);
+    yPosition += obsBoxHeight;
+  }
+
   // === FOOTER ===
   const footerY = pageHeight - 20;
   doc.setDrawColor(...COLORS.lightGray);

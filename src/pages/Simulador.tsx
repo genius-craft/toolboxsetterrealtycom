@@ -587,6 +587,8 @@ export default function Simulador() {
         onShowAddressChange={setShowAddress}
         googleMapsLink={googleMapsLink}
         onGoogleMapsLinkChange={setGoogleMapsLink}
+        observations={observations}
+        onObservationsChange={setObservations}
       />
 
       {/* CAPEX Card */}
