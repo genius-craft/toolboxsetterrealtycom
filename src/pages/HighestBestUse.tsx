@@ -180,6 +180,7 @@ export default function HighestBestUse() {
     setIsExportingPDF(true);
     try {
       await generateHBUPDF({
+        googleMapsLink: showAddress ? googleMapsLink : undefined,
         landParams: { landArea, far, occupancyRate, location },
         results: {
           residencial: { score: results.residencial.score, vgv: results.residencial.vgv, profit: results.residencial.grossProfit, npv: results.residencial.npv, margin: results.residencial.margin },
