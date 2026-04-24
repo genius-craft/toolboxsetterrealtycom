@@ -770,6 +770,12 @@ export default function Simulador() {
           tooltip="discountRate"
         />
       </CollapsibleInputCard>
+      <ProjectVersionsSheet
+        projectId={loadedProjectId}
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+        onRestore={handleRestoreVersion}
+      />
     </ToolLayout>
   );
 }
