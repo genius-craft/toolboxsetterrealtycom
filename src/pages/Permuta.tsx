@@ -34,6 +34,7 @@ export default function Permuta() {
   const projectIdFromUrl = searchParams.get('id');
   const { data: projectFromUrl, isLoading: loadingProjectFromUrl } = useProject(projectIdFromUrl || '');
   const [hasLoadedFromUrl, setHasLoadedFromUrl] = useState(false);
+  const [loadedProjectId, setLoadedProjectId] = useState<string | null>(null);
 
   // === Estado: Dialog ===
   const [openDialogOpen, setOpenDialogOpen] = useState(false);
