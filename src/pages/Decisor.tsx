@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSaveProject, useProject } from '@/hooks/useProjects';
+import { HistoryButton } from '@/components/tools/HistoryButton';
 import { calculateGoNoGo } from '@/lib/calculations';
 import { formatCurrency, formatCompactCurrency, formatPercentage } from '@/lib/formatters';
 import { generateDecisorPDF } from '@/lib/pdfExport';
@@ -85,6 +86,7 @@ export default function Decisor() {
   const projectIdFromUrl = searchParams.get('id');
   const { data: projectFromUrl, isLoading: loadingProjectFromUrl } = useProject(projectIdFromUrl || '');
   const [hasLoadedFromUrl, setHasLoadedFromUrl] = useState(false);
+  const [loadedProjectId, setLoadedProjectId] = useState<string | null>(null);
 
   // Project name
   const [assetName, setAssetName] = useState('');
@@ -157,10 +159,16 @@ export default function Decisor() {
     setTenantRisk(inputs.tenantRisk ?? 3);
     setFutureLiquidity(inputs.futureLiquidity ?? 3);
     setAssetCondition(inputs.assetCondition ?? 4);
+    if (project.id) setLoadedProjectId(project.id);
     if (showToast) {
       toast.success(`Projeto "${project.name}" carregado!`);
     }
   }, []);
+
+  const handleRestoreVersion = useCallback((v: any) => {
+    handleLoadProject({ id: loadedProjectId, name: v.name, inputs: v.inputs, results: v.results }, false);
+    toast.success(`Versão v${v.version_number} restaurada. Clique em Salvar para confirmar.`);
+  }, [handleLoadProject, loadedProjectId]);
 
   // Auto-load project from URL
   useEffect(() => {
@@ -430,6 +438,7 @@ export default function Decisor() {
 
       {/* Action Buttons */}
       <div className="flex gap-3">
+        <HistoryButton loadedProjectId={loadedProjectId} onRestore={handleRestoreVersion} />
         <Button
           variant="gold"
           className="flex-1"

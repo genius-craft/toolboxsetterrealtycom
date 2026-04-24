@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSaveProject, useUpdateProject, useProjects, useProject, ProjectType } from '@/hooks/useProjects';
+import { HistoryButton } from '@/components/tools/HistoryButton';
 import { useToast } from '@/hooks/use-toast';
 import {
   calculateMaxPriceByCapRate,
@@ -207,6 +208,11 @@ export default function PrecoTeto() {
       toast({ title: 'Projeto carregado!', description: project.name });
     }
   }, [toast]);
+
+  const handleRestoreVersion = useCallback((v: any) => {
+    handleLoadProject({ id: loadedProjectId, name: v.name, inputs: v.inputs, results: v.results }, false);
+    toast({ title: 'Versão restaurada', description: `v${v.version_number} carregada. Clique em Salvar para confirmar.` });
+  }, [handleLoadProject, loadedProjectId, toast]);
 
   // Auto-load project from URL
   useEffect(() => {
@@ -417,7 +423,8 @@ export default function PrecoTeto() {
       )}
 
       {/* Action Buttons */}
-      <div className="flex gap-3">
+      <div className="flex gap-3 flex-wrap">
+        <HistoryButton loadedProjectId={loadedProjectId} onRestore={handleRestoreVersion} />
         <Button
           variant="outline"
           className="flex-1"

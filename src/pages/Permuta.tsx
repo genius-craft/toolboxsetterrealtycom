@@ -20,6 +20,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { generatePermutaPDF } from "@/lib/pdfExport";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSaveProject, useProjects, useProject, ProjectType } from "@/hooks/useProjects";
+import { HistoryButton } from '@/components/tools/HistoryButton';
 import { toast } from "sonner";
 
 export default function Permuta() {
@@ -33,6 +34,7 @@ export default function Permuta() {
   const projectIdFromUrl = searchParams.get('id');
   const { data: projectFromUrl, isLoading: loadingProjectFromUrl } = useProject(projectIdFromUrl || '');
   const [hasLoadedFromUrl, setHasLoadedFromUrl] = useState(false);
+  const [loadedProjectId, setLoadedProjectId] = useState<string | null>(null);
 
   // === Estado: Dialog ===
   const [openDialogOpen, setOpenDialogOpen] = useState(false);
@@ -129,10 +131,16 @@ export default function Permuta() {
     setPrecoUnidade(inputs.precoUnidade ?? 500000);
     setCustoMensalUnidade(inputs.custoMensalUnidade ?? 1500);
     setOpenDialogOpen(false);
+    if (project.id) setLoadedProjectId(project.id);
     if (showToast) {
       toast.success(`Projeto "${project.name}" carregado!`);
     }
   }, []);
+
+  const handleRestoreVersion = useCallback((v: any) => {
+    handleLoadProject({ id: loadedProjectId, name: v.name, inputs: v.inputs, results: v.results }, false);
+    toast.success(`Versão v${v.version_number} restaurada. Clique em Salvar para confirmar.`);
+  }, [handleLoadProject, loadedProjectId]);
 
   // Auto-load project from URL
   useEffect(() => {
@@ -313,6 +321,7 @@ export default function Permuta() {
           </Button>
           <Button variant="outline" size="sm" onClick={handleReset}><RefreshCcw className="h-4 w-4 mr-2" />Limpar</Button>
           <Button variant="outline" size="sm" onClick={handleSave} disabled={isLocked}><Save className="h-4 w-4 mr-2" />Salvar</Button>
+          <HistoryButton loadedProjectId={loadedProjectId} onRestore={handleRestoreVersion} />
           <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={isLocked || isExportingPDF}>
             {isExportingPDF ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileDown className="h-4 w-4 mr-2" />}
             {isExportingPDF ? 'Gerando...' : 'PDF'}

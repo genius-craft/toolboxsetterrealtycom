@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProjects, useDeleteProject, ProjectType } from '@/hooks/useProjects';
+import { useDuplicateProject } from '@/hooks/useProjectVersions';
 import { formatCompactCurrency, formatPercentage } from '@/lib/formatters';
 import {
   Calculator,
@@ -10,15 +11,25 @@ import {
   Map,
   CheckCircle,
   Target,
-  Plus,
   Trash2,
   Eye,
   Calendar,
   AlertCircle,
   ArrowRight,
+  Copy,
+  BarChart3,
+  TrendingUp,
+  Wallet,
+  ListChecks,
+  Trophy,
+  X,
+  Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AuthModal } from '@/components/auth/AuthModal';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { OnboardingTour } from '@/components/OnboardingTour';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,50 +40,46 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { LineChart, Line, ResponsiveContainer, XAxis, Tooltip as RTooltip } from 'recharts';
 
 const projectTypeConfig: Record<ProjectType, { label: string; icon: typeof Calculator; path: string; color: string; description: string }> = {
-  simulador: {
-    label: 'Simulador',
-    icon: Calculator,
-    path: '/simulador',
-    color: 'text-blue-500',
-    description: 'Simule investimentos imobiliários com fluxo de caixa detalhado',
-  },
-  permuta: {
-    label: 'Permuta',
-    icon: Repeat2,
-    path: '/permuta',
-    color: 'text-purple-500',
-    description: 'Compare vender agora vs. permutar com incorporadora',
-  },
-  hbu: {
-    label: 'H&BU',
-    icon: Map,
-    path: '/highest-best-use',
-    color: 'text-emerald-500',
-    description: 'Descubra o melhor uso para o seu terreno',
-  },
-  decisor: {
-    label: 'Decisor',
-    icon: CheckCircle,
-    path: '/decisor',
-    color: 'text-amber-500',
-    description: 'Decida entre comprar ou não com base em métricas',
-  },
-  preco_teto: {
-    label: 'Preço Teto',
-    icon: Target,
-    path: '/preco-teto',
-    color: 'text-rose-500',
-    description: 'Calcule o preço máximo que vale pagar',
-  },
+  simulador: { label: 'Simulador', icon: Calculator, path: '/simulador', color: 'text-blue-500', description: 'Simule investimentos imobiliários com fluxo de caixa detalhado' },
+  permuta: { label: 'Permuta', icon: Repeat2, path: '/permuta', color: 'text-purple-500', description: 'Compare vender agora vs. permutar com incorporadora' },
+  hbu: { label: 'H&BU', icon: Map, path: '/highest-best-use', color: 'text-emerald-500', description: 'Descubra o melhor uso para o seu terreno' },
+  decisor: { label: 'Decisor', icon: CheckCircle, path: '/decisor', color: 'text-amber-500', description: 'Decida entre comprar ou não com base em métricas' },
+  preco_teto: { label: 'Preço Teto', icon: Target, path: '/preco-teto', color: 'text-rose-500', description: 'Calcule o preço máximo que vale pagar' },
 };
+
+const TOUR_STEPS = [
+  {
+    title: 'Bem-vindo ao Setter Toolbox!',
+    description: 'Vamos fazer um tour rápido pelo Dashboard. Em 5 passos você conhecerá tudo o que precisa saber.',
+  },
+  {
+    selector: '[data-tour="new-project"]',
+    title: 'Criar uma nova análise',
+    description: 'Escolha aqui qual ferramenta usar: Simulador, Permuta, H&BU, Decisor ou Preço Teto.',
+  },
+  {
+    selector: '[data-tour="filters"]',
+    title: 'Filtrar por tipo',
+    description: 'Use os filtros para focar em um tipo específico de análise.',
+  },
+  {
+    selector: '[data-tour="compare-btn"]',
+    title: 'Comparar projetos',
+    description: 'Ative o modo Comparar para selecionar 2 ou 3 projetos do mesmo tipo e ver os KPIs lado a lado.',
+  },
+  {
+    selector: '[data-tour="sidebar"]',
+    title: 'Menu lateral',
+    description: 'Acesse rapidamente todas as ferramentas pelo menu da esquerda. Você pode refazer este tour a qualquer momento.',
+  },
+];
 
 function ProjectCardSkeleton({ index }: { index: number }) {
   return (
-    <div
-      className={cn('bg-card rounded-lg border border-border p-6 animate-fade-up', `delay-${index * 100}`)}
-    >
+    <div className={cn('bg-card rounded-lg border border-border p-6 animate-fade-up', `delay-${index * 100}`)}>
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg skeleton-shimmer" />
@@ -90,21 +97,117 @@ function ProjectCardSkeleton({ index }: { index: number }) {
   );
 }
 
+function StatCard({ icon: Icon, label, value, hint, iconColor }: { icon: any; label: string; value: string; hint?: string; iconColor: string }) {
+  return (
+    <div className="bg-card border border-border rounded-lg p-4 shadow-card">
+      <div className="flex items-start justify-between mb-2">
+        <span className="text-xs text-muted-foreground uppercase tracking-wide">{label}</span>
+        <Icon className={cn('h-4 w-4', iconColor)} />
+      </div>
+      <div className="font-mono text-2xl font-medium">{value}</div>
+      {hint && <div className="text-xs text-muted-foreground mt-1 truncate">{hint}</div>}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [filter, setFilter] = useState<ProjectType | 'all'>('all');
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  
-  const { data: projects, isLoading } = useProjects(
-    filter === 'all' ? undefined : filter
-  );
+  const [compareMode, setCompareMode] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [tourOpen, setTourOpen] = useState(false);
+
+  const { data: projects, isLoading } = useProjects(filter === 'all' ? undefined : filter);
+  const { data: allProjects } = useProjects();
   const deleteProject = useDeleteProject();
+  const duplicateProject = useDuplicateProject();
+
+  // Auto-trigger onboarding for new users
+  useEffect(() => {
+    if (user && !localStorage.getItem('onboarding_completed') && allProjects !== undefined) {
+      const t = setTimeout(() => setTourOpen(true), 600);
+      return () => clearTimeout(t);
+    }
+  }, [user, allProjects]);
+
+  const aggregates = useMemo(() => {
+    if (!allProjects || allProjects.length === 0) return null;
+    let totalInvestment = 0;
+    let irrSum = 0;
+    let irrCount = 0;
+    let best: { name: string; metric: string; value: number } | null = null;
+
+    for (const p of allProjects) {
+      const inv = Number(p.results?.totalInvestment || p.inputs?.askingPrice || p.inputs?.purchasePrice || 0);
+      if (Number.isFinite(inv)) totalInvestment += inv;
+      const irr = Number(p.results?.irr);
+      if (Number.isFinite(irr)) {
+        irrSum += irr;
+        irrCount++;
+        if (!best || irr > best.value) {
+          best = { name: p.name, metric: 'TIR', value: irr };
+        }
+      }
+    }
+
+    // Monthly counts (last 6 months)
+    const now = new Date();
+    const months: { label: string; count: number }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const label = d.toLocaleDateString('pt-BR', { month: 'short' });
+      const count = allProjects.filter((p) => {
+        const cd = new Date(p.created_at);
+        return cd.getFullYear() === d.getFullYear() && cd.getMonth() === d.getMonth();
+      }).length;
+      months.push({ label, count });
+    }
+
+    return {
+      total: allProjects.length,
+      totalInvestment,
+      avgIrr: irrCount > 0 ? irrSum / irrCount : null,
+      best,
+      months,
+    };
+  }, [allProjects]);
 
   const handleDelete = () => {
     if (deleteId) {
       deleteProject.mutate(deleteId);
       setDeleteId(null);
+    }
+  };
+
+  const toggleSelect = (id: string, type: ProjectType) => {
+    setSelected((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      // limit to 3, same type
+      const others = projects?.filter((p) => prev.includes(p.id)) || [];
+      if (others.length > 0 && others[0].project_type !== type) return prev;
+      if (prev.length >= 3) return prev;
+      return [...prev, id];
+    });
+  };
+
+  const handleCompare = () => {
+    if (selected.length < 2) return;
+    navigate(`/comparar?ids=${selected.join(',')}`);
+  };
+
+  const handleDuplicate = async (project: any) => {
+    const newProj = await duplicateProject.mutateAsync({
+      project_type: project.project_type,
+      name: project.name,
+      inputs: project.inputs,
+      results: project.results,
+    });
+    const config = projectTypeConfig[project.project_type as ProjectType];
+    if (config && newProj?.id) {
+      navigate(`${config.path}?id=${newProj.id}`);
     }
   };
 
@@ -117,9 +220,7 @@ export default function Dashboard() {
           <p className="text-muted-foreground text-center mb-6 max-w-md">
             Faça login para ver seus projetos salvos e ter acesso completo às ferramentas.
           </p>
-          <Button variant="gold" onClick={() => setAuthModalOpen(true)}>
-            Entrar
-          </Button>
+          <Button variant="gold" onClick={() => setAuthModalOpen(true)}>Entrar</Button>
           <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
         </div>
       </div>
@@ -128,38 +229,128 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-
       <div className="max-w-6xl mx-auto p-6 lg:p-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 animate-fade-up">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 animate-fade-up">
           <div>
             <h1 className="font-serif text-3xl font-medium">Meus Projetos</h1>
-            <p className="text-muted-foreground mt-1">
-              Gerencie suas simulações e análises
-            </p>
+            <p className="text-muted-foreground mt-1">Gerencie suas simulações e análises</p>
           </div>
-          
-          {/* New Project Dropdown */}
-          <div className="flex gap-2 flex-wrap">
-            {Object.entries(projectTypeConfig).map(([key, config]) => (
-              <Link key={key} to={config.path}>
-                <Button variant="outline" size="sm" className="transition-all duration-200 active:scale-[0.97]">
-                  <config.icon className={cn('h-4 w-4 mr-2', config.color)} />
-                  {config.label}
+
+          <div className="flex gap-2 flex-wrap items-center">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={() => setTourOpen(true)} className="text-muted-foreground">
+                  <Sparkles className="h-4 w-4 mr-1" />
+                  Tour
                 </Button>
-              </Link>
-            ))}
+              </TooltipTrigger>
+              <TooltipContent>Refazer o tour guiado</TooltipContent>
+            </Tooltip>
+
+            <div data-tour="compare-btn">
+              <Button
+                variant={compareMode ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => {
+                  setCompareMode((m) => !m);
+                  setSelected([]);
+                }}
+                disabled={!allProjects || allProjects.length < 2}
+              >
+                <BarChart3 className="h-4 w-4 mr-2" />
+                {compareMode ? 'Sair de Comparar' : 'Comparar'}
+              </Button>
+            </div>
+
+            <div data-tour="new-project" className="flex gap-2 flex-wrap">
+              {Object.entries(projectTypeConfig).map(([key, config]) => (
+                <Link key={key} to={config.path}>
+                  <Button variant="outline" size="sm" className="transition-all duration-200 active:scale-[0.97]">
+                    <config.icon className={cn('h-4 w-4 mr-2', config.color)} />
+                    {config.label}
+                  </Button>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
 
+        {/* Aggregates */}
+        {aggregates && aggregates.total > 0 && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6 animate-fade-up delay-75">
+            <StatCard
+              icon={ListChecks}
+              label="Análises"
+              value={String(aggregates.total)}
+              hint={`${allProjects?.filter((p) => new Date(p.created_at).getMonth() === new Date().getMonth()).length || 0} este mês`}
+              iconColor="text-blue-500"
+            />
+            <StatCard
+              icon={Wallet}
+              label="Investimento total"
+              value={formatCompactCurrency(aggregates.totalInvestment)}
+              hint="Soma de todos os projetos"
+              iconColor="text-emerald-500"
+            />
+            <StatCard
+              icon={TrendingUp}
+              label="TIR média"
+              value={aggregates.avgIrr != null ? formatPercentage(aggregates.avgIrr) : '—'}
+              hint={aggregates.avgIrr != null ? 'Em projetos com TIR' : 'Sem dados ainda'}
+              iconColor="text-amber-500"
+            />
+            <div className="bg-card border border-border rounded-lg p-4 shadow-card">
+              <div className="flex items-start justify-between mb-2">
+                <span className="text-xs text-muted-foreground uppercase tracking-wide">Atividade (6m)</span>
+                <Trophy className="h-4 w-4 text-rose-500" />
+              </div>
+              <div className="h-12">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={aggregates.months}>
+                    <XAxis dataKey="label" hide />
+                    <RTooltip
+                      contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 6, fontSize: 12 }}
+                      labelStyle={{ color: 'hsl(var(--foreground))' }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="count"
+                      stroke="hsl(var(--accent))"
+                      strokeWidth={2}
+                      dot={{ r: 2, fill: 'hsl(var(--accent))' }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="text-xs text-muted-foreground truncate mt-1">
+                {aggregates.best ? `Top: ${aggregates.best.name}` : '—'}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Compare bar */}
+        {compareMode && (
+          <div className="flex items-center justify-between gap-2 mb-4 p-3 rounded-lg border border-accent/40 bg-accent/5 animate-fade-up">
+            <div className="text-sm">
+              <span className="font-medium">{selected.length}</span> de 3 selecionados
+              <span className="text-muted-foreground ml-2">(mesmo tipo, mín. 2)</span>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setSelected([])}>
+                <X className="h-4 w-4 mr-1" /> Limpar
+              </Button>
+              <Button variant="gold" size="sm" onClick={handleCompare} disabled={selected.length < 2}>
+                Comparar selecionados
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Filters */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2 animate-fade-up delay-100">
-          <Button
-            variant={filter === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilter('all')}
-            className="transition-all duration-200 active:scale-[0.97]"
-          >
+        <div data-tour="filters" className="flex gap-2 mb-6 overflow-x-auto pb-2 animate-fade-up delay-100">
+          <Button variant={filter === 'all' ? 'default' : 'outline'} size="sm" onClick={() => setFilter('all')} className="transition-all duration-200 active:scale-[0.97]">
             Todos
           </Button>
           {Object.entries(projectTypeConfig).map(([key, config]) => (
@@ -176,12 +367,10 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Projects List */}
+        {/* Projects list */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[0, 1, 2].map((i) => (
-              <ProjectCardSkeleton key={i} index={i} />
-            ))}
+            {[0, 1, 2].map((i) => <ProjectCardSkeleton key={i} index={i} />)}
           </div>
         ) : projects?.length === 0 ? (
           <div className="animate-fade-up delay-200">
@@ -191,7 +380,7 @@ export default function Dashboard() {
               </div>
               <h3 className="font-serif text-2xl mb-2">Crie sua primeira análise</h3>
               <p className="text-muted-foreground max-w-md mx-auto">
-                Escolha uma ferramenta abaixo para começar sua primeira simulação imobiliária.
+                Escolha uma ferramenta abaixo para começar.
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
@@ -210,9 +399,7 @@ export default function Dashboard() {
                     </div>
                     <h4 className="font-medium">{config.label}</h4>
                   </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                    {config.description}
-                  </p>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-3">{config.description}</p>
                   <div className="flex items-center gap-1 text-xs font-medium text-accent opacity-0 group-hover:opacity-100 transition-opacity">
                     Começar <ArrowRight className="h-3 w-3" />
                   </div>
@@ -225,17 +412,31 @@ export default function Dashboard() {
             {projects?.map((project, i) => {
               const config = projectTypeConfig[project.project_type];
               const Icon = config.icon;
+              const isSelected = selected.includes(project.id);
+              const otherSelectedType = selected.length > 0 ? projects.find((p) => p.id === selected[0])?.project_type : null;
+              const disabledForCompare = compareMode && !isSelected && otherSelectedType && otherSelectedType !== project.project_type;
 
               return (
                 <div
                   key={project.id}
                   className={cn(
-                    'bg-card rounded-lg border border-border p-6 shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.99] animate-fade-up',
-                    `delay-${Math.min(i, 5) * 75}`
+                    'bg-card rounded-lg border p-6 shadow-card transition-all duration-300 active:scale-[0.99] animate-fade-up relative',
+                    `delay-${Math.min(i, 5) * 75}`,
+                    isSelected ? 'border-accent ring-2 ring-accent/30' : 'border-border hover:shadow-card-hover hover:-translate-y-0.5',
+                    disabledForCompare && 'opacity-50'
                   )}
                 >
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-4">
+                  {compareMode && (
+                    <div className="absolute top-3 left-3 z-10">
+                      <Checkbox
+                        checked={isSelected}
+                        disabled={!!disabledForCompare}
+                        onCheckedChange={() => toggleSelect(project.id, project.project_type)}
+                      />
+                    </div>
+                  )}
+
+                  <div className={cn('flex items-start justify-between mb-4', compareMode && 'pl-7')}>
                     <div className="flex items-center gap-2">
                       <div className="p-2 bg-secondary rounded-lg">
                         <Icon className={cn('h-4 w-4', config.color)} />
@@ -250,51 +451,33 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  {/* Title */}
-                  <h3 className="font-serif text-lg font-medium mb-3 truncate">
-                    {project.name}
-                  </h3>
+                  <h3 className="font-serif text-lg font-medium mb-3 truncate">{project.name}</h3>
 
-                  {/* Quick Stats */}
                   <div className="space-y-1 text-sm mb-4">
                     {project.project_type === 'simulador' && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Cap Rate Mensal</span>
                         <span className="font-mono text-accent">
-                          {formatPercentage(
-                            project.results.monthlyCapRate ?? 
-                            (project.results.noi / 12) / project.results.totalInvestment
-                          )}
+                          {formatPercentage(project.results.monthlyCapRate ?? (project.results.noi / 12) / project.results.totalInvestment)}
                         </span>
                       </div>
                     )}
                     {project.project_type === 'permuta' && project.results.winner && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Vencedor</span>
-                        <span className="font-mono text-accent capitalize">
-                          {project.results.winner}
-                        </span>
+                        <span className="font-mono text-accent capitalize">{project.results.winner}</span>
                       </div>
                     )}
                     {project.project_type === 'hbu' && project.results.winner && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Melhor Uso</span>
-                        <span className="font-mono text-accent">
-                          {project.results.winner}
-                        </span>
+                        <span className="font-mono text-accent">{project.results.winner}</span>
                       </div>
                     )}
                     {project.project_type === 'decisor' && project.results.verdict && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Veredicto</span>
-                        <span
-                          className={cn(
-                            'font-mono font-medium',
-                            project.results.verdict === 'GO' && 'text-green-600',
-                            project.results.verdict === 'NEGOTIATE' && 'text-amber-600',
-                            project.results.verdict === 'NO-GO' && 'text-red-600'
-                          )}
-                        >
+                        <span className={cn('font-mono font-medium', project.results.verdict === 'GO' && 'text-green-600', project.results.verdict === 'NEGOTIATE' && 'text-amber-600', project.results.verdict === 'NO-GO' && 'text-red-600')}>
                           {project.results.verdict}
                         </span>
                       </div>
@@ -302,14 +485,11 @@ export default function Dashboard() {
                     {project.project_type === 'preco_teto' && project.results.maxPrice && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Preço Teto</span>
-                        <span className="font-mono text-accent">
-                          {formatCompactCurrency(project.results.maxPrice as number)}
-                        </span>
+                        <span className="font-mono text-accent">{formatCompactCurrency(project.results.maxPrice as number)}</span>
                       </div>
                     )}
                   </div>
 
-                  {/* Actions */}
                   <div className="flex gap-2">
                     <Link to={`${config.path}?id=${project.id}`} className="flex-1">
                       <Button variant="outline" size="sm" className="w-full active:scale-[0.97] transition-all">
@@ -317,14 +497,33 @@ export default function Dashboard() {
                         Ver
                       </Button>
                     </Link>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setDeleteId(project.id)}
-                      className="text-red-500 hover:text-red-600 hover:bg-red-500/10 active:scale-[0.95] transition-all"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDuplicate(project)}
+                          disabled={duplicateProject.isPending}
+                          className="active:scale-[0.95] transition-all"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Duplicar</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setDeleteId(project.id)}
+                          className="text-red-500 hover:text-red-600 hover:bg-red-500/10 active:scale-[0.95] transition-all"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Excluir</TooltipContent>
+                    </Tooltip>
                   </div>
                 </div>
               );
@@ -333,7 +532,6 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent className="animate-scale-in">
           <AlertDialogHeader>
@@ -344,15 +542,19 @@ export default function Dashboard() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-red-500 hover:bg-red-600"
-            >
+            <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-600">
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <OnboardingTour
+        steps={TOUR_STEPS}
+        storageKey="onboarding_completed"
+        open={tourOpen}
+        onClose={() => setTourOpen(false)}
+      />
     </div>
   );
 }

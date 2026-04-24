@@ -11,6 +11,9 @@ import { SoftLockOverlay } from '@/components/tools/SoftLockOverlay';
 import { ScenarioMatrix } from '@/components/tools/ScenarioMatrix';
 import { SensitivityHeatmap } from '@/components/tools/SensitivityHeatmap';
 import { ProjectHeader } from '@/components/tools/ProjectHeader';
+import { HistoryButton } from '@/components/tools/HistoryButton';
+import { ProjectVersion } from '@/hooks/useProjectVersions';
+import { ProjectVersionsSheet } from '@/components/tools/ProjectVersionsSheet';
 import { RentalUnitsCard, RentalUnit } from '@/components/tools/RentalUnitsCard';
 import { GlossaryTooltip } from '@/components/tools/InfoTooltip';
 import { Button } from '@/components/ui/button';
@@ -67,6 +70,7 @@ export default function Simulador() {
   
   // Track loaded project ID for update vs create
   const [loadedProjectId, setLoadedProjectId] = useState<string | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   // Project Info
   const [projectName, setProjectName] = useState('');
@@ -265,6 +269,11 @@ export default function Simulador() {
       toast({ title: 'Projeto carregado!', description: project.name });
     }
   }, [toast]);
+
+  const handleRestoreVersion = useCallback((v: ProjectVersion) => {
+    handleLoadProject({ id: loadedProjectId, name: v.name, inputs: v.inputs, results: v.results } as any, false);
+    toast({ title: 'Versão restaurada', description: `v${v.version_number} carregada. Clique em Salvar para confirmar.` });
+  }, [handleLoadProject, loadedProjectId, toast]);
 
   // Auto-load project from URL
   useEffect(() => {
@@ -589,6 +598,8 @@ export default function Simulador() {
         onGoogleMapsLinkChange={setGoogleMapsLink}
         observations={observations}
         onObservationsChange={setObservations}
+        loadedProjectId={loadedProjectId}
+        onShowHistory={() => setHistoryOpen(true)}
       />
 
       {/* CAPEX Card */}
@@ -760,6 +771,12 @@ export default function Simulador() {
           tooltip="discountRate"
         />
       </CollapsibleInputCard>
+      <ProjectVersionsSheet
+        projectId={loadedProjectId}
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+        onRestore={handleRestoreVersion}
+      />
     </ToolLayout>
   );
 }

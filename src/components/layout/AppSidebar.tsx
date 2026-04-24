@@ -108,7 +108,7 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-sidebar-foreground/50 uppercase text-xs tracking-wider px-2 mb-2">
             {!isCollapsed && 'Ferramentas'}
           </SidebarGroupLabel>
-          <SidebarGroupContent>
+          <SidebarGroupContent data-tour="sidebar">
             <SidebarMenu>
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.title}>

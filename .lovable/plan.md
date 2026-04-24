@@ -1,102 +1,102 @@
-
-
-# Plano: Melhorias de UX em Todo o App
+# Plano: 5 Melhorias Selecionadas (1, 2, 4, 6, 10)
 
 ## Resumo
-Conjunto de melhorias de experiência do usuário aplicadas em toda a plataforma, focando em feedback visual, navegação, micro-interacoes, loading states e acessibilidade.
+Implementar: Comparação de Projetos, Histórico de Versões, Dashboard de Métricas Agregadas, Duplicar Projeto e Tour Guiado de Onboarding.
 
 ---
 
-## 1. Loading States e Skeleton Screens Melhorados
+## 1. Comparação Lado a Lado de Projetos
 
-**Arquivos:** `Dashboard.tsx`, `Vitrine.tsx`, `VitrineDetail.tsx`
+**Novo arquivo:** `src/pages/CompareProjects.tsx`
+**Editado:** `src/pages/Dashboard.tsx`, `src/App.tsx`, `src/components/layout/AppSidebar.tsx`
 
-- Substituir skeletons genéricos por skeletons que imitam o layout real dos cards (ícone + título + stats)
-- Adicionar animação de shimmer nos skeletons em vez de apenas `animate-pulse`
-- No `VitrineDetail`, adicionar skeleton completo em vez de apenas um spinner centralizado
-
----
-
-## 2. Transicoes de Pagina e Animacoes de Entrada
-
-**Arquivos:** `ToolLayout.tsx`, `AppLayout.tsx`, `Dashboard.tsx`
-
-- Adicionar `animate-fade-up` nas seções principais ao montar
-- Stagger nas listas de cards (projetos, ferramentas) para entrada sequencial
-- Transição suave no conteúdo do sidebar ao expandir/colapsar
+- Modo "Comparar" no Dashboard: botão que ativa checkboxes nos cards de projeto (até 3 do mesmo tipo)
+- Botão "Comparar selecionados" leva para `/comparar?ids=a,b,c`
+- Página `/comparar` renderiza tabela lado a lado:
+  - Colunas: nome de cada projeto
+  - Linhas: KPIs específicos do tipo (TIR, VPL, Cap Rate, Payback, etc.)
+  - Destaque visual (verde/vermelho) na melhor/pior métrica de cada linha
+- Botão "Exportar comparação em PDF" usando `pdfExport.ts` existente
 
 ---
 
-## 3. Feedback Visual nas Ações do Usuário
+## 2. Histórico de Versões por Projeto
 
-**Arquivos:** `Simulador.tsx`, `Decisor.tsx`, `Permuta.tsx`, `PrecoTeto.tsx`, `HighestBestUse.tsx`
+**Migration nova:** tabela `project_versions`
+**Editado:** `src/hooks/useProjects.ts`, todas as 5 páginas de ferramentas, `src/components/tools/ProjectHeader.tsx`
 
-- Botão "Salvar" com estado de loading (spinner) e texto dinâmico ("Salvando..." -> "Salvo!")
-- Botão "Exportar PDF" com barra de progresso ou spinner durante geração
-- Toast de sucesso com ícone de check animado
-- Desabilitar botões duplicados durante operações assíncronas
+### Schema
+```sql
+CREATE TABLE project_versions (
+  id uuid PK,
+  project_id uuid REFERENCES toolbox_projects(id) ON DELETE CASCADE,
+  user_id uuid,
+  version_number int,
+  inputs jsonb,
+  results jsonb,
+  name text,
+  created_at timestamptz DEFAULT now()
+);
+-- RLS: usuário só vê versões dos próprios projetos
+```
 
----
-
-## 4. Navegação e Orientação
-
-**Arquivos:** `AppSidebar.tsx`, `AppLayout.tsx`
-
-- Adicionar breadcrumb na header do AppLayout (ex: "Dashboard > Simulador")
-- Tooltip nos itens do sidebar quando colapsado (já existe, verificar se funciona)
-- Highlight mais visível no item ativo do sidebar (borda lateral dourada em vez de fundo solid)
-- Adicionar link "Voltar ao site" no sidebar footer
-
----
-
-## 5. Empty States Mais Atraentes
-
-**Arquivos:** `Dashboard.tsx`
-
-- Redesenhar empty state com ilustração ou ícone maior
-- Adicionar CTA mais claro: "Crie sua primeira análise" com cards clicáveis das ferramentas
-- Adicionar descrição breve de cada ferramenta no empty state
+- Antes de cada UPDATE em `toolbox_projects`, snapshot do estado atual é gravado em `project_versions` (lógica no `useUpdateProject`)
+- Novo botão "Histórico" no `ProjectHeader` quando projeto está carregado
+- Drawer/Sheet lateral lista versões (data, número, mudanças resumidas)
+- Botão "Restaurar" carrega inputs daquela versão no formulário (sem salvar automático — usuário decide)
+- Limite de 20 versões por projeto (mais antigas são apagadas)
 
 ---
 
-## 6. Melhorias Mobile
+## 4. Dashboard de Métricas Agregadas
 
-**Arquivos:** `ToolLayout.tsx`, `Navbar.tsx`, `CookieConsent.tsx`, `WhatsAppButton.tsx`
+**Editado:** `src/pages/Dashboard.tsx`
 
-- Cookie consent: posicionar acima do botão WhatsApp para não sobrepor
-- WhatsApp button: z-index mais alto e posição que não obstrui conteúdo
-- Mobile menu no Navbar: adicionar backdrop escuro ao abrir
-- ToolLayout mobile: substituir "Resultados abaixo" estático por botão "Ver Resultados" que faz smooth scroll
-
----
-
-## 7. Formulários e Inputs
-
-**Arquivos:** `AuthModal.tsx`, `ProjectHeader.tsx`, `CurrencyInput.tsx`
-
-- AuthModal: adicionar indicador de força da senha no signup
-- AuthModal: melhorar transição entre login/signup com animação
-- ProjectHeader: campo de nome com auto-focus ao montar
-- Inputs monetários: feedback visual quando o valor muda (flash sutil)
+- Linha de cards resumo no topo (acima da lista atual):
+  - **Total de análises**: contagem total
+  - **Investimento total analisado**: soma de `inputs.totalInvestment` ou equivalente
+  - **TIR média**: média ponderada quando aplicável
+  - **Melhor projeto**: nome + métrica chave
+- Mini gráfico (sparkline) de análises criadas por mês (últimos 6 meses) usando `recharts` já instalado
+- Filtros por tipo continuam abaixo
 
 ---
 
-## 8. Micro-interações
+## 6. Duplicar Projeto com Um Clique
 
-**Arquivos:** `CollapsibleInputCard.tsx`, `KPICard.tsx`, `VerdictBadge.tsx`
+**Editado:** `src/pages/Dashboard.tsx`, `src/hooks/useProjects.ts`
 
-- CollapsibleInputCard: animação de rotação mais suave no chevron
-- KPICard: animação de contagem (count-up) nos números ao montar
-- VerdictBadge: animação de entrada com scale + bounce
+- Novo botão "Duplicar" (ícone Copy) ao lado de Ver/Excluir nos cards
+- Hook `useDuplicateProject`: cria novo registro com `name = "Cópia de {nome}"` e mesmos `inputs`/`results`
+- Após duplicar, redireciona para `/{ferramenta}?id={novoId}` com toast "Projeto duplicado"
+
+---
+
+## 10. Tour Guiado de Onboarding
+
+**Novo arquivo:** `src/components/OnboardingTour.tsx`
+**Editado:** `src/pages/Dashboard.tsx`
+
+- Componente standalone (sem lib externa) com:
+  - Overlay escuro semi-transparente
+  - "Spotlight" (recorte) no elemento atual via `clip-path` ou `box-shadow` enorme
+  - Tooltip ao lado com título, descrição, botões "Próximo / Pular / Anterior"
+- 5 passos no Dashboard:
+  1. "Bem-vindo!" (centro da tela)
+  2. Spotlight nos botões de criar nova análise
+  3. Spotlight nos filtros
+  4. Spotlight num card de projeto (Ver/Duplicar/Excluir)
+  5. Spotlight no menu lateral (ferramentas)
+- Estado persistido: `localStorage.setItem('onboarding_completed', 'true')`
+- Botão "Refazer tour" no footer do sidebar para reabrir manualmente
 
 ---
 
 ## Detalhes Técnicos
 
-- Todas as animações usam CSS/Tailwind (sem lib extra)
-- Prioridade em performance: `will-change` e `transform` para animações GPU
-- Nenhuma migration de banco necessária
-- Mudanças retrocompatíveis
-- Total de ~12-15 arquivos modificados
-- Utilização de `framer-motion` nao necessária — tudo com CSS transitions e keyframes
-
+- Migration: 1 nova tabela `project_versions` com RLS
+- Bibliotecas: nenhuma nova (usa `recharts`, `lucide-react`, `@radix-ui` já instalados)
+- Total de arquivos: ~12 (3 novos + 9 editados)
+- `App.tsx`: adicionar rota `/comparar` dentro de `AppLayout`
+- Sidebar: novo item "Comparar projetos" (visível só quando há 2+ projetos)
+- Retrocompatível com dados existentes

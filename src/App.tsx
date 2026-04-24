@@ -12,6 +12,7 @@ import HighestBestUse from "./pages/HighestBestUse";
 import Decisor from "./pages/Decisor";
 import PrecoTeto from "./pages/PrecoTeto";
 import Dashboard from "./pages/Dashboard";
+import CompareProjects from "./pages/CompareProjects";
 import AdminUsers from "./pages/AdminUsers";
 import AdminProjects from "./pages/AdminProjects";
 import Vitrine from "./pages/Vitrine";
@@ -66,6 +67,11 @@ const App = () => (
             <Route path="/dashboard" element={
               <AppLayout title="Dashboard">
                 <Dashboard />
+              </AppLayout>
+            } />
+            <Route path="/comparar" element={
+              <AppLayout title="Comparar Projetos">
+                <CompareProjects />
               </AppLayout>
             } />
             <Route path="/admin/users" element={

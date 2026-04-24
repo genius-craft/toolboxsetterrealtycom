@@ -3,8 +3,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Building2, Hammer, MapPin, StickyNote } from 'lucide-react';
+import { Building2, Hammer, MapPin, StickyNote, History } from 'lucide-react';
 
 type InvestmentType = 'ready' | 'build-to-suit';
 
@@ -19,6 +20,8 @@ interface ProjectHeaderProps {
   onGoogleMapsLinkChange?: (link: string) => void;
   observations?: string;
   onObservationsChange?: (obs: string) => void;
+  loadedProjectId?: string | null;
+  onShowHistory?: () => void;
   className?: string;
 }
 
@@ -33,15 +36,31 @@ export function ProjectHeader({
   onGoogleMapsLinkChange,
   observations,
   onObservationsChange,
+  loadedProjectId,
+  onShowHistory,
   className,
 }: ProjectHeaderProps) {
   return (
     <div className={cn('bg-card rounded-lg border border-border p-4 shadow-card space-y-4', className)}>
-      {/* Project Name */}
+      {/* Project Name + History */}
       <div className="space-y-2">
-        <Label htmlFor="project-name" className="text-sm font-medium">
-          Nome do Projeto
-        </Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label htmlFor="project-name" className="text-sm font-medium">
+            Nome do Projeto
+          </Label>
+          {loadedProjectId && onShowHistory && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onShowHistory}
+              className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <History className="h-3.5 w-3.5 mr-1" />
+              Histórico
+            </Button>
+          )}
+        </div>
         <Input
           id="project-name"
           placeholder="Ex: Edifício Centro SP"

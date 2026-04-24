@@ -16,6 +16,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSaveProject, useProject } from '@/hooks/useProjects';
+import { HistoryButton } from '@/components/tools/HistoryButton';
 import { calculateHBUv3, HBUv3Params } from '@/lib/calculations';
 import { formatArea, formatPercentage } from '@/lib/formatters';
 import { generateHBUPDF } from '@/lib/pdfExport';
@@ -44,6 +45,7 @@ export default function HighestBestUse() {
   const projectIdFromUrl = searchParams.get('id');
   const { data: projectFromUrl, isLoading: loadingProjectFromUrl } = useProject(projectIdFromUrl || '');
   const [hasLoadedFromUrl, setHasLoadedFromUrl] = useState(false);
+  const [loadedProjectId, setLoadedProjectId] = useState<string | null>(null);
 
   // Address
   const [showAddress, setShowAddress] = useState(false);
@@ -126,11 +128,16 @@ export default function HighestBestUse() {
     setDiscountRate(gerais.discountRate ?? 0.15);
     setConstructionMonths(gerais.constructionMonths ?? 24);
     setLandCostPremissa(gerais.landCostPremissa ?? 0.15);
-    
+    if (project.id) setLoadedProjectId(project.id);
     if (showToast) {
       toast.success(`Projeto "${project.name}" carregado!`);
     }
   }, []);
+
+  const handleRestoreVersion = useCallback((v: any) => {
+    handleLoadProject({ id: loadedProjectId, name: v.name, inputs: v.inputs, results: v.results }, false);
+    toast.success(`Versão v${v.version_number} restaurada. Clique em Salvar para confirmar.`);
+  }, [handleLoadProject, loadedProjectId]);
 
   // Auto-load project from URL
   useEffect(() => {
@@ -266,6 +273,7 @@ export default function HighestBestUse() {
 
       {/* Action Buttons */}
       <div className="flex gap-3">
+        <HistoryButton loadedProjectId={loadedProjectId} onRestore={handleRestoreVersion} />
         <Button
           variant="gold"
           className="flex-1"
