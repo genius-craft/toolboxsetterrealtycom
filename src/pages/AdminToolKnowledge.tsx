@@ -168,14 +168,27 @@ export default function AdminToolKnowledge() {
 
   return (
     <div className="container max-w-5xl mx-auto p-6 space-y-6">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
+      <div>
+        <h1 className="font-display text-2xl flex items-center gap-2">
+          <BookOpen className="h-6 w-6 text-accent" />
+          Configurações da TOOL
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
+          Gerencie o modelo de IA do provedor primário e a base de conhecimento (documentos) usada
+          pela TOOL para responder dúvidas dos usuários.
+        </p>
+      </div>
+
+      <ToolModelSelector />
+
+      <div className="flex items-start justify-between gap-4 flex-wrap pt-4 border-t">
         <div>
-          <h1 className="font-display text-2xl flex items-center gap-2">
-            <BookOpen className="h-6 w-6 text-accent" />
-            Conhecimento da TOOL
-          </h1>
+          <h2 className="font-display text-xl flex items-center gap-2">
+            <BookOpen className="h-5 w-5 text-accent" />
+            Base de Conhecimento
+          </h2>
           <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-            Documentos enviados aqui viram a base de conhecimento da TOOL — a assistente que responde dúvidas dos usuários.
+            Documentos enviados aqui viram contexto adicional para a TOOL (estilo RAG).
             Ela usa esse conteúdo, junto com o manual base, para gerar respostas mais precisas.
           </p>
         </div>
