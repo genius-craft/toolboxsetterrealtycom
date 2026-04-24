@@ -15,7 +15,8 @@ import {
   ChevronRight,
   Store,
   ExternalLink,
-  BookOpen
+  BookOpen,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -134,6 +135,21 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Fale com o TOOL"
+                  onClick={() => window.dispatchEvent(new CustomEvent('tool-assistant:open'))}
+                  className={cn(
+                    'transition-all duration-200 relative cursor-pointer',
+                    'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent'
+                  )}
+                >
+                  <div className="flex items-center gap-3 w-full">
+                    <Sparkles className="h-4 w-4 shrink-0 text-accent" />
+                    <span>Fale com o TOOL</span>
+                  </div>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
