@@ -69,6 +69,7 @@ export default function Simulador() {
   
   // Track loaded project ID for update vs create
   const [loadedProjectId, setLoadedProjectId] = useState<string | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   // Project Info
   const [projectName, setProjectName] = useState('');
