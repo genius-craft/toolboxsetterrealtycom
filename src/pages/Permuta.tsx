@@ -20,6 +20,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { generatePermutaPDF } from "@/lib/pdfExport";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSaveProject, useProjects, useProject, ProjectType } from "@/hooks/useProjects";
+import { HistoryButton } from '@/components/tools/HistoryButton';
 import { toast } from "sonner";
 
 export default function Permuta() {
