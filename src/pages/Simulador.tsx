@@ -268,6 +268,11 @@ export default function Simulador() {
     }
   }, [toast]);
 
+  const handleRestoreVersion = useCallback((v: ProjectVersion) => {
+    handleLoadProject({ id: loadedProjectId, name: v.name, inputs: v.inputs, results: v.results } as any, false);
+    toast({ title: 'Versão restaurada', description: `v${v.version_number} carregada. Clique em Salvar para confirmar.` });
+  }, [handleLoadProject, loadedProjectId, toast]);
+
   // Auto-load project from URL
   useEffect(() => {
     if (projectFromUrl && !loadingProjectFromUrl && !hasLoadedFromUrl) {
