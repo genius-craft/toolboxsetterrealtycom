@@ -321,6 +321,7 @@ export default function Permuta() {
           </Button>
           <Button variant="outline" size="sm" onClick={handleReset}><RefreshCcw className="h-4 w-4 mr-2" />Limpar</Button>
           <Button variant="outline" size="sm" onClick={handleSave} disabled={isLocked}><Save className="h-4 w-4 mr-2" />Salvar</Button>
+          <HistoryButton loadedProjectId={loadedProjectId} onRestore={handleRestoreVersion} />
           <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={isLocked || isExportingPDF}>
             {isExportingPDF ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileDown className="h-4 w-4 mr-2" />}
             {isExportingPDF ? 'Gerando...' : 'PDF'}
