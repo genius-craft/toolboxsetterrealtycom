@@ -35,7 +35,7 @@ const SUGGESTIONS = [
 const INITIAL_MESSAGE: Msg = {
   role: "assistant",
   content:
-    "Olá! Eu sou a **TOOL**, sua assistente do Setter Toolbox.\n\nPosso te ajudar com qualquer dúvida sobre as calculadoras, fórmulas e fluxos da plataforma.\n\n💡 **Dica:** clique no ícone de clipe para anexar um PDF (ex.: relatório gerado pelas ferramentas) e eu analiso para você.";
+    "Olá! Eu sou a **TOOL**, sua assistente do Setter Toolbox.\n\nPosso te ajudar com qualquer dúvida sobre as calculadoras, fórmulas e fluxos da plataforma.\n\n**Dica:** clique no ícone de clipe para anexar um PDF (ex.: relatório gerado pelas ferramentas) e eu analiso para você.",
 };
 
 const MAX_ATTACHMENTS = 2;
