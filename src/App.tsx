@@ -69,6 +69,11 @@ const App = () => (
                 <Dashboard />
               </AppLayout>
             } />
+            <Route path="/comparar" element={
+              <AppLayout title="Comparar Projetos">
+                <CompareProjects />
+              </AppLayout>
+            } />
             <Route path="/admin/users" element={
               <AppLayout title="Gestão de Usuários">
                 <AdminUsers />
