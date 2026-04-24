@@ -59,25 +59,11 @@ async function extractText(buffer: ArrayBuffer, fileType: string): Promise<strin
   }
 
   if (t === "pdf") {
-    // pdfjs-dist legacy build (Deno-compatível)
-    const pdfjs: any = await import("https://esm.sh/pdfjs-dist@4.0.379/legacy/build/pdf.mjs");
-    // desativa worker
-    pdfjs.GlobalWorkerOptions.workerSrc = "";
-    const loadingTask = pdfjs.getDocument({
-      data: new Uint8Array(buffer),
-      useWorkerFetch: false,
-      isEvalSupported: false,
-      useSystemFonts: true,
-    });
-    const pdf = await loadingTask.promise;
-    let fullText = "";
-    for (let p = 1; p <= pdf.numPages; p++) {
-      const page = await pdf.getPage(p);
-      const content = await page.getTextContent();
-      const pageText = content.items.map((it: any) => ("str" in it ? it.str : "")).join(" ");
-      fullText += pageText + "\n\n";
-    }
-    return fullText;
+    // unpdf é puro JS (fork do pdfjs sem dependências nativas) — funciona em Deno/Edge
+    const { extractText: unpdfExtract, getDocumentProxy } = await import("https://esm.sh/unpdf@0.12.1");
+    const pdf = await getDocumentProxy(new Uint8Array(buffer));
+    const { text } = await unpdfExtract(pdf, { mergePages: true });
+    return Array.isArray(text) ? text.join("\n\n") : (text as string);
   }
 
   throw new Error(`Tipo de arquivo não suportado: ${fileType}`);
