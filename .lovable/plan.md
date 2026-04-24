@@ -1,248 +1,93 @@
-## Visão geral
+## Objetivo
 
-Criar o assistente **TOOL** — um chat flutuante que responde dúvidas sobre o Setter Toolbox usando:
+Adicionar os 7 modelos abaixo como opções **recomendadas** explícitas no seletor de IA da TOOL (admin → `/admin/tool-knowledge`), para que possam ser escolhidos diretamente sem depender de aparecerem na lista filtrada do OpenRouter:
 
-1. **Provedor primário:** OpenRouter (`google/gemma-2-9b-it:free`)
-2. **Fallback automático:** Lovable AI (`google/gemini-3-flash-preview`) quando o OpenRouter retornar 402, 429 ou erro de rede.
-3. **Base de conhecimento (RAG simples):** admins fazem upload de documentos (PDF, DOCX, TXT, MD) que são processados, divididos em pedaços (chunks) e injetados no contexto da TOOL como "conhecimento adicional" — para que a TOOL responda sobre o manual e qualquer outro material que o admin queira ensinar a ela.
+- `google/gemma-4-31b-it`
+- `google/gemini-3.1-flash-lite-preview`
+- `anthropic/claude-3-haiku`
+- `deepseek/deepseek-v4-flash`
+- `x-ai/grok-4.1-fast`
+- `openai/gpt-4.1-nano`
+- `xiaomi/mimo-v2.5`
 
-## Como vai funcionar
+Hoje a lista esconde tudo que não é "free" — então mesmo se o OpenRouter listar esses modelos, eles não aparecem. Vamos garantir que apareçam **independente de serem pagos ou não**.
 
-```text
-Admin faz upload de doc na página /admin/tool-knowledge
-        ↓
-Edge function "tool-ingest-document":
-  - extrai texto (pdfjs / mammoth / texto puro)
-  - quebra em chunks (~800 tokens cada, 100 overlap)
-  - salva em tool_knowledge_chunks
-        ↓
-Usuário comum clica no botão flutuante "TOOL" e pergunta algo
-        ↓
-Edge function "tool-chat":
-  - busca chunks mais relevantes (busca por palavras-chave, sem embeddings nesta v1)
-  - monta system prompt = identidade da TOOL + manual base + chunks recuperados
-  - tenta OpenRouter primeiro (streaming SSE)
-  - se 402/429/erro → fallback Lovable AI (streaming SSE)
-  - retransmite stream para o cliente
-        ↓
-Resposta aparece token-a-token no chat, com markdown
+---
+
+## Mudanças
+
+### 1. `src/components/tool-assistant/ToolModelSelector.tsx`
+
+**a) Expandir a lista `RECOMMENDED_FREE` → renomear para `RECOMMENDED_MODELS`** com duas categorias:
+
+- **Free (atuais)** — Gemma 3 27B/12B/4B/3n.
+- **Premium / experimentais (novos)** — os 7 modelos pedidos, cada um com label amigável e hint curto explicando o trade-off (velocidade, custo, força de raciocínio).
+
+**b) Sempre mostrar os recomendados**, mesmo se não estiverem na lista do OpenRouter (hoje filtra por `freeModels.some(...)`). Vou trocar para mostrar todos os recomendados; se o ID não vier na lista do OpenRouter, marca um Badge "não confirmado" mas ainda permite selecionar (o backend tenta e cai no fallback Lovable AI se der erro).
+
+**c) Reorganizar o `<SelectContent>` em três grupos:**
+1. Recomendados — Free
+2. Recomendados — Premium / Experimentais
+3. Outros modelos free (lista filtrada do OpenRouter, como já é hoje)
+
+**d) Mostrar Badge de pricing** (ex: `free`, `pago`) ao lado de cada recomendado, calculado a partir do `pricing` do OpenRouter quando disponível.
+
+### 2. `supabase/functions/tool-chat/index.ts`
+
+- Nenhuma mudança obrigatória de lógica — a chamada ao OpenRouter já é dinâmica via `model` lido de `tool_config`.
+- Garantir apenas que o tratamento de erro 402/429/5xx continua caindo para Lovable AI (já existe). Isso protege contra modelos pagos que falhem por falta de créditos no OpenRouter.
+
+### 3. (Opcional) Pequeno aviso visual no card
+
+- Linha discreta abaixo do select: "Modelos premium podem exigir créditos no OpenRouter. Se falharem, a TOOL automaticamente usa o Lovable AI como fallback."
+
+---
+
+## Detalhes técnicos
+
+```ts
+const RECOMMENDED_MODELS: { id: string; label: string; hint: string; tier: "free" | "premium" }[] = [
+  // Free (mantidos)
+  { id: "google/gemma-3-27b-it:free", label: "Gemma 3 27B (free)", hint: "Padrão. Mais capaz da família Gemma free.", tier: "free" },
+  { id: "google/gemma-3-12b-it:free", label: "Gemma 3 12B (free)", hint: "Mais rápido, qualidade ainda boa.", tier: "free" },
+  { id: "google/gemma-3-4b-it:free", label: "Gemma 3 4B (free)", hint: "Bem rápido, respostas mais simples.", tier: "free" },
+  { id: "google/gemma-3n-e4b-it:free", label: "Gemma 3n E4B (free)", hint: "Variante eficiente da família 3n.", tier: "free" },
+  // Premium / experimentais (novos)
+  { id: "google/gemma-4-31b-it", label: "Gemma 4 31B", hint: "Próxima geração Gemma, raciocínio mais forte.", tier: "premium" },
+  { id: "google/gemini-3.1-flash-lite-preview", label: "Gemini 3.1 Flash Lite (preview)", hint: "Rápido e barato, bom para respostas curtas.", tier: "premium" },
+  { id: "anthropic/claude-3-haiku", label: "Claude 3 Haiku", hint: "Anthropic — leve, conciso, ótimo custo-benefício.", tier: "premium" },
+  { id: "deepseek/deepseek-v4-flash", label: "DeepSeek V4 Flash", hint: "Bom em raciocínio técnico, rápido.", tier: "premium" },
+  { id: "x-ai/grok-4.1-fast", label: "Grok 4.1 Fast", hint: "xAI — respostas diretas, baixa latência.", tier: "premium" },
+  { id: "openai/gpt-4.1-nano", label: "GPT-4.1 Nano", hint: "OpenAI — barato e ágil, ideal para Q&A simples.", tier: "premium" },
+  { id: "xiaomi/mimo-v2.5", label: "MiMo v2.5", hint: "Xiaomi — multilíngue, experimental.", tier: "premium" },
+];
 ```
 
-## RAG: por que busca por palavras-chave (e não embeddings) na v1
+Render dos grupos (pseudo):
 
-Embeddings exigem extensão `pgvector`, geração de vetores a cada upload e a cada pergunta — mais infra, mais custo. Para o volume esperado (manual + alguns docs do admin, dezenas/centenas de chunks), uma **busca full-text em PostgreSQL** (`to_tsvector` + `ts_rank` em português) entrega resultado bom o suficiente, é instantânea e sem custo de API. Se mais tarde a base crescer e a qualidade cair, migramos para embeddings — ficaria como segunda iteração.
-
-## O que será construído
-
-### 1. Banco de dados (migração)
-
-**Tabela `tool_knowledge_documents`** — metadado de cada arquivo enviado:
-- `id uuid pk`
-- `title text` (nome exibido)
-- `original_filename text`
-- `file_type text` (pdf, docx, txt, md)
-- `storage_path text` (ponteiro para o bucket)
-- `chunk_count int`
-- `enabled boolean default true` (admin pode desativar sem deletar)
-- `uploaded_by uuid`, `created_at`, `updated_at`
-
-**Tabela `tool_knowledge_chunks`** — pedaços de texto consultáveis:
-- `id uuid pk`
-- `document_id uuid → tool_knowledge_documents`
-- `chunk_index int`
-- `content text`
-- `content_tsv tsvector` (GENERATED, idioma português) + índice GIN
-- `created_at`
-
-**RLS:**
-- Apenas admin/super_admin leem/escrevem `tool_knowledge_documents` e `tool_knowledge_chunks` via API.
-- A edge function `tool-chat` consulta os chunks usando o **service role key** (bypassa RLS) — usuários comuns nunca tocam essas tabelas diretamente.
-
-**Bucket de Storage:** `tool-knowledge` (privado). RLS permite upload/leitura apenas para admins; a edge function de ingestão lê via service role.
-
-### 2. Edge functions
-
-**`tool-ingest-document`** (chamada pelo painel admin após upload)
-- Input: `{ documentId }`
-- Baixa o arquivo do bucket
-- Extrai texto:
-  - `.txt` / `.md` → texto direto
-  - `.pdf` → `pdfjs-dist` (Deno-compatível via esm.sh)
-  - `.docx` → `mammoth` (esm.sh)
-- Quebra em chunks (~800 chars, 100 de overlap, respeitando parágrafos)
-- Insere em `tool_knowledge_chunks` em batch
-- Atualiza `chunk_count` no documento
-- Validação Zod no input
-
-**`tool-chat`** (chamada pelo widget flutuante)
-- Input: `{ messages: [{role, content}] }`
-- Validação Zod: máx 20 mensagens, 4000 chars cada
-- Pega a última pergunta do user, faz busca full-text:
-  ```sql
-  SELECT content FROM tool_knowledge_chunks c
-  JOIN tool_knowledge_documents d ON d.id = c.document_id
-  WHERE d.enabled = true
-    AND c.content_tsv @@ plainto_tsquery('portuguese', $1)
-  ORDER BY ts_rank(c.content_tsv, plainto_tsquery('portuguese', $1)) DESC
-  LIMIT 6;
-  ```
-- Monta system prompt = identidade da TOOL + manual-base embutido + chunks recuperados (cap em ~6000 chars para não estourar contexto)
-- Tenta OpenRouter primeiro com streaming; se status ∈ {402, 429, 500, 502, 503} ou throw → tenta Lovable AI
-- Header de resposta `X-AI-Provider: openrouter | lovable` para o front mostrar discreto badge
-- Surfacing de erro 402/429 do FALLBACK como JSON (depois que ambos falharam)
-
-**Esqueleto da lógica de fallback:**
-```typescript
-async function callOpenRouter(messages) {
-  return fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${Deno.env.get("OPENROUTER_API_KEY")}`,
-      "Content-Type": "application/json",
-      "HTTP-Referer": "https://toolbox.setterrealty.com",
-      "X-Title": "Setter Toolbox - TOOL",
-    },
-    body: JSON.stringify({
-      model: "google/gemma-2-9b-it:free",
-      messages, stream: true,
-    }),
-  });
-}
-
-async function callLovable(messages) {
-  return fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY")}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
-      messages, stream: true,
-    }),
-  });
-}
-
-// Tenta primário, faz fallback em 402/429/erro
-let provider = "openrouter";
-let resp;
-try {
-  resp = await callOpenRouter(allMessages);
-  if (!resp.ok && [402, 429, 500, 502, 503].includes(resp.status)) {
-    throw new Error(`OpenRouter ${resp.status}`);
-  }
-} catch {
-  provider = "lovable";
-  resp = await callLovable(allMessages);
-}
+```tsx
+<SelectGroup>
+  <SelectLabel>Recomendados — Free</SelectLabel>
+  {recommendedFree.map(...)}
+</SelectGroup>
+<SelectGroup>
+  <SelectLabel>Recomendados — Premium</SelectLabel>
+  {recommendedPremium.map(r => (
+    <SelectItem value={r.id}>
+      {r.label} <Badge>{availableInOR ? "ok" : "não confirmado"}</Badge>
+    </SelectItem>
+  ))}
+</SelectGroup>
+<SelectGroup>
+  <SelectLabel>Outros modelos free</SelectLabel>
+  {otherFree.map(...)}
+</SelectGroup>
 ```
 
-### 3. UI — Widget flutuante "TOOL"
+---
 
-**`src/components/tool-assistant/ToolAssistantButton.tsx`**
-- Botão flutuante circular dourado (gradiente da marca), 56px, posicionado em `bottom-6 right-6 z-50`.
-- Texto "TOOL" + ícone `Sparkles`.
-- Posicionado para não conflitar com o WhatsApp (`bottom-24 z-40` segundo memória).
-- Não aparece em `/auth` e `/pending-approval`.
+## Fora do escopo
 
-**`src/components/tool-assistant/ToolAssistantPanel.tsx`**
-- `Sheet` lateral (mobile: bottom, desktop: right, ~420px de largura).
-- Header com avatar da TOOL + nome + badge sutil "online".
-- Lista de mensagens renderizadas com `react-markdown` (instalar se não houver).
-- Mensagem inicial da TOOL apresentando-se: "Olá! Sou a TOOL, sua assistente do Setter Toolbox. Posso te ajudar com qualquer dúvida sobre as calculadoras, fórmulas e fluxos da plataforma."
-- 4 sugestões clicáveis: "Como uso o Simulador?", "O que é Cap Rate?", "Como funciona a Permuta?", "Diferença entre as 5 calculadoras".
-- Input com `Enter` para enviar, `Shift+Enter` para nova linha. Botão enviar ícone `Send`.
-- Indicador "TOOL está pensando..." durante streaming.
-- Badge mínimo no rodapé: "Powered by OpenRouter" ou "Modo backup ativo" (quando cair no fallback).
-
-**Streaming no front** — segue o padrão SSE line-by-line já documentado (parser tolerante a chunks parciais, flush final, tratamento de `[DONE]`).
-
-### 4. UI — Painel admin de conhecimento
-
-**`src/pages/admin/ToolKnowledge.tsx`** — rota `/admin/tool-knowledge` (apenas super_admin)
-- Cabeçalho explicando: "Documentos enviados aqui viram a base de conhecimento da TOOL. Ela usará esse conteúdo para responder as perguntas dos usuários."
-- Botão **"Enviar documento"** → modal com:
-  - Input título
-  - File picker (`.pdf`, `.docx`, `.txt`, `.md`, máx 10MB)
-  - Ao confirmar: upload no bucket → insert em `tool_knowledge_documents` → invoke `tool-ingest-document` → toast de sucesso/erro
-- Lista (tabela) de documentos: título, tipo, chunks, status (ativo/inativo), data, ações:
-  - Toggle ativar/desativar (sem reprocessar)
-  - Botão excluir (remove arquivo do bucket + linha + chunks em cascade)
-- Estado vazio amigável: "Nenhum documento ainda. A TOOL responderá apenas com o conhecimento base do Setter Toolbox."
-
-**Link no menu admin** (na página `/admin` ou na sidebar admin existente): "Conhecimento da TOOL".
-
-### 5. Integração global
-- Renderizar `<ToolAssistantButton />` em `App.tsx` (mesmo nível do botão WhatsApp).
-- Guard de rota: esconder em `/auth`, `/pending-approval`.
-
-## Secret necessário
-
-- **`OPENROUTER_API_KEY`** — obtida em https://openrouter.ai/keys (basta criar conta, é gratuita; `google/gemma-2-9b-it:free` não consome crédito). Será solicitada via `add_secret` no início. **Não prossigo até ser adicionada.**
-- `LOVABLE_API_KEY` já existe.
-
-## Identidade da TOOL (system prompt — resumo)
-
-```
-Você é TOOL, a assistente oficial do Setter Toolbox — plataforma de análises
-imobiliárias da Setter Realty. Sua missão é ajudar corretores e analistas a
-usar as calculadoras (Simulador, Permuta, H&BU, Decisor, Preço Teto), entender
-conceitos financeiros (Cap Rate, NOI, GAV, IRR, NPV) e dominar os fluxos da
-plataforma (salvar projeto, versões, comparação, vitrine, exportar PDF).
-
-Regras:
-- Responda em português brasileiro, claro e direto.
-- Sempre cite a calculadora ou seção relevante quando fizer sentido.
-- Se a pergunta exigir dado que não está no conhecimento, diga honestamente e
-  sugira onde a pessoa pode descobrir (ex: "verifique o tooltip ao lado do campo X").
-- Use markdown para listas e destaques. Evite respostas longas demais.
-- Nunca dê conselho jurídico ou tributário definitivo — sempre lembre o
-  disclaimer educacional do Setter Toolbox.
-
-CONHECIMENTO BASE:
-[manual resumido — Simulador, Permuta, H&BU, Decisor, Preço Teto, glossário]
-
-CONHECIMENTO ADICIONAL (do admin):
-[chunks recuperados via busca]
-```
-
-## Arquivos afetados
-
-**Migrações SQL:**
-- Nova tabela `tool_knowledge_documents` + RLS (admin only)
-- Nova tabela `tool_knowledge_chunks` + RLS + índice GIN tsvector
-- Novo bucket `tool-knowledge` (privado) + políticas Storage
-
-**Edge functions:**
-- `supabase/functions/tool-chat/index.ts` (novo)
-- `supabase/functions/tool-ingest-document/index.ts` (novo)
-
-**Front:**
-- `src/components/tool-assistant/ToolAssistantButton.tsx` (novo)
-- `src/components/tool-assistant/ToolAssistantPanel.tsx` (novo)
-- `src/components/tool-assistant/ToolMessage.tsx` (novo, render markdown)
-- `src/pages/admin/ToolKnowledge.tsx` (novo)
-- `src/App.tsx` — montar botão global + rota admin
-- (talvez) `src/components/admin/AdminNav.tsx` — link para a nova página
-- `package.json` — adicionar `react-markdown` se ausente
-
-## Fora do escopo (próximas iterações)
-
-- Embeddings/pgvector (busca semântica)
-- Histórico de conversas persistido por usuário
-- Citações automáticas linkando para a página do manual
-- Modo voz
-- Limite de uso por usuário/dia
-- Reindexação automática quando o admin edita um documento (na v1, deletar e reenviar)
-
-## Passos da implementação
-
-1. Solicitar `OPENROUTER_API_KEY` via `add_secret` e aguardar.
-2. Criar migração SQL: tabelas + RLS + índice + bucket + políticas Storage.
-3. Criar edge function `tool-ingest-document` (upload → chunks).
-4. Criar edge function `tool-chat` (RAG + OpenRouter primário + Lovable fallback + streaming).
-5. Criar componentes do widget TOOL (botão + painel + render).
-6. Criar página admin `/admin/tool-knowledge` (upload, lista, toggle, excluir).
-7. Montar botão global em `App.tsx` com guards de rota.
-8. Adicionar link no menu admin.
-9. Testar: upload de um PDF curto, pergunta básica, simulação de fallback (forçando erro no OpenRouter), pergunta sobre conteúdo do PDF enviado.
+- Não vou validar antecipadamente no OpenRouter se cada ID realmente existe — o admin pode salvar, e se o modelo não for reconhecido o backend já cai no Lovable AI via tratamento de erro.
+- Não vou alterar o fallback (continua `google/gemini-3-flash-preview`).
+- Não vou mexer no RAG, ingestão de documentos nem chat panel.
