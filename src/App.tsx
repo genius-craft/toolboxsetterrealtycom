@@ -15,6 +15,7 @@ import Dashboard from "./pages/Dashboard";
 import CompareProjects from "./pages/CompareProjects";
 import AdminUsers from "./pages/AdminUsers";
 import AdminProjects from "./pages/AdminProjects";
+import AdminToolKnowledge from "./pages/AdminToolKnowledge";
 import Vitrine from "./pages/Vitrine";
 import VitrineDetail from "./pages/VitrineDetail";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -82,6 +83,11 @@ const App = () => (
             <Route path="/admin/projects" element={
               <AppLayout title="Projetos dos Usuários">
                 <AdminProjects />
+              </AppLayout>
+            } />
+            <Route path="/admin/tool-knowledge" element={
+              <AppLayout title="Conhecimento da TOOL">
+                <AdminToolKnowledge />
               </AppLayout>
             } />
             

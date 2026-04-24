@@ -274,6 +274,80 @@ export type Database = {
         }
         Relationships: []
       }
+      tool_knowledge_chunks: {
+        Row: {
+          chunk_index: number
+          content: string
+          content_tsv: unknown
+          created_at: string
+          document_id: string
+          id: string
+        }
+        Insert: {
+          chunk_index: number
+          content: string
+          content_tsv?: unknown
+          created_at?: string
+          document_id: string
+          id?: string
+        }
+        Update: {
+          chunk_index?: number
+          content?: string
+          content_tsv?: unknown
+          created_at?: string
+          document_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tool_knowledge_chunks_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "tool_knowledge_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tool_knowledge_documents: {
+        Row: {
+          chunk_count: number
+          created_at: string
+          enabled: boolean
+          file_type: string
+          id: string
+          original_filename: string
+          storage_path: string
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          chunk_count?: number
+          created_at?: string
+          enabled?: boolean
+          file_type: string
+          id?: string
+          original_filename: string
+          storage_path: string
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          chunk_count?: number
+          created_at?: string
+          enabled?: boolean
+          file_type?: string
+          id?: string
+          original_filename?: string
+          storage_path?: string
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       toolbox_projects: {
         Row: {
           created_at: string

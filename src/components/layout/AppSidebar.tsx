@@ -14,7 +14,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Store,
-  ExternalLink
+  ExternalLink,
+  BookOpen
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -183,6 +184,27 @@ export function AppSidebar() {
                       )}
                       <FolderKanban className={cn('h-4 w-4 shrink-0', isActive('/admin/projects') && 'text-accent')} />
                       <span>Projetos</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive('/admin/tool-knowledge')}
+                    tooltip="Conhecimento da TOOL"
+                    className={cn(
+                      'transition-all duration-200 relative',
+                      isActive('/admin/tool-knowledge')
+                        ? 'bg-sidebar-accent text-sidebar-foreground font-medium'
+                        : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent'
+                    )}
+                  >
+                    <Link to="/admin/tool-knowledge" className="flex items-center gap-3">
+                      {isActive('/admin/tool-knowledge') && (
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-accent" />
+                      )}
+                      <BookOpen className={cn('h-4 w-4 shrink-0', isActive('/admin/tool-knowledge') && 'text-accent')} />
+                      <span>TOOL Knowledge</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
