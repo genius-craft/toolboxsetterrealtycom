@@ -438,6 +438,7 @@ export default function Decisor() {
 
       {/* Action Buttons */}
       <div className="flex gap-3">
+        <HistoryButton loadedProjectId={loadedProjectId} onRestore={handleRestoreVersion} />
         <Button
           variant="gold"
           className="flex-1"
