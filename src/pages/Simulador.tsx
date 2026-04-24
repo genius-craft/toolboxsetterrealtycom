@@ -596,6 +596,8 @@ export default function Simulador() {
         onGoogleMapsLinkChange={setGoogleMapsLink}
         observations={observations}
         onObservationsChange={setObservations}
+        loadedProjectId={loadedProjectId}
+        onShowHistory={() => setHistoryOpen(true)}
       />
 
       {/* CAPEX Card */}
