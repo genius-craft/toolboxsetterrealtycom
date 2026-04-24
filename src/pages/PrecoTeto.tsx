@@ -423,7 +423,8 @@ export default function PrecoTeto() {
       )}
 
       {/* Action Buttons */}
-      <div className="flex gap-3">
+      <div className="flex gap-3 flex-wrap">
+        <HistoryButton loadedProjectId={loadedProjectId} onRestore={handleRestoreVersion} />
         <Button
           variant="outline"
           className="flex-1"
