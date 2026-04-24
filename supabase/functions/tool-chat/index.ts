@@ -16,8 +16,14 @@ const MessageSchema = z.object({
   role: z.enum(["user", "assistant"]),
   content: z.string().min(1).max(4000),
 });
+const AttachedDocSchema = z.object({
+  filename: z.string().min(1).max(255),
+  content: z.string().min(1).max(30_000),
+  pageCount: z.number().int().nonnegative().optional(),
+});
 const BodySchema = z.object({
   messages: z.array(MessageSchema).min(1).max(20),
+  attachedDocuments: z.array(AttachedDocSchema).max(2).optional(),
 });
 
 const BASE_KNOWLEDGE = `
