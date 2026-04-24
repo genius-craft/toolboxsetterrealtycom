@@ -1,93 +1,102 @@
 ## Objetivo
 
-Adicionar os 7 modelos abaixo como opções **recomendadas** explícitas no seletor de IA da TOOL (admin → `/admin/tool-knowledge`), para que possam ser escolhidos diretamente sem depender de aparecerem na lista filtrada do OpenRouter:
+Permitir que o usuário **anexe um PDF** (especialmente o relatório PDF gerado pelas ferramentas — Simulador, Permuta, H&BU, Decisor, Preço Teto) dentro do chat da TOOL para que ela analise o conteúdo. Toda análise deve começar **obrigatoriamente** com o disclaimer:
 
-- `google/gemma-4-31b-it`
-- `google/gemini-3.1-flash-lite-preview`
-- `anthropic/claude-3-haiku`
-- `deepseek/deepseek-v4-flash`
-- `x-ai/grok-4.1-fast`
-- `openai/gpt-4.1-nano`
-- `xiaomi/mimo-v2.5`
-
-Hoje a lista esconde tudo que não é "free" — então mesmo se o OpenRouter listar esses modelos, eles não aparecem. Vamos garantir que apareçam **independente de serem pagos ou não**.
+> *"⚠️ Minha análise não é passível de falhas — por favor, consulte um especialista antes de qualquer decisão."*
 
 ---
 
 ## Mudanças
 
-### 1. `src/components/tool-assistant/ToolModelSelector.tsx`
+### 1. Edge function nova: `supabase/functions/tool-extract-pdf/index.ts`
+- Recebe um PDF via `multipart/form-data` (campo `file`).
+- Valida: extensão `.pdf`, tamanho máx **10 MB**, somente usuários autenticados (verifica JWT manualmente).
+- Extrai texto usando `unpdf` (mesma lib já usada em `tool-ingest-document`).
+- Retorna JSON `{ filename, pageCount, text }` (texto truncado em ~25 000 caracteres para não estourar contexto do modelo).
 
-**a) Expandir a lista `RECOMMENDED_FREE` → renomear para `RECOMMENDED_MODELS`** com duas categorias:
+### 2. Edge function `supabase/functions/tool-chat/index.ts`
+- Aceitar no `BodySchema` um campo opcional `attachedDocuments: { filename, content }[]` (máx 2 docs, cada um até 25 000 chars).
+- Quando vier anexo, montar um bloco extra no system prompt:
+  ```
+  ═══ DOCUMENTOS ANEXADOS PELO USUÁRIO ═══
+  [Documento: relatorio_simulador.pdf]
+  <texto extraído...>
+  ```
+- Adicionar regra no system prompt:
+  - Se `attachedDocuments` estiver presente, a primeira linha da resposta **DEVE** ser o disclaimer literal acima.
+  - Em seguida, fazer análise estruturada: identificar tipo de relatório (Simulador / Permuta / H&BU / Decisor / Preço Teto), KPIs principais, pontos de atenção, sugestões de ajuste.
 
-- **Free (atuais)** — Gemma 3 27B/12B/4B/3n.
-- **Premium / experimentais (novos)** — os 7 modelos pedidos, cada um com label amigável e hint curto explicando o trade-off (velocidade, custo, força de raciocínio).
+### 3. Frontend `src/components/tool-assistant/ToolAssistantPanel.tsx`
+- Adicionar botão **paperclip** ao lado do botão Send.
+- Estado `attachments: { filename: string; text: string; pageCount: number }[]`.
+- Ao clicar no clip → abre `<input type="file" accept=".pdf">`.
+- Ao escolher arquivo:
+  - Validação client: tamanho ≤ 10 MB, tipo `application/pdf`.
+  - Mostra toast "Lendo PDF…" + spinner.
+  - Faz `fetch` em `/functions/v1/tool-extract-pdf` com `FormData`.
+  - Em sucesso, adiciona à lista de attachments com chip visual (filename + páginas + botão X para remover).
+  - Em erro, toast com mensagem.
+- Acima do textarea, mostrar chips dos PDFs anexados (com botão remover).
+- No `send()`, incluir `attachedDocuments` no body se houver anexos. Após envio bem-sucedido, **limpar attachments** (anexos ficam ligados àquela mensagem específica do histórico — armazenar também na `Msg` para exibir ao usuário "Você anexou: X.pdf").
+- Mostrar pequena badge na bolha do usuário quando ele anexou: "📎 relatorio_simulador.pdf".
 
-**b) Sempre mostrar os recomendados**, mesmo se não estiverem na lista do OpenRouter (hoje filtra por `freeModels.some(...)`). Vou trocar para mostrar todos os recomendados; se o ID não vier na lista do OpenRouter, marca um Badge "não confirmado" mas ainda permite selecionar (o backend tenta e cai no fallback Lovable AI se der erro).
-
-**c) Reorganizar o `<SelectContent>` em três grupos:**
-1. Recomendados — Free
-2. Recomendados — Premium / Experimentais
-3. Outros modelos free (lista filtrada do OpenRouter, como já é hoje)
-
-**d) Mostrar Badge de pricing** (ex: `free`, `pago`) ao lado de cada recomendado, calculado a partir do `pricing` do OpenRouter quando disponível.
-
-### 2. `supabase/functions/tool-chat/index.ts`
-
-- Nenhuma mudança obrigatória de lógica — a chamada ao OpenRouter já é dinâmica via `model` lido de `tool_config`.
-- Garantir apenas que o tratamento de erro 402/429/5xx continua caindo para Lovable AI (já existe). Isso protege contra modelos pagos que falhem por falta de créditos no OpenRouter.
-
-### 3. (Opcional) Pequeno aviso visual no card
-
-- Linha discreta abaixo do select: "Modelos premium podem exigir créditos no OpenRouter. Se falharem, a TOOL automaticamente usa o Lovable AI como fallback."
+### 4. Sugestão visual extra
+- Quando o usuário tem anexo na composição, adicionar uma frase placeholder no textarea: "Pergunte algo sobre o(s) PDF(s) anexado(s)…".
+- Adicionar uma sugestão pronta no painel inicial: **"Analisar PDF da minha simulação"** que apenas abre o seletor de arquivo.
 
 ---
 
 ## Detalhes técnicos
 
+**Endpoint de extração** (resumo):
 ```ts
-const RECOMMENDED_MODELS: { id: string; label: string; hint: string; tier: "free" | "premium" }[] = [
-  // Free (mantidos)
-  { id: "google/gemma-3-27b-it:free", label: "Gemma 3 27B (free)", hint: "Padrão. Mais capaz da família Gemma free.", tier: "free" },
-  { id: "google/gemma-3-12b-it:free", label: "Gemma 3 12B (free)", hint: "Mais rápido, qualidade ainda boa.", tier: "free" },
-  { id: "google/gemma-3-4b-it:free", label: "Gemma 3 4B (free)", hint: "Bem rápido, respostas mais simples.", tier: "free" },
-  { id: "google/gemma-3n-e4b-it:free", label: "Gemma 3n E4B (free)", hint: "Variante eficiente da família 3n.", tier: "free" },
-  // Premium / experimentais (novos)
-  { id: "google/gemma-4-31b-it", label: "Gemma 4 31B", hint: "Próxima geração Gemma, raciocínio mais forte.", tier: "premium" },
-  { id: "google/gemini-3.1-flash-lite-preview", label: "Gemini 3.1 Flash Lite (preview)", hint: "Rápido e barato, bom para respostas curtas.", tier: "premium" },
-  { id: "anthropic/claude-3-haiku", label: "Claude 3 Haiku", hint: "Anthropic — leve, conciso, ótimo custo-benefício.", tier: "premium" },
-  { id: "deepseek/deepseek-v4-flash", label: "DeepSeek V4 Flash", hint: "Bom em raciocínio técnico, rápido.", tier: "premium" },
-  { id: "x-ai/grok-4.1-fast", label: "Grok 4.1 Fast", hint: "xAI — respostas diretas, baixa latência.", tier: "premium" },
-  { id: "openai/gpt-4.1-nano", label: "GPT-4.1 Nano", hint: "OpenAI — barato e ágil, ideal para Q&A simples.", tier: "premium" },
-  { id: "xiaomi/mimo-v2.5", label: "MiMo v2.5", hint: "Xiaomi — multilíngue, experimental.", tier: "premium" },
-];
+// tool-extract-pdf/index.ts
+const form = await req.formData();
+const file = form.get("file") as File;
+if (file.size > 10 * 1024 * 1024) return 413;
+const buf = await file.arrayBuffer();
+const { extractText, getDocumentProxy } = await import("https://esm.sh/unpdf@0.12.1");
+const pdf = await getDocumentProxy(new Uint8Array(buf));
+const { text, totalPages } = await extractText(pdf, { mergePages: true });
+const finalText = (Array.isArray(text) ? text.join("\n\n") : text).slice(0, 25_000);
+return Response.json({ filename: file.name, pageCount: totalPages, text: finalText });
 ```
 
-Render dos grupos (pseudo):
+**Bloco no system prompt** (apenas quando há anexo):
+```
+INSTRUÇÃO ESPECIAL — ANÁLISE DE DOCUMENTO ANEXADO:
+O usuário anexou 1+ PDF(s) abaixo. Sua resposta DEVE OBRIGATORIAMENTE começar
+com a linha exata:
 
-```tsx
-<SelectGroup>
-  <SelectLabel>Recomendados — Free</SelectLabel>
-  {recommendedFree.map(...)}
-</SelectGroup>
-<SelectGroup>
-  <SelectLabel>Recomendados — Premium</SelectLabel>
-  {recommendedPremium.map(r => (
-    <SelectItem value={r.id}>
-      {r.label} <Badge>{availableInOR ? "ok" : "não confirmado"}</Badge>
-    </SelectItem>
-  ))}
-</SelectGroup>
-<SelectGroup>
-  <SelectLabel>Outros modelos free</SelectLabel>
-  {otherFree.map(...)}
-</SelectGroup>
+> ⚠️ **Minha análise não é passível de falhas — por favor, consulte um especialista antes de qualquer decisão.**
+
+Em seguida, faça uma análise objetiva: identifique o tipo de relatório (se for
+do Setter Toolbox: Simulador, Permuta, H&BU, Decisor, Preço Teto), liste os KPIs
+principais que aparecem, aponte pontos de atenção (Cap Rate fraco, vacância
+otimista, payback longo, etc.) e sugira próximos passos.
+
+DOCUMENTOS ANEXADOS:
+═══ relatorio_simulador.pdf (3 páginas) ═══
+<texto extraído>
+═══ FIM DO DOCUMENTO ═══
+```
+
+**Estrutura da Msg no frontend**:
+```ts
+type Attachment = { filename: string; pageCount: number };
+type Msg = {
+  role: "user" | "assistant";
+  content: string;
+  attachments?: Attachment[]; // só visual; o texto vai no payload do backend
+};
 ```
 
 ---
 
-## Fora do escopo
+## Limitações e fora de escopo
 
-- Não vou validar antecipadamente no OpenRouter se cada ID realmente existe — o admin pode salvar, e se o modelo não for reconhecido o backend já cai no Lovable AI via tratamento de erro.
-- Não vou alterar o fallback (continua `google/gemini-3-flash-preview`).
-- Não vou mexer no RAG, ingestão de documentos nem chat panel.
+- Apenas **PDF** nesta primeira versão (não DOCX/imagens).
+- O texto extraído é **anexado a cada chamada** que tiver anexos — não persistimos no banco. Se o usuário fechar o chat, os anexos somem (comportamento esperado e mais barato).
+- Máximo 2 PDFs simultâneos, 10 MB cada, 25 000 chars por PDF (≈ 50 páginas de texto puro).
+- PDFs que sejam puramente imagem/scan **não funcionam** (não temos OCR no edge); a TOOL avisará "não consegui ler texto desse PDF".
+- Não vou criar nenhuma tabela nova — fluxo 100% efêmero.
