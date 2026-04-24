@@ -45,6 +45,7 @@ export default function HighestBestUse() {
   const projectIdFromUrl = searchParams.get('id');
   const { data: projectFromUrl, isLoading: loadingProjectFromUrl } = useProject(projectIdFromUrl || '');
   const [hasLoadedFromUrl, setHasLoadedFromUrl] = useState(false);
+  const [loadedProjectId, setLoadedProjectId] = useState<string | null>(null);
 
   // Address
   const [showAddress, setShowAddress] = useState(false);
