@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSaveProject, useUpdateProject, useProjects, useProject, ProjectType } from '@/hooks/useProjects';
+import { HistoryButton } from '@/components/tools/HistoryButton';
 import { useToast } from '@/hooks/use-toast';
 import {
   calculateMaxPriceByCapRate,
