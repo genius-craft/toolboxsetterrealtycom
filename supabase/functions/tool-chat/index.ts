@@ -417,7 +417,7 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
-    const { messages } = parsed.data;
+    const { messages, attachedDocuments } = parsed.data;
 
     // RAG simples: full-text search dos chunks usando service role (bypass RLS)
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -454,7 +454,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const systemPrompt = buildSystemPrompt(extraKnowledge);
+    const systemPrompt = buildSystemPrompt(extraKnowledge, attachedDocuments);
     const aiMessages = [
       { role: "system", content: systemPrompt },
       ...messages,
