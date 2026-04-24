@@ -1,102 +1,92 @@
-## Objetivo
+## Resumo
 
-Permitir que o usuário **anexe um PDF** (especialmente o relatório PDF gerado pelas ferramentas — Simulador, Permuta, H&BU, Decisor, Preço Teto) dentro do chat da TOOL para que ela analise o conteúdo. Toda análise deve começar **obrigatoriamente** com o disclaimer:
-
-> *"⚠️ Minha análise não é passível de falhas — por favor, consulte um especialista antes de qualquer decisão."*
+Substituir o upload de PDF externo na **TOOL** por um seletor de **projetos do próprio sistema**, com regras estritas de visibilidade. Adicionar uma área no **Admin → TOOL Knowledge** para editar o **System Prompt** da TOOL diretamente pelo painel.
 
 ---
 
-## Mudanças
+## Parte 1 — Anexar projetos do sistema (em vez de PDFs externos)
 
-### 1. Edge function nova: `supabase/functions/tool-extract-pdf/index.ts`
-- Recebe um PDF via `multipart/form-data` (campo `file`).
-- Valida: extensão `.pdf`, tamanho máx **10 MB**, somente usuários autenticados (verifica JWT manualmente).
-- Extrai texto usando `unpdf` (mesma lib já usada em `tool-ingest-document`).
-- Retorna JSON `{ filename, pageCount, text }` (texto truncado em ~25 000 caracteres para não estourar contexto do modelo).
+### Regras de acesso (CRÍTICO)
+O seletor mostra **apenas**:
+- Projetos cujo `user_id` é igual ao usuário logado (`auth.uid()`), **OU**
+- Projetos com `show_in_vitrine = true` (aprovados para a vitrine pública).
 
-### 2. Edge function `supabase/functions/tool-chat/index.ts`
-- Aceitar no `BodySchema` um campo opcional `attachedDocuments: { filename, content }[]` (máx 2 docs, cada um até 25 000 chars).
-- Quando vier anexo, montar um bloco extra no system prompt:
-  ```
-  ═══ DOCUMENTOS ANEXADOS PELO USUÁRIO ═══
-  [Documento: relatorio_simulador.pdf]
-  <texto extraído...>
-  ```
-- Adicionar regra no system prompt:
-  - Se `attachedDocuments` estiver presente, a primeira linha da resposta **DEVE** ser o disclaimer literal acima.
-  - Em seguida, fazer análise estruturada: identificar tipo de relatório (Simulador / Permuta / H&BU / Decisor / Preço Teto), KPIs principais, pontos de atenção, sugestões de ajuste.
+Nenhum usuário pode acessar projetos privados de outro usuário. Como as RLS de `toolbox_projects` já garantem isso (`Users can view own projects` + `Anyone can view vitrine projects`), basta a query `SELECT` respeitar o filtro — o banco bloqueia o resto.
 
-### 3. Frontend `src/components/tool-assistant/ToolAssistantPanel.tsx`
-- Adicionar botão **paperclip** ao lado do botão Send.
-- Estado `attachments: { filename: string; text: string; pageCount: number }[]`.
-- Ao clicar no clip → abre `<input type="file" accept=".pdf">`.
-- Ao escolher arquivo:
-  - Validação client: tamanho ≤ 10 MB, tipo `application/pdf`.
-  - Mostra toast "Lendo PDF…" + spinner.
-  - Faz `fetch` em `/functions/v1/tool-extract-pdf` com `FormData`.
-  - Em sucesso, adiciona à lista de attachments com chip visual (filename + páginas + botão X para remover).
-  - Em erro, toast com mensagem.
-- Acima do textarea, mostrar chips dos PDFs anexados (com botão remover).
-- No `send()`, incluir `attachedDocuments` no body se houver anexos. Após envio bem-sucedido, **limpar attachments** (anexos ficam ligados àquela mensagem específica do histórico — armazenar também na `Msg` para exibir ao usuário "Você anexou: X.pdf").
-- Mostrar pequena badge na bolha do usuário quando ele anexou: "📎 relatorio_simulador.pdf".
+### Mudanças na experiência
 
-### 4. Sugestão visual extra
-- Quando o usuário tem anexo na composição, adicionar uma frase placeholder no textarea: "Pergunte algo sobre o(s) PDF(s) anexado(s)…".
-- Adicionar uma sugestão pronta no painel inicial: **"Analisar PDF da minha simulação"** que apenas abre o seletor de arquivo.
+1. O ícone de clipe (📎) na TOOL **deixa de abrir o file picker do computador**.
+2. No lugar dele, abre um **Dialog "Anexar projeto"** com duas abas:
+   - **Meus projetos** — todos os projetos salvos pelo usuário logado.
+   - **Vitrine** — projetos aprovados publicamente, com nome do autor e tipo.
+3. Cada item mostra: ícone do tipo (Simulador / Permuta / H&BU / Decisor / Preço Teto), nome, data de atualização e botão **Anexar**.
+4. Se o usuário estiver em uma rota com `?id=...`, esse projeto aparece em destaque no topo como **"Projeto atual"**.
+5. Limite de **2 projetos por mensagem** (chips removíveis).
+6. A sugestão "Analisar PDF da minha simulação" vira **"Analisar um dos meus projetos"**.
+7. Resposta da IA continua começando obrigatoriamente com:
+   > ⚠️ Minha análise não é passível de falhas — por favor, consulte um especialista antes de qualquer decisão.
+
+### O que sai
+- Botão de upload `.pdf` do computador.
+- Edge Function `tool-extract-pdf` (não usada mais → será deletada).
+- Validações de tamanho/extensão de arquivo no frontend.
+
+### Detalhes técnicos
+- **Editado:** `src/components/tool-assistant/ToolAssistantPanel.tsx` — remove input file e lógica de extração; troca tipo `Attachment` para `{ projectId, name, projectType, ownerLabel, summary }`.
+- **Criado:** `src/components/tool-assistant/ProjectAttachmentPicker.tsx` — Dialog com Tabs "Meus projetos" / "Vitrine", busca, lista e botão de anexar.
+- **Serialização local**: o componente serializa `inputs` + `results` do projeto em texto enxuto (chave: valor) e envia em `attachedDocuments` no mesmo formato já aceito pelo `tool-chat` (`filename` = `${name} (${tipo})`, `content` = texto serializado). Sem precisar de nova edge function.
+- **Editado:** `supabase/functions/tool-chat/index.ts` — texto do bloco de instrução muda de "PDF anexado" para "projeto do sistema anexado", mantendo o disclaimer obrigatório.
+- **Removido:** `supabase/functions/tool-extract-pdf/` (e desploy correspondente).
 
 ---
 
-## Detalhes técnicos
+## Parte 2 — Editor de System Prompt no TOOL Knowledge
 
-**Endpoint de extração** (resumo):
-```ts
-// tool-extract-pdf/index.ts
-const form = await req.formData();
-const file = form.get("file") as File;
-if (file.size > 10 * 1024 * 1024) return 413;
-const buf = await file.arrayBuffer();
-const { extractText, getDocumentProxy } = await import("https://esm.sh/unpdf@0.12.1");
-const pdf = await getDocumentProxy(new Uint8Array(buf));
-const { text, totalPages } = await extractText(pdf, { mergePages: true });
-const finalText = (Array.isArray(text) ? text.join("\n\n") : text).slice(0, 25_000);
-return Response.json({ filename: file.name, pageCount: totalPages, text: finalText });
-```
+### Onde aparece
+Dentro de `/admin/tool-knowledge`, adicionar uma nova seção (Card) **acima da lista de documentos**, chamada **"Prompt da TOOL"**, com:
+- Um `Textarea` grande (estilo chat/editor) com o system prompt atual.
+- Botões **Salvar**, **Restaurar padrão** e **Pré-visualizar** (abre a TOOL em modo teste para validar).
+- Texto auxiliar: "Este é o prompt-base que define a personalidade e regras da TOOL. Cuidado ao editar — afeta todos os usuários."
+- Contador de caracteres e badge mostrando última edição (`updated_at` + `updated_by`).
 
-**Bloco no system prompt** (apenas quando há anexo):
-```
-INSTRUÇÃO ESPECIAL — ANÁLISE DE DOCUMENTO ANEXADO:
-O usuário anexou 1+ PDF(s) abaixo. Sua resposta DEVE OBRIGATORIAMENTE começar
-com a linha exata:
+### Persistência
+Usar a tabela existente `tool_config` (já tem RLS só para admin/super_admin):
+- Chave: `system_prompt`
+- Valor: `{ "content": "...texto markdown..." }`
 
-> ⚠️ **Minha análise não é passível de falhas — por favor, consulte um especialista antes de qualquer decisão.**
+### Mudança na edge function
+- `tool-chat` passa a ler `tool_config` para a chave `system_prompt`. Se existir, usa o conteúdo como base do `buildSystemPrompt`. Se não existir, usa a constante hardcoded atual como fallback (default).
+- O bloco de "instrução especial — análise de documento anexado" continua sendo **anexado dinamicamente** (não faz parte do prompt editável), assim o admin não consegue desligar o disclaimer obrigatório por engano.
 
-Em seguida, faça uma análise objetiva: identifique o tipo de relatório (se for
-do Setter Toolbox: Simulador, Permuta, H&BU, Decisor, Preço Teto), liste os KPIs
-principais que aparecem, aponte pontos de atenção (Cap Rate fraco, vacância
-otimista, payback longo, etc.) e sugira próximos passos.
-
-DOCUMENTOS ANEXADOS:
-═══ relatorio_simulador.pdf (3 páginas) ═══
-<texto extraído>
-═══ FIM DO DOCUMENTO ═══
-```
-
-**Estrutura da Msg no frontend**:
-```ts
-type Attachment = { filename: string; pageCount: number };
-type Msg = {
-  role: "user" | "assistant";
-  content: string;
-  attachments?: Attachment[]; // só visual; o texto vai no payload do backend
-};
-```
+### Detalhes técnicos
+- **Editado:** `src/pages/AdminToolKnowledge.tsx` — adiciona seção "Prompt da TOOL" com textarea, hooks de load/save em `tool_config`, botões e estado de "modificado".
+- **Editado:** `supabase/functions/tool-chat/index.ts` — `buildSystemPrompt` recebe um `customPrompt` opcional (vindo de `tool_config.system_prompt.content`); se ausente, usa a constante atual.
 
 ---
 
-## Limitações e fora de escopo
+## Diagrama do fluxo de anexo
 
-- Apenas **PDF** nesta primeira versão (não DOCX/imagens).
-- O texto extraído é **anexado a cada chamada** que tiver anexos — não persistimos no banco. Se o usuário fechar o chat, os anexos somem (comportamento esperado e mais barato).
-- Máximo 2 PDFs simultâneos, 10 MB cada, 25 000 chars por PDF (≈ 50 páginas de texto puro).
-- PDFs que sejam puramente imagem/scan **não funcionam** (não temos OCR no edge); a TOOL avisará "não consegui ler texto desse PDF".
-- Não vou criar nenhuma tabela nova — fluxo 100% efêmero.
+```text
+Usuário clica 📎
+   ↓
+Dialog "Anexar projeto"
+ ├─ [Aba] Meus projetos        → toolbox_projects WHERE user_id = me
+ └─ [Aba] Vitrine              → toolbox_projects WHERE show_in_vitrine = true
+   ↓
+Clica Anexar → vira chip
+   ↓
+Envia mensagem
+   ↓
+tool-chat lê system_prompt do tool_config (ou fallback)
+   + acrescenta bloco do projeto + disclaimer obrigatório
+   ↓
+TOOL responde começando com o disclaimer
+```
+
+## Arquivos afetados
+
+- **Editado:** `src/components/tool-assistant/ToolAssistantPanel.tsx`
+- **Criado:** `src/components/tool-assistant/ProjectAttachmentPicker.tsx`
+- **Editado:** `src/pages/AdminToolKnowledge.tsx`
+- **Editado:** `supabase/functions/tool-chat/index.ts`
+- **Removido:** `supabase/functions/tool-extract-pdf/index.ts`
