@@ -273,6 +273,7 @@ export default function HighestBestUse() {
 
       {/* Action Buttons */}
       <div className="flex gap-3">
+        <HistoryButton loadedProjectId={loadedProjectId} onRestore={handleRestoreVersion} />
         <Button
           variant="gold"
           className="flex-1"
