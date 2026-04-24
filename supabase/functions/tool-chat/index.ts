@@ -417,11 +417,26 @@ Deno.serve(async (req) => {
       ...messages,
     ];
 
+    // Lê o modelo OpenRouter selecionado pelo admin (com fallback hard-coded)
+    let openRouterModel = "google/gemma-3-27b-it:free";
+    try {
+      const { data: cfg } = await admin
+        .from("tool_config")
+        .select("value")
+        .eq("key", "openrouter_model")
+        .maybeSingle();
+      if (cfg?.value && typeof cfg.value === "string") {
+        openRouterModel = cfg.value;
+      }
+    } catch (e) {
+      console.warn("Não foi possível ler tool_config, usando modelo padrão:", e);
+    }
+
     // Tenta OpenRouter primeiro
     let provider = "openrouter";
     let resp: Response | null = null;
     try {
-      resp = await callOpenRouter(aiMessages);
+      resp = await callOpenRouter(aiMessages, openRouterModel);
       if (!resp.ok) {
         const status = resp.status;
         if ([402, 429, 500, 502, 503, 504].includes(status)) {
