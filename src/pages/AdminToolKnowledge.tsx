@@ -17,6 +17,7 @@ import {
 import { Loader2, Upload, Trash2, FileText, Sparkles, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import { ToolModelSelector } from "@/components/tool-assistant/ToolModelSelector";
+import { ToolPromptEditor } from "@/components/tool-assistant/ToolPromptEditor";
 
 interface Doc {
   id: string;
