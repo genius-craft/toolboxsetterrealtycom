@@ -21,6 +21,8 @@ const AttachedDocSchema = z.object({
   content: z.string().min(1).max(30_000),
   pageCount: z.number().int().nonnegative().optional(),
 });
+// NOTA: anexos agora são SEMPRE projetos do próprio sistema (Setter Toolbox),
+// nunca PDFs externos. O frontend serializa inputs+results e envia em `content`.
 const BodySchema = z.object({
   messages: z.array(MessageSchema).min(1).max(20),
   attachedDocuments: z.array(AttachedDocSchema).max(2).optional(),
@@ -300,6 +302,7 @@ qualquer decisão.
 function buildSystemPrompt(
   extraKnowledge: string,
   attachedDocuments?: { filename: string; content: string; pageCount?: number }[],
+  customBasePrompt?: string,
 ): string {
   const hasAttachments = !!attachedDocuments && attachedDocuments.length > 0;
 
@@ -307,34 +310,36 @@ function buildSystemPrompt(
     ? `
 
 ═══════════════════════════════════════════════════════════════════
-INSTRUÇÃO ESPECIAL — ANÁLISE DE DOCUMENTO ANEXADO PELO USUÁRIO
+INSTRUÇÃO ESPECIAL — ANÁLISE DE PROJETO DO SETTER TOOLBOX ANEXADO
 ═══════════════════════════════════════════════════════════════════
-O usuário anexou ${attachedDocuments!.length} PDF(s) abaixo.
+O usuário anexou ${attachedDocuments!.length} projeto(s) do próprio sistema (Setter Toolbox)
+para análise. Os dados abaixo são uma serialização fiel de inputs + resultados.
+
 A SUA RESPOSTA DEVE OBRIGATORIAMENTE COMEÇAR com a linha exata, em destaque:
 
 > ⚠️ **Minha análise não é passível de falhas — por favor, consulte um especialista antes de qualquer decisão.**
 
 Em seguida, faça uma análise objetiva:
-1. Identifique o tipo de relatório. Se for do Setter Toolbox, diga qual ferramenta gerou (Simulador, Permuta, H&BU, Decisor ou Preço Teto).
-2. Liste os principais KPIs encontrados (Cap Rate, NOI, VPL, TIR, Score, GAV, Strike Price, etc.).
-3. Aponte pontos de atenção: Cap Rate fraco, vacância otimista, payback longo, OPEX subestimada, premissas agressivas.
-4. Sugira próximos passos concretos (ajustar X, comparar com Y, falar com especialista pelo WhatsApp).
+1. Diga qual calculadora gerou o projeto (Simulador, Permuta, H&BU, Decisor ou Preço Teto) — está explícito no campo FERRAMENTA.
+2. Liste os principais KPIs (Cap Rate, NOI, VPL, TIR, Score, GAV, Strike Price, Preço Teto, etc.) que aparecem em RESULTADOS.
+3. Aponte pontos de atenção: Cap Rate fraco, vacância otimista, payback longo, OPEX subestimada, premissas agressivas, taxa de desconto incompatível com risco.
+4. Sugira próximos passos concretos (ajustar X, comparar com outro projeto via /comparar, falar com especialista pelo WhatsApp).
 
 Use markdown com listas e negritos para clareza. Seja conciso (máx ~400 palavras).
 
-DOCUMENTOS ANEXADOS:
+PROJETOS ANEXADOS:
 ${attachedDocuments!
   .map(
     (d, i) =>
-      `═══ Documento ${i + 1}: ${d.filename}${d.pageCount ? ` (${d.pageCount} páginas)` : ""} ═══
+      `═══ Projeto ${i + 1}: ${d.filename} ═══
 ${d.content}
-═══ FIM DO DOCUMENTO ${i + 1} ═══`,
+═══ FIM DO PROJETO ${i + 1} ═══`,
   )
   .join("\n\n")}
 `
     : "";
 
-  return `Você é TOOL, a assistente oficial do Setter Toolbox — plataforma de análises imobiliárias da Setter Realty.
+  const defaultBase = `Você é TOOL, a assistente oficial do Setter Toolbox — plataforma de análises imobiliárias da Setter Realty.
 
 Sua missão é ajudar corretores, analistas e investidores a:
 1. Entender PARA QUE serve cada uma das 5 calculadoras (Simulador, Permuta, H&BU, Decisor, Preço Teto).
@@ -342,7 +347,7 @@ Sua missão é ajudar corretores, analistas e investidores a:
 3. PREENCHER cada campo corretamente, com referências de mercado brasileiro.
 4. INTERPRETAR os KPIs de saída (Cap Rate, NOI, VPL, TIR, GAV, Score).
 5. Dominar fluxos da plataforma (salvar, versionar, comparar, vitrine, PDF).
-6. ANALISAR PDFs gerados pelas próprias ferramentas, quando o usuário anexa.
+6. ANALISAR projetos do próprio sistema, quando o usuário os anexa pelo clipe.
 
 REGRAS DE COMUNICAÇÃO:
 - Português brasileiro, direto e amigável. Trate o usuário por "você".
@@ -356,7 +361,13 @@ REGRAS DE COMUNICAÇÃO:
 - Para temas fora do Setter Toolbox (política, código, etc.), redirecione gentilmente:
   "Sou especialista no Setter Toolbox — posso te ajudar com algo das calculadoras?".
 - NUNCA dê conselho jurídico, tributário ou de investimento definitivo.
-  Sempre lembre o caráter educacional da ferramenta em recomendações finais.
+  Sempre lembre o caráter educacional da ferramenta em recomendações finais.`;
+
+  const base = customBasePrompt && customBasePrompt.trim().length > 0
+    ? customBasePrompt
+    : defaultBase;
+
+  return `${base}
 
 CONHECIMENTO BASE (manual oficial):
 ${BASE_KNOWLEDGE}
@@ -454,26 +465,35 @@ Deno.serve(async (req) => {
       }
     }
 
-    const systemPrompt = buildSystemPrompt(extraKnowledge, attachedDocuments);
+    // Lê config (modelo + system prompt customizado) em paralelo
+    let openRouterModel = "google/gemma-3-27b-it:free";
+    let customSystemPrompt: string | undefined;
+    try {
+      const { data: cfgRows } = await admin
+        .from("tool_config")
+        .select("key,value")
+        .in("key", ["openrouter_model", "system_prompt"]);
+      for (const row of cfgRows ?? []) {
+        if (row.key === "openrouter_model" && typeof row.value === "string") {
+          openRouterModel = row.value;
+        } else if (row.key === "system_prompt") {
+          // value pode ser { content: "..." } ou string direta
+          if (typeof row.value === "string") {
+            customSystemPrompt = row.value;
+          } else if (row.value && typeof row.value === "object" && typeof (row.value as any).content === "string") {
+            customSystemPrompt = (row.value as any).content;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Não foi possível ler tool_config, usando defaults:", e);
+    }
+
+    const systemPrompt = buildSystemPrompt(extraKnowledge, attachedDocuments, customSystemPrompt);
     const aiMessages = [
       { role: "system", content: systemPrompt },
       ...messages,
     ];
-
-    // Lê o modelo OpenRouter selecionado pelo admin (com fallback hard-coded)
-    let openRouterModel = "google/gemma-3-27b-it:free";
-    try {
-      const { data: cfg } = await admin
-        .from("tool_config")
-        .select("value")
-        .eq("key", "openrouter_model")
-        .maybeSingle();
-      if (cfg?.value && typeof cfg.value === "string") {
-        openRouterModel = cfg.value;
-      }
-    } catch (e) {
-      console.warn("Não foi possível ler tool_config, usando modelo padrão:", e);
-    }
 
     // Tenta OpenRouter primeiro
     let provider = "openrouter";

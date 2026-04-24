@@ -3,26 +3,23 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Send, Loader2, Paperclip, FileText, X } from "lucide-react";
+import { Sparkles, Send, Loader2, Paperclip, FolderOpen, X } from "lucide-react";
 import { ToolMessage } from "./ToolMessage";
 import { toast } from "sonner";
+import {
+  ProjectAttachmentPicker,
+  type ProjectAttachment,
+} from "./ProjectAttachmentPicker";
 
 interface ToolAssistantPanelProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-interface Attachment {
-  filename: string;
-  text: string;
-  pageCount: number;
-  truncated?: boolean;
-}
-
 type Msg = {
   role: "user" | "assistant";
   content: string;
-  attachments?: { filename: string; pageCount: number }[];
+  attachments?: { name: string; projectType: string; ownerLabel: string }[];
 };
 
 const SUGGESTIONS = [
@@ -35,22 +32,20 @@ const SUGGESTIONS = [
 const INITIAL_MESSAGE: Msg = {
   role: "assistant",
   content:
-    "Olá! Eu sou a **TOOL**, sua assistente do Setter Toolbox.\n\nPosso te ajudar com qualquer dúvida sobre as calculadoras, fórmulas e fluxos da plataforma.\n\n**Dica:** clique no ícone de clipe para anexar um PDF (ex.: relatório gerado pelas ferramentas) e eu analiso para você.",
+    "Olá! Eu sou a **TOOL**, sua assistente do Setter Toolbox.\n\nPosso te ajudar com qualquer dúvida sobre as calculadoras, fórmulas e fluxos da plataforma.\n\n**Dica:** clique no ícone de clipe para anexar um dos seus projetos (ou um da vitrine) e eu analiso para você.",
 };
 
 const MAX_ATTACHMENTS = 2;
-const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
 export function ToolAssistantPanel({ open, onOpenChange }: ToolAssistantPanelProps) {
   const [messages, setMessages] = useState<Msg[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [provider, setProvider] = useState<string | null>(null);
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [extracting, setExtracting] = useState(false);
+  const [attachments, setAttachments] = useState<ProjectAttachment[]>([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -60,71 +55,18 @@ export function ToolAssistantPanel({ open, onOpenChange }: ToolAssistantPanelPro
 
   const handleAttachClick = () => {
     if (attachments.length >= MAX_ATTACHMENTS) {
-      toast.error(`Máximo de ${MAX_ATTACHMENTS} PDFs por conversa.`);
+      toast.error(`Máximo de ${MAX_ATTACHMENTS} projetos por mensagem.`);
       return;
     }
-    fileInputRef.current?.click();
+    setPickerOpen(true);
   };
 
-  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (e.target) e.target.value = ""; // permite reanexar mesmo arquivo
-    if (!file) return;
-
-    if (!file.name.toLowerCase().endsWith(".pdf")) {
-      toast.error("Apenas arquivos PDF são aceitos.");
-      return;
-    }
-    if (file.size > MAX_FILE_BYTES) {
-      toast.error("PDF muito grande (máx 10 MB).");
-      return;
-    }
-
-    setExtracting(true);
-    const toastId = toast.loading(`Lendo ${file.name}…`);
-
-    try {
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tool-extract-pdf`;
-      const fd = new FormData();
-      fd.append("file", file);
-
-      const resp = await fetch(url, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: fd,
-      });
-
-      const data = await resp.json();
-
-      if (!resp.ok) {
-        toast.error(data?.error || "Falha ao ler o PDF.", { id: toastId });
-        return;
-      }
-
-      setAttachments((prev) => [
-        ...prev,
-        {
-          filename: data.filename,
-          text: data.text,
-          pageCount: data.pageCount || 0,
-          truncated: !!data.truncated,
-        },
-      ]);
-
-      toast.success(
-        data.truncated
-          ? `${data.filename} anexado (texto longo — apenas o início será analisado).`
-          : `${data.filename} anexado e pronto para análise.`,
-        { id: toastId },
-      );
-    } catch (err) {
-      console.error("Erro extract PDF:", err);
-      toast.error("Não consegui processar o PDF.", { id: toastId });
-    } finally {
-      setExtracting(false);
-    }
+  const handleAttachProject = (att: ProjectAttachment) => {
+    setAttachments((prev) => {
+      if (prev.some((p) => p.projectId === att.projectId)) return prev;
+      return [...prev, att];
+    });
+    toast.success(`${att.name} anexado para análise.`);
   };
 
   const removeAttachment = (idx: number) => {
@@ -137,14 +79,17 @@ export function ToolAssistantPanel({ open, onOpenChange }: ToolAssistantPanelPro
 
     if ((!trimmed && !hasAttachments) || loading) return;
 
-    // Se só tem anexo sem texto, usa um prompt padrão de análise
-    const userText = trimmed || "Analise o(s) PDF(s) que anexei.";
+    const userText = trimmed || "Analise o(s) projeto(s) que anexei.";
 
     const userMsg: Msg = {
       role: "user",
       content: userText,
       attachments: hasAttachments
-        ? attachments.map((a) => ({ filename: a.filename, pageCount: a.pageCount }))
+        ? attachments.map((a) => ({
+            name: a.name,
+            projectType: a.projectType,
+            ownerLabel: a.ownerLabel,
+          }))
         : undefined,
     };
 
@@ -154,15 +99,14 @@ export function ToolAssistantPanel({ open, onOpenChange }: ToolAssistantPanelPro
 
     const attachedDocuments = hasAttachments
       ? attachments.map((a) => ({
-          filename: a.filename,
-          content: a.text,
-          pageCount: a.pageCount,
+          filename: `${a.name} (${a.projectType})`,
+          content: a.summary,
         }))
       : undefined;
 
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
-    setAttachments([]); // anexos são consumidos por essa mensagem
+    setAttachments([]);
     setLoading(true);
 
     const controller = new AbortController();
@@ -294,7 +238,7 @@ export function ToolAssistantPanel({ open, onOpenChange }: ToolAssistantPanelPro
     }
   };
 
-  const canSend = !loading && !extracting && (input.trim().length > 0 || attachments.length > 0);
+  const canSend = !loading && (input.trim().length > 0 || attachments.length > 0);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -321,9 +265,9 @@ export function ToolAssistantPanel({ open, onOpenChange }: ToolAssistantPanelPro
                 <div className="flex flex-wrap gap-1.5 justify-end">
                   {m.attachments.map((a, ai) => (
                     <Badge key={ai} variant="outline" className="gap-1 text-[10px] font-normal">
-                      <FileText className="h-3 w-3" />
-                      {a.filename}
-                      {a.pageCount > 0 && <span className="text-muted-foreground">· {a.pageCount}p</span>}
+                      <FolderOpen className="h-3 w-3" />
+                      {a.name}
+                      <span className="text-muted-foreground">· {a.projectType}</span>
                     </Badge>
                   ))}
                 </div>
@@ -360,8 +304,8 @@ export function ToolAssistantPanel({ open, onOpenChange }: ToolAssistantPanelPro
                   onClick={handleAttachClick}
                   className="text-left text-sm px-3 py-2 rounded-lg border border-dashed border-accent/40 hover:border-accent hover:bg-accent/5 transition-colors flex items-center gap-2"
                 >
-                  <Paperclip className="h-3.5 w-3.5 text-accent" />
-                  Analisar PDF da minha simulação
+                  <FolderOpen className="h-3.5 w-3.5 text-accent" />
+                  Analisar um dos meus projetos
                 </button>
               </div>
             </div>
@@ -369,24 +313,22 @@ export function ToolAssistantPanel({ open, onOpenChange }: ToolAssistantPanelPro
         </div>
 
         <div className="border-t p-3 space-y-2">
-          {/* Chips de anexos */}
+          {/* Chips de anexos (projetos) */}
           {attachments.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {attachments.map((a, i) => (
                 <Badge
-                  key={i}
+                  key={a.projectId}
                   variant="secondary"
                   className="gap-1.5 pl-2 pr-1 py-1 text-xs font-normal"
                 >
-                  <FileText className="h-3 w-3 text-accent shrink-0" />
-                  <span className="truncate max-w-[140px]">{a.filename}</span>
-                  {a.pageCount > 0 && (
-                    <span className="text-muted-foreground">· {a.pageCount}p</span>
-                  )}
+                  <FolderOpen className="h-3 w-3 text-accent shrink-0" />
+                  <span className="truncate max-w-[140px]">{a.name}</span>
+                  <span className="text-muted-foreground">· {a.projectType}</span>
                   <button
                     onClick={() => removeAttachment(i)}
                     className="ml-0.5 rounded hover:bg-background/80 p-0.5"
-                    aria-label={`Remover ${a.filename}`}
+                    aria-label={`Remover ${a.name}`}
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -395,29 +337,17 @@ export function ToolAssistantPanel({ open, onOpenChange }: ToolAssistantPanelPro
             </div>
           )}
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="application/pdf,.pdf"
-            className="hidden"
-            onChange={handleFileSelected}
-          />
-
           <div className="flex gap-2 items-end">
             <Button
               type="button"
               size="icon"
               variant="outline"
               onClick={handleAttachClick}
-              disabled={loading || extracting || attachments.length >= MAX_ATTACHMENTS}
+              disabled={loading || attachments.length >= MAX_ATTACHMENTS}
               className="shrink-0"
-              title="Anexar PDF para análise"
+              title="Anexar projeto do sistema"
             >
-              {extracting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Paperclip className="h-4 w-4" />
-              )}
+              <Paperclip className="h-4 w-4" />
             </Button>
 
             <Textarea
@@ -426,7 +356,7 @@ export function ToolAssistantPanel({ open, onOpenChange }: ToolAssistantPanelPro
               onKeyDown={handleKeyDown}
               placeholder={
                 attachments.length > 0
-                  ? "Pergunte algo sobre o(s) PDF(s) ou envie em branco para análise…"
+                  ? "Pergunte algo sobre o(s) projeto(s) ou envie em branco para análise…"
                   : "Pergunte algo sobre o Setter Toolbox…"
               }
               rows={1}
@@ -451,6 +381,13 @@ export function ToolAssistantPanel({ open, onOpenChange }: ToolAssistantPanelPro
               : "TOOL pode cometer erros — confira informações importantes"}
           </p>
         </div>
+
+        <ProjectAttachmentPicker
+          open={pickerOpen}
+          onOpenChange={setPickerOpen}
+          onAttach={handleAttachProject}
+          alreadyAttachedIds={attachments.map((a) => a.projectId)}
+        />
       </SheetContent>
     </Sheet>
   );

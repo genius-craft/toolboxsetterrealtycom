@@ -17,6 +17,7 @@ import {
 import { Loader2, Upload, Trash2, FileText, Sparkles, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import { ToolModelSelector } from "@/components/tool-assistant/ToolModelSelector";
+import { ToolPromptEditor } from "@/components/tool-assistant/ToolPromptEditor";
 
 interface Doc {
   id: string;
@@ -180,6 +181,8 @@ export default function AdminToolKnowledge() {
       </div>
 
       <ToolModelSelector />
+
+      <ToolPromptEditor />
 
       <div className="flex items-start justify-between gap-4 flex-wrap pt-4 border-t">
         <div>
