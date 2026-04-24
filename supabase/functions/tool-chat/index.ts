@@ -465,26 +465,35 @@ Deno.serve(async (req) => {
       }
     }
 
-    const systemPrompt = buildSystemPrompt(extraKnowledge, attachedDocuments);
+    // Lê config (modelo + system prompt customizado) em paralelo
+    let openRouterModel = "google/gemma-3-27b-it:free";
+    let customSystemPrompt: string | undefined;
+    try {
+      const { data: cfgRows } = await admin
+        .from("tool_config")
+        .select("key,value")
+        .in("key", ["openrouter_model", "system_prompt"]);
+      for (const row of cfgRows ?? []) {
+        if (row.key === "openrouter_model" && typeof row.value === "string") {
+          openRouterModel = row.value;
+        } else if (row.key === "system_prompt") {
+          // value pode ser { content: "..." } ou string direta
+          if (typeof row.value === "string") {
+            customSystemPrompt = row.value;
+          } else if (row.value && typeof row.value === "object" && typeof (row.value as any).content === "string") {
+            customSystemPrompt = (row.value as any).content;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Não foi possível ler tool_config, usando defaults:", e);
+    }
+
+    const systemPrompt = buildSystemPrompt(extraKnowledge, attachedDocuments, customSystemPrompt);
     const aiMessages = [
       { role: "system", content: systemPrompt },
       ...messages,
     ];
-
-    // Lê o modelo OpenRouter selecionado pelo admin (com fallback hard-coded)
-    let openRouterModel = "google/gemma-3-27b-it:free";
-    try {
-      const { data: cfg } = await admin
-        .from("tool_config")
-        .select("value")
-        .eq("key", "openrouter_model")
-        .maybeSingle();
-      if (cfg?.value && typeof cfg.value === "string") {
-        openRouterModel = cfg.value;
-      }
-    } catch (e) {
-      console.warn("Não foi possível ler tool_config, usando modelo padrão:", e);
-    }
 
     // Tenta OpenRouter primeiro
     let provider = "openrouter";
