@@ -131,10 +131,16 @@ export default function Permuta() {
     setPrecoUnidade(inputs.precoUnidade ?? 500000);
     setCustoMensalUnidade(inputs.custoMensalUnidade ?? 1500);
     setOpenDialogOpen(false);
+    if (project.id) setLoadedProjectId(project.id);
     if (showToast) {
       toast.success(`Projeto "${project.name}" carregado!`);
     }
   }, []);
+
+  const handleRestoreVersion = useCallback((v: any) => {
+    handleLoadProject({ id: loadedProjectId, name: v.name, inputs: v.inputs, results: v.results }, false);
+    toast.success(`Versão v${v.version_number} restaurada. Clique em Salvar para confirmar.`);
+  }, [handleLoadProject, loadedProjectId]);
 
   // Auto-load project from URL
   useEffect(() => {
