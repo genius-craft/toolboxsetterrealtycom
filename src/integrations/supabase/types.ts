@@ -274,6 +274,27 @@ export type Database = {
         }
         Relationships: []
       }
+      tool_config: {
+        Row: {
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       tool_knowledge_chunks: {
         Row: {
           chunk_index: number
