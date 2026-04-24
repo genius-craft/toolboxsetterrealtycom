@@ -97,7 +97,7 @@ async function callOpenRouter(messages: any[]) {
       "X-Title": "Setter Toolbox - TOOL",
     },
     body: JSON.stringify({
-      model: "google/gemma-2-9b-it:free",
+      model: "google/gemma-3-27b-it:free",
       messages,
       stream: true,
     }),
