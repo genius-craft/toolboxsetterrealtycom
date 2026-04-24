@@ -182,6 +182,8 @@ export default function AdminToolKnowledge() {
 
       <ToolModelSelector />
 
+      <ToolPromptEditor />
+
       <div className="flex items-start justify-between gap-4 flex-wrap pt-4 border-t">
         <div>
           <h2 className="font-display text-xl flex items-center gap-2">
