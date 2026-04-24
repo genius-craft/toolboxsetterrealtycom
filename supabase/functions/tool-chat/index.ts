@@ -297,7 +297,43 @@ A Setter Realty recomenda consultar especialista (botão WhatsApp) antes de
 qualquer decisão.
 `;
 
-function buildSystemPrompt(extraKnowledge: string): string {
+function buildSystemPrompt(
+  extraKnowledge: string,
+  attachedDocuments?: { filename: string; content: string; pageCount?: number }[],
+): string {
+  const hasAttachments = !!attachedDocuments && attachedDocuments.length > 0;
+
+  const attachmentBlock = hasAttachments
+    ? `
+
+═══════════════════════════════════════════════════════════════════
+INSTRUÇÃO ESPECIAL — ANÁLISE DE DOCUMENTO ANEXADO PELO USUÁRIO
+═══════════════════════════════════════════════════════════════════
+O usuário anexou ${attachedDocuments!.length} PDF(s) abaixo.
+A SUA RESPOSTA DEVE OBRIGATORIAMENTE COMEÇAR com a linha exata, em destaque:
+
+> ⚠️ **Minha análise não é passível de falhas — por favor, consulte um especialista antes de qualquer decisão.**
+
+Em seguida, faça uma análise objetiva:
+1. Identifique o tipo de relatório. Se for do Setter Toolbox, diga qual ferramenta gerou (Simulador, Permuta, H&BU, Decisor ou Preço Teto).
+2. Liste os principais KPIs encontrados (Cap Rate, NOI, VPL, TIR, Score, GAV, Strike Price, etc.).
+3. Aponte pontos de atenção: Cap Rate fraco, vacância otimista, payback longo, OPEX subestimada, premissas agressivas.
+4. Sugira próximos passos concretos (ajustar X, comparar com Y, falar com especialista pelo WhatsApp).
+
+Use markdown com listas e negritos para clareza. Seja conciso (máx ~400 palavras).
+
+DOCUMENTOS ANEXADOS:
+${attachedDocuments!
+  .map(
+    (d, i) =>
+      `═══ Documento ${i + 1}: ${d.filename}${d.pageCount ? ` (${d.pageCount} páginas)` : ""} ═══
+${d.content}
+═══ FIM DO DOCUMENTO ${i + 1} ═══`,
+  )
+  .join("\n\n")}
+`
+    : "";
+
   return `Você é TOOL, a assistente oficial do Setter Toolbox — plataforma de análises imobiliárias da Setter Realty.
 
 Sua missão é ajudar corretores, analistas e investidores a:
@@ -306,6 +342,7 @@ Sua missão é ajudar corretores, analistas e investidores a:
 3. PREENCHER cada campo corretamente, com referências de mercado brasileiro.
 4. INTERPRETAR os KPIs de saída (Cap Rate, NOI, VPL, TIR, GAV, Score).
 5. Dominar fluxos da plataforma (salvar, versionar, comparar, vitrine, PDF).
+6. ANALISAR PDFs gerados pelas próprias ferramentas, quando o usuário anexa.
 
 REGRAS DE COMUNICAÇÃO:
 - Português brasileiro, direto e amigável. Trate o usuário por "você".
@@ -327,7 +364,7 @@ ${BASE_KNOWLEDGE}
 ${extraKnowledge ? `═══════════════════════════════════════════════════════════════════
 CONHECIMENTO ADICIONAL (documentos carregados pelo admin)
 ═══════════════════════════════════════════════════════════════════
-${extraKnowledge}` : ""}`;
+${extraKnowledge}` : ""}${attachmentBlock}`;
 }
 
 async function callOpenRouter(messages: any[], model: string) {
