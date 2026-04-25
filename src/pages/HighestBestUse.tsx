@@ -17,6 +17,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/contexts/AuthContext';
 import { useSaveProject, useProject } from '@/hooks/useProjects';
 import { HistoryButton } from '@/components/tools/HistoryButton';
+import { AutoFillButton } from '@/components/ai/AutoFillButton';
+import { AIAnalysisCard } from '@/components/ai/AIAnalysisCard';
+import { applyAIFields } from '@/lib/applyAIFields';
 import { calculateHBUv3, HBUv3Params } from '@/lib/calculations';
 import { formatArea, formatPercentage } from '@/lib/formatters';
 import { generateHBUPDF } from '@/lib/pdfExport';
