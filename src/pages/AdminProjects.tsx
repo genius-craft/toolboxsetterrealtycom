@@ -88,21 +88,6 @@ export default function AdminProjects() {
     });
   };
 
-  const handleToggleVitrine = async (projectId: string, currentStatus: boolean) => {
-    try {
-      await toggleVitrine.mutateAsync({
-        projectId,
-        showInVitrine: !currentStatus,
-      });
-      toast.success(
-        !currentStatus 
-          ? 'Projeto publicado na vitrine!' 
-          : 'Projeto removido da vitrine'
-      );
-    } catch {
-      toast.error('Erro ao atualizar status da vitrine');
-    }
-  };
 
   const exportToCSV = () => {
     if (!filteredProjects.length) return;
