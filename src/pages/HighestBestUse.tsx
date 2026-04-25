@@ -343,6 +343,9 @@ export default function HighestBestUse() {
 
   return (
     <ToolLayout title="Highest & Best Use" rightPanel={Dashboard}>
+      <div className="flex justify-end mb-2">
+        <AutoFillButton tool="hbu" onFill={handleAIFill} />
+      </div>
       {/* Address Toggle */}
       <div className="bg-card rounded-lg border border-border p-4 shadow-card space-y-2 mb-4">
         <div className="flex items-center justify-between">
