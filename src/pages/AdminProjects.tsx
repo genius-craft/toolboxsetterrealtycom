@@ -5,7 +5,7 @@ import { VitrinePublishDialog } from '@/components/admin/VitrinePublishDialog';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
+
 import {
   Select,
   SelectContent,
