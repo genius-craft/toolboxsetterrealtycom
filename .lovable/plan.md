@@ -1,120 +1,71 @@
 
-# Plano — 5 Recursos de IA na Plataforma
+# Manual de Funcionamento — Setter Toolbox v2 (PDF profissional)
 
-Vamos integrar IA dentro do fluxo das 5 calculadoras + vitrine + comparador. Tudo sob demanda (botão), usando **Lovable AI Gateway** (sem nova API key) com `google/gemini-3-flash-preview` (rápido e barato).
+## O que será entregue
 
----
+Um único arquivo **PDF completo (~28-32 páginas)** em `/mnt/documents/manual-setter-toolbox-v2.pdf`, em português, com capa, índice, screenshots reais, exemplos numéricos e linguagem acessível para leitores não-técnicos. Cada seção responde: **o que é**, **para que serve**, **como funciona**, **para quem é**.
 
-## 1. Auto-preenchimento por descrição (todas as 5 calculadoras)
+## Estrutura do manual
 
-**Onde:** botão "✨ Preencher com IA" no topo de cada página: `Simulador`, `Permuta`, `HighestBestUse`, `Decisor`, `PrecoTeto`.
+```text
+1.  Capa + identidade visual (logo S, paleta navy/accent)
+2.  Sumário executivo (1 pág) — o que é o Setter Toolbox em 1 página
+3.  Índice (1 pág)
+4.  Como começar (1-2 págs) — login, aprovação, sidebar, salvar projetos
+5.  Calculadora 1 — Simulador de Viabilidade (4 págs)
+6.  Calculadora 2 — Permuta (3-4 págs)
+7.  Calculadora 3 — Highest & Best Use (3-4 págs)
+8.  Calculadora 4 — Decisor Go/No-Go (3 págs)
+9.  Calculadora 5 — Preço Teto (3 págs)
+10. Recursos de IA integrados (4-5 págs)
+11. Vitrine pública de simulações (1-2 págs)
+12. Comparador de projetos (1 pág)
+13. Exportação PDF e dashboard administrativo (1-2 págs)
+14. Glossário rápido (Cap Rate, TIR, VPL, NOI, Strike, Score) (1 pág)
+15. Disclaimer CVM e contato (1 pág)
+```
 
-**Fluxo:**
-1. Usuário clica → abre modal com `Textarea` ("Cole o anúncio, descreva o imóvel ou cenário…").
-2. Frontend chama edge function `tool-autofill` enviando `{ tool: 'simulador', description: '...' }`.
-3. Edge function usa **tool calling** (structured output) com schema específico de cada calculadora → retorna JSON tipado com os campos.
-4. Frontend faz merge no estado da calculadora e mostra toast "Campos preenchidos. Revise antes de calcular."
+## Padrão de cada calculadora (4 páginas-modelo)
 
-**Schemas:** um por ferramenta, mapeando exatamente os inputs já existentes em cada `pages/<Tool>.tsx` (ex.: `purchasePrice`, `renovationCost`, `units[].monthlyRent`, etc.).
+Cada uma das 5 calculadoras seguirá esse template:
 
----
+- **O que é** — 2-3 linhas em linguagem comum (sem jargão).
+- **Para que serve** — situação-problema concreta ("você recebeu um anúncio de sala comercial e quer saber se o aluguel paga o investimento").
+- **Para quem é** — exemplos com persona (ex.: "Investidor pessoa física comprando primeira sala", "Corretor preparando proposta", "Proprietário avaliando terreno herdado").
+- **Como funciona** — passo a passo numerado (1. Você informa X, 2. A ferramenta calcula Y, 3. Aparecem KPIs Z).
+- **Screenshot real** da calculadora preenchida (capturada no preview).
+- **KPIs explicados** — tabela com cada métrica que aparece no resultado e o que ela significa.
+- **Exemplo prático** com números fictícios e leitura do resultado ("Cap Rate de 0,62% a.m. = retorno mensal saudável; payback ~13 anos").
+- **Dicas de uso** — armadilhas comuns e boas práticas.
 
-## 2. Análise crítica dos resultados (todas as 5)
+## Seção de IA (detalhada)
 
-**Onde:** card "Parecer da IA" logo abaixo dos KPIs, no painel direito (`ToolLayout` rightPanel).
+Bloco dedicado explicando os 5 recursos de IA recém-implementados, com screenshots dos botões/cards:
 
-**Fluxo:**
-1. Após calcular, aparece botão "Gerar análise IA" (sob demanda).
-2. Frontend envia `inputs + results + tool` para edge function `tool-analyze`.
-3. IA retorna texto markdown estruturado: **Pontos fortes**, **Riscos**, **Recomendações** (3-5 bullets cada).
-4. Render com `react-markdown` (já usado no `ToolMessage.tsx`).
-5. Cache local em `useState` — não regera a menos que usuário clique de novo ou mude inputs.
+1. **✨ Preencher com IA (AutoFill)** — como colar um anúncio e a IA preenche os campos. Caixa "exemplo de prompt" para cada calculadora.
+2. **Parecer da IA (Análise crítica)** — como o card aparece após calcular, com bullets de Pontos Fortes / Riscos / Recomendações.
+3. **Gerar copy da Vitrine** — botão no diálogo de publicação que cria título e descrição comerciais.
+4. **Resumo executivo no PDF** — checkbox no export que adiciona parágrafo profissional na primeira página.
+5. **Parecer comparativo** — bloco no /compare com vencedor recomendado e trade-offs.
 
----
+Inclui: limites de uso (rate limit), o que fazer quando aparecer "limite atingido", e nota de segurança ("a IA não envia seus dados para terceiros, roda no Lovable AI Gateway").
 
-## 4. Gerador de copy da vitrine
+## Como será gerado (técnico)
 
-**Onde:** dialog/sheet de publicação na vitrine (onde hoje setam `vitrine_title` e `vitrine_description` em `toolbox_projects`).
+1. **Capturar screenshots** via `browser--navigate_to_sandbox` + `browser--screenshot` em viewport 1280x720, percorrendo: dashboard, cada uma das 5 calculadoras (com dados de exemplo já preenchidos via formulário ou estado vazio), modal AutoFill, card Parecer da IA, vitrine pública, comparador, dialog de export PDF. ~15-18 screenshots.
+2. **Salvar imagens** em `/tmp/manual-shots/` e referenciar no script Python.
+3. **Gerar PDF** com **ReportLab** (Platypus) — capa colorida (paleta navy/accent da marca), tipografia Helvetica/Helvetica-Bold, seções com headings, paragrafos justificados, tabelas de KPIs, screenshots inseridos com legenda, rodapé com paginação.
+4. **QA visual** — converter o PDF para imagens (`pdftoppm`) e revisar cada página, corrigindo overflow, cortes, baixo contraste e alinhamento até passar limpo.
+5. **Entregar** com tag `<lov-artifact>` apontando para `/mnt/documents/manual-setter-toolbox-v2.pdf`.
 
-**Fluxo:**
-1. Botão "✨ Gerar com IA" ao lado dos campos de título/descrição.
-2. Envia `name + project_type + results principais` para edge function `tool-vitrine-copy`.
-3. IA retorna `{ title: string (max 80 chars), description: string (max 240 chars) }` via structured output.
-4. Preenche os campos; usuário pode editar antes de salvar.
+## Pré-requisito de login para screenshots
 
----
+Para capturar telas das calculadoras autenticadas, precisamos que você esteja logado no preview (rota `/dashboard` já está aberta — o que indica sessão ativa). Vou usar a sessão atual; se algum screenshot cair em tela de login eu paro e te aviso.
 
-## 5. Resumo executivo no PDF (todas as 5)
+## Tempo estimado
 
-**Onde:** opção "Incluir resumo executivo IA" no diálogo de exportação PDF (ou checkbox).
-
-**Fluxo:**
-1. Antes de gerar o PDF, se marcado, chama edge function `tool-pdf-summary` com `inputs + results + tool`.
-2. IA retorna parágrafo único profissional (~120 palavras) em PT-BR formal, tom de relatório de consultoria.
-3. `pdfExport.ts` ganha nova `PDFSection` tipo `'executive-summary'` que renderiza o texto em destaque na primeira página, abaixo do título e antes dos KPIs.
-
----
-
-## 6. Comparador inteligente de projetos
-
-**Onde:** página `/compare` (`src/pages/CompareProjects.tsx`), acima da tabela.
-
-**Fluxo:**
-1. Botão "Gerar parecer comparativo IA".
-2. Envia array de projetos (nome, inputs principais, métricas-chave) para edge function `tool-compare`.
-3. IA retorna análise em markdown: **Vencedor recomendado**, **Justificativa**, **Trade-offs de cada opção**.
-4. Render acima da tabela com `react-markdown`.
-
----
-
-## Detalhes técnicos
-
-**Edge functions novas (5):**
-- `supabase/functions/tool-autofill/index.ts`
-- `supabase/functions/tool-analyze/index.ts`
-- `supabase/functions/tool-vitrine-copy/index.ts`
-- `supabase/functions/tool-pdf-summary/index.ts`
-- `supabase/functions/tool-compare/index.ts`
-
-Cada função segue o mesmo padrão do `tool-chat/index.ts` já existente:
-- CORS + validação Zod do payload
-- Auth: validar JWT, exigir `profiles.approved = true`
-- Rate limiting compartilhado via tabela `tool_chat_usage` (mesma que já criamos) — todas as chamadas IA contam no mesmo bucket
-- Limite de payload (50k chars)
-- Chamada ao **Lovable AI Gateway** (`https://ai.gateway.lovable.dev/v1/chat/completions`) com `LOVABLE_API_KEY`
-- Tratamento de 429 (rate limit) e 402 (créditos esgotados) → toast amigável no frontend
-- Para #1, #4, #5: **tool calling** com schema JSON estrito para garantir output parseável
-
-**Frontend — componentes novos:**
-- `src/components/ai/AutoFillButton.tsx` — botão + modal genérico, recebe `tool` e `onFill(data)`
-- `src/components/ai/AIAnalysisCard.tsx` — card "Parecer da IA" reutilizável com loading/error states
-- `src/components/ai/AIVitrineCopyButton.tsx` — botão pequeno ao lado dos inputs da vitrine
-- `src/components/ai/AICompareInsight.tsx` — bloco markdown no topo do comparador
-
-**Frontend — alterações:**
-- 5 páginas de calculadora: adicionar `<AutoFillButton>` no topo + `<AIAnalysisCard>` no painel direito
-- Diálogo da vitrine (precisa localizar — provável em `Dashboard.tsx` ou componente próprio): adicionar botão de copy
-- Diálogo/lógica de export PDF: checkbox + chamada à função
-- `src/lib/pdfExport.ts`: novo `PDFSection` tipo `'executive-summary'`
-- `src/pages/CompareProjects.tsx`: bloco de insight no topo
-
-**Modelo padrão:** `google/gemini-3-flash-preview` (rápido, ~3x mais barato que pro). Para #6 (comparador), avaliar usar `google/gemini-2.5-pro` se quiser análise mais nuançada — fica configurável.
-
-**UX comum a todos os botões:**
-- Loading com spinner + texto "Gerando…"
-- Botão fica disabled durante geração
-- Erros 429/402 → toast claro ("Limite de uso atingido, tente em alguns minutos" / "Créditos da plataforma esgotados, contate o admin")
-- Animação `animate-fade-up` ao revelar resultado (consistente com o resto do app)
-
-**Sem mudanças de schema** — não precisa de migration. Reaproveita `tool_chat_usage` para rate limiting.
+~5-8 minutos: ~2 min para capturar screenshots, ~1 min para o script ReportLab, ~2 min para QA visual e refinamentos, ~1 min para iteração de correções.
 
 ---
 
-## Ordem de entrega sugerida
-
-Posso fazer tudo numa tacada só, mas se preferir em ondas:
-1. **Onda 1 (maior impacto):** #1 Auto-preenchimento + #2 Análise crítica nas 5 calculadoras
-2. **Onda 2:** #4 Copy da vitrine + #5 Resumo PDF
-3. **Onda 3:** #6 Comparador inteligente
-
-Aprove o plano e eu implemento. Se quiser entregar em ondas, me diga; caso contrário faço tudo de uma vez.
+**Aprove o plano** para eu mudar para o modo de execução, capturar as telas e gerar o PDF.
