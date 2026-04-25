@@ -86,7 +86,11 @@ export function useToggleVitrineStatus() {
       vitrineTitle?: string;
       vitrineDescription?: string;
     }) => {
-      const updateData: Record<string, unknown> = {
+      const updateData: {
+        show_in_vitrine: boolean;
+        vitrine_title?: string | null;
+        vitrine_description?: string | null;
+      } = {
         show_in_vitrine: showInVitrine,
       };
       
