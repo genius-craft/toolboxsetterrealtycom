@@ -596,6 +596,13 @@ export async function generateDecisorPDF(data: DecisorPDFData): Promise<void> {
 
   // Build sections array
   const sections: PDFSection[] = [
+    ...(data.aiSummary
+      ? [{
+          title: 'Resumo Executivo (IA)',
+          type: 'text' as const,
+          data: data.aiSummary,
+        }]
+      : []),
     {
       title: 'Veredicto',
       type: 'verdict',
