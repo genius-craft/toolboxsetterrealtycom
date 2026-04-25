@@ -251,23 +251,24 @@ export default function AdminProjects() {
                   <TableCell className="text-center">
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div className="flex items-center justify-center gap-2">
-                          <Switch
-                            checked={project.show_in_vitrine}
-                            onCheckedChange={() => handleToggleVitrine(project.id, project.show_in_vitrine)}
-                            disabled={toggleVitrine.isPending}
-                          />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setVitrineProject(project)}
+                          className="h-8 px-2 gap-1.5"
+                        >
                           {project.show_in_vitrine ? (
                             <Globe className="h-4 w-4 text-green-500" />
                           ) : (
                             <EyeOff className="h-4 w-4 text-muted-foreground" />
                           )}
-                        </div>
+                          <span className="text-xs">
+                            {project.show_in_vitrine ? 'Publicado' : 'Publicar'}
+                          </span>
+                        </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        {project.show_in_vitrine 
-                          ? 'Visível na vitrine pública' 
-                          : 'Clique para publicar na vitrine'}
+                        Editar título, descrição e status na vitrine (com IA opcional)
                       </TooltipContent>
                     </Tooltip>
                   </TableCell>
