@@ -217,6 +217,28 @@ export default function HighestBestUse() {
     }
   };
 
+  // Setters expostos para o auto-preenchimento por IA
+  const aiSetters = {
+    landArea: setLandArea,
+    far: setFar,
+    occupancyRate: setOccupancyRate,
+    location: setLocation,
+    zoning: setZoning,
+    residencialPricePerSqm: setResidencialPricePerSqm,
+    residencialCostPerSqm: setResidencialCostPerSqm,
+    residencialAbsorptionMonths: setResidencialAbsorptionMonths,
+    comercialPricePerSqm: setComercialPricePerSqm,
+    comercialCostPerSqm: setComercialCostPerSqm,
+    comercialAbsorptionMonths: setComercialAbsorptionMonths,
+    discountRate: setDiscountRate,
+    constructionMonths: setConstructionMonths,
+    landCostPremissa: setLandCostPremissa,
+  } as Record<string, ((value: never) => void) | undefined>;
+
+  const handleAIFill = (fields: Record<string, unknown>) => {
+    applyAIFields(aiSetters, fields);
+  };
+
   const Dashboard = (
     <div className="space-y-6">
       {/* Educational Banner */}
