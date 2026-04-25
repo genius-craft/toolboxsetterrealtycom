@@ -19,6 +19,7 @@ import { useSaveProject, useProject } from '@/hooks/useProjects';
 import { HistoryButton } from '@/components/tools/HistoryButton';
 import { AutoFillButton } from '@/components/ai/AutoFillButton';
 import { AIAnalysisCard } from '@/components/ai/AIAnalysisCard';
+import { PDFExportWithAIButton } from '@/components/ai/PDFExportWithAIButton';
 import { applyAIFields } from '@/lib/applyAIFields';
 import { calculateHBUv3, HBUv3Params } from '@/lib/calculations';
 import { formatArea, formatPercentage } from '@/lib/formatters';
@@ -194,10 +195,11 @@ export default function HighestBestUse() {
     });
   };
 
-  const handleExportPDF = async () => {
+  const handleExportPDF = async (aiSummary?: string) => {
     setIsExportingPDF(true);
     try {
       await generateHBUPDF({
+        aiSummary,
         googleMapsLink: showAddress ? googleMapsLink : undefined,
         observations: observations.trim() || undefined,
         landParams: { landArea, far, occupancyRate, location },
@@ -327,13 +329,25 @@ export default function HighestBestUse() {
           <Save className="h-4 w-4 mr-2" />
           {saveProject.isPending ? 'Salvando...' : 'Salvar'}
         </Button>
-        <Button 
-          variant="outline" 
-          onClick={handleExportPDF}
+        <PDFExportWithAIButton
+          tool="hbu"
+          inputs={{
+            landArea, far, occupancyRate, location, zoning,
+            residencialPricePerSqm, residencialCostPerSqm, residencialAbsorptionMonths,
+            comercialPricePerSqm, comercialCostPerSqm, comercialAbsorptionMonths,
+            discountRate, constructionMonths, landCostPremissa,
+          }}
+          results={{
+            residencial: results.residencial,
+            comercial: results.comercial,
+            misto: results.misto,
+            winner: results.winner,
+          }}
+          onExport={handleExportPDF}
           disabled={!user || isExportingPDF}
-        >
-          {isExportingPDF ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-        </Button>
+          variant="outline"
+          iconOnly
+        />
         <Button variant="outline" onClick={handleReset}>
           <RotateCcw className="h-4 w-4" />
         </Button>

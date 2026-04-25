@@ -23,6 +23,7 @@ import { useSaveProject, useUpdateProject, useProjects, useProject, ProjectType 
 import { HistoryButton } from '@/components/tools/HistoryButton';
 import { AutoFillButton } from '@/components/ai/AutoFillButton';
 import { AIAnalysisCard } from '@/components/ai/AIAnalysisCard';
+import { PDFExportWithAIButton } from '@/components/ai/PDFExportWithAIButton';
 import { applyAIFields } from '@/lib/applyAIFields';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -271,10 +272,11 @@ export default function PrecoTeto() {
     }
   };
 
-  const handleExportPDF = async () => {
+  const handleExportPDF = async (aiSummary?: string) => {
     setIsExportingPDF(true);
     try {
       await generatePrecoTetoPDF({
+        aiSummary,
         projectName: projectName || 'Projeto sem nome',
         googleMapsLink: showAddress ? googleMapsLink : undefined,
         observations: observations.trim() || undefined,

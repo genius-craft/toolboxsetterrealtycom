@@ -16,6 +16,7 @@ import { useSaveProject, useProject } from '@/hooks/useProjects';
 import { HistoryButton } from '@/components/tools/HistoryButton';
 import { AutoFillButton } from '@/components/ai/AutoFillButton';
 import { AIAnalysisCard } from '@/components/ai/AIAnalysisCard';
+import { PDFExportWithAIButton } from '@/components/ai/PDFExportWithAIButton';
 import { applyAIFields } from '@/lib/applyAIFields';
 import { calculateGoNoGo } from '@/lib/calculations';
 import { formatCurrency, formatCompactCurrency, formatPercentage } from '@/lib/formatters';
@@ -212,10 +213,11 @@ export default function Decisor() {
     });
   };
 
-  const handleExportPDF = async () => {
+  const handleExportPDF = async (aiSummary?: string) => {
     setIsExportingPDF(true);
     try {
       await generateDecisorPDF({
+        aiSummary,
         assetName: assetName || 'Ativo sem nome',
         googleMapsLink: showAddress ? googleMapsLink : undefined,
         observations: observations.trim() || undefined,
