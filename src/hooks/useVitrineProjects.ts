@@ -24,7 +24,7 @@ export function useVitrineProjects(options: UseVitrineProjectsOptions = {}) {
     queryKey: ['vitrine-projects', projectType],
     queryFn: async () => {
       let query = supabase
-        .from('toolbox_projects')
+        .from('vitrine_projects_public' as any)
         .select(`
           id,
           name,
@@ -35,7 +35,6 @@ export function useVitrineProjects(options: UseVitrineProjectsOptions = {}) {
           vitrine_title,
           vitrine_description
         `)
-        .eq('show_in_vitrine', true)
         .order('updated_at', { ascending: false });
 
       if (projectType && projectType !== 'all') {
