@@ -296,6 +296,25 @@ export default function HighestBestUse() {
         />
       </div>
 
+      {/* AI Analysis */}
+      <AIAnalysisCard
+        tool="hbu"
+        inputs={{
+          landArea, far, occupancyRate, location, zoning,
+          residencialPricePerSqm, residencialCostPerSqm, residencialAbsorptionMonths,
+          comercialPricePerSqm, comercialCostPerSqm, comercialAbsorptionMonths,
+          discountRate, constructionMonths, landCostPremissa,
+        }}
+        results={{
+          residencial: results.residencial,
+          comercial: results.comercial,
+          misto: results.misto,
+          winner: results.winner,
+          justification: results.justification,
+        }}
+        resetKey={`${landArea}-${far}-${location}-${results.winner}`}
+      />
+
       {/* Action Buttons */}
       <div className="flex gap-3">
         <HistoryButton loadedProjectId={loadedProjectId} onRestore={handleRestoreVersion} />
