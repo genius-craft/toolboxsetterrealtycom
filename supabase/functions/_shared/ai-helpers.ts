@@ -47,14 +47,14 @@ export async function validateAuthAndApproved(req: Request): Promise<
   });
 
   const token = authHeader.replace("Bearer ", "");
-  const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
-  if (claimsError || !claimsData?.claims) {
+  const { data: userData, error: userError } = await userClient.auth.getUser(token);
+  if (userError || !userData?.user) {
     return {
       ok: false,
       response: jsonResponse({ error: "Sessão inválida. Faça login novamente." }, 401),
     };
   }
-  const userId = claimsData.claims.sub as string;
+  const userId = userData.user.id;
 
   const { data: profileRow } = await admin
     .from("profiles")
