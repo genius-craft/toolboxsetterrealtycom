@@ -361,7 +361,7 @@ export default function Simulador() {
     applyAIFields(aiSetters, fields);
   };
 
-  const handleExportPDF = async () => {
+  const handleExportPDF = async (aiSummary?: string) => {
     setIsExportingPDF(true);
     try {
       const closingCostsAmount = purchasePrice * closingCosts;
