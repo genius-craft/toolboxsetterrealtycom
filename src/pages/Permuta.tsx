@@ -363,6 +363,19 @@ export default function Permuta() {
       </CardContent></Card>
 
       <PermutaVerdict vendaValor={vendaOferta} parceriaValor={calculations.totalParceria} locked={isLocked} />
+
+      <AIAnalysisCard
+        tool="permuta"
+        projectName={assetName}
+        inputs={{
+          vendaOferta, valorImovelParceria, percentualUnidades,
+          aprovacaoMeses, construcaoMeses, vendaMeses, taxaDesconto,
+          precoUnidade, custoMensalUnidade,
+        }}
+        results={calculations}
+        resetKey={`${vendaOferta}-${valorImovelParceria}-${percentualUnidades}-${taxaDesconto}`}
+      />
+
     </div>
   );
 
