@@ -178,8 +178,29 @@ export default function Permuta() {
     }
   };
 
+  // Setters expostos para o auto-preenchimento por IA
+  const aiSetters = {
+    assetName: setAssetName,
+    vendaOferta: setVendaOferta,
+    valorImovelParceria: setValorImovelParceria,
+    percentualUnidades: setPercentualUnidades,
+    aprovacaoMeses: setAprovacaoMeses,
+    construcaoMeses: setConstrucaoMeses,
+    vendaMeses: setVendaMeses,
+    taxaDesconto: setTaxaDesconto,
+    precoUnidade: setPrecoUnidade,
+    custoMensalUnidade: setCustoMensalUnidade,
+  } as Record<string, ((value: never) => void) | undefined>;
+
+  const handleAIFill = (fields: Record<string, unknown>) => {
+    applyAIFields(aiSetters, fields);
+  };
+
   const InputsPanel = (
     <div className="space-y-6">
+      <div className="flex justify-end -mb-2">
+        <AutoFillButton tool="permuta" onFill={handleAIFill} />
+      </div>
       {/* Nome do Ativo */}
       <div className="bg-card rounded-lg border border-border p-4 shadow-card space-y-4">
         <div className="space-y-2">
