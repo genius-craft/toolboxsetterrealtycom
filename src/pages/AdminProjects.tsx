@@ -66,7 +66,6 @@ export default function AdminProjects() {
   const [vitrineProject, setVitrineProject] = useState<AdminProject | null>(null);
 
   const { data: projects, isLoading, error } = useAdminProjects(selectedType);
-  const toggleVitrine = useToggleVitrineStatus();
 
   const filteredProjects = useMemo(() => {
     if (!projects) return [];
