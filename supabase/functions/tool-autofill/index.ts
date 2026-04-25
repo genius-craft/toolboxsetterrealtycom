@@ -42,8 +42,8 @@ const SIMULADOR_TOOL: AIToolDef = {
       hasTurnkey: { type: "boolean", description: "Tem turnkey? (custo fixo adicional)" },
       turnkeyCost: { type: "number", description: "Custo do turnkey em R$, se aplicável." },
       vacancyRate: { type: "number", description: "Vacância em fração (0.05 = 5%)." },
-      propertyTax: { type: "number", description: "IPTU mensal em R$." },
-      condoFee: { type: "number", description: "Condomínio mensal em R$." },
+      propertyTax: { type: "number", description: "IPTU ANUAL em R$ (não mensal)." },
+      condoFee: { type: "number", description: "Condomínio ANUAL em R$ (não mensal)." },
       managementFee: { type: "number", description: "Taxa de administração em fração (0.08 = 8%)." },
       holdingPeriod: { type: "integer", description: "Horizonte de análise em anos (1-30)." },
       exitCapRate: { type: "number", description: "Cap rate de saída em fração anual." },
@@ -54,6 +54,7 @@ const SIMULADOR_TOOL: AIToolDef = {
         items: {
           type: "object",
           properties: {
+            id: { type: "string" },
             name: { type: "string" },
             monthlyRent: { type: "number", description: "Aluguel mensal em R$." },
           },
