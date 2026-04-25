@@ -10,6 +10,17 @@ import {
 import { fetchAIPDFSummary, AIPDFSummaryTool } from "@/lib/aiPdfSummary";
 import { toast } from "sonner";
 
+type ButtonVariant =
+  | "default"
+  | "destructive"
+  | "outline"
+  | "secondary"
+  | "ghost"
+  | "link"
+  | "gold";
+
+type ButtonSize = "default" | "sm" | "lg" | "icon";
+
 interface PDFExportWithAIButtonProps {
   tool: AIPDFSummaryTool;
   projectName?: string;
@@ -19,11 +30,17 @@ interface PDFExportWithAIButtonProps {
   onExport: (aiSummary?: string) => Promise<void> | void;
   disabled?: boolean;
   className?: string;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  /** Texto a exibir; default "PDF". */
+  label?: string;
+  /** Mostrar apenas ícone (sem texto). Útil em barras compactas. */
+  iconOnly?: boolean;
 }
 
 /**
  * Botão dropdown para exportar PDF com opção de incluir resumo executivo
- * gerado pela IA. Mostra "Gerar PDF" e "Gerar PDF + Resumo IA".
+ * gerado pela IA. Mostra "PDF padrão" e "PDF + Resumo IA".
  */
 export function PDFExportWithAIButton({
   tool,
@@ -33,6 +50,10 @@ export function PDFExportWithAIButton({
   onExport,
   disabled,
   className,
+  variant = "outline",
+  size = "sm",
+  label = "PDF",
+  iconOnly = false,
 }: PDFExportWithAIButtonProps) {
   const [loading, setLoading] = useState(false);
 
@@ -40,6 +61,9 @@ export function PDFExportWithAIButton({
     setLoading(true);
     try {
       await onExport(undefined);
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao gerar PDF.");
     } finally {
       setLoading(false);
     }
@@ -51,7 +75,11 @@ export function PDFExportWithAIButton({
       const summary = await fetchAIPDFSummary({ tool, projectName, inputs, results });
       await onExport(summary);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha ao gerar resumo IA.");
+      toast.error(
+        e instanceof Error
+          ? `${e.message} Gerando PDF sem resumo…`
+          : "Falha ao gerar resumo IA. Gerando PDF sem resumo…",
+      );
       // Fallback: ainda gera o PDF sem resumo
       try {
         await onExport(undefined);
@@ -66,21 +94,27 @@ export function PDFExportWithAIButton({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" disabled={disabled || loading} className={className}>
+        <Button
+          variant={variant}
+          size={size}
+          disabled={disabled || loading}
+          className={className}
+          type="button"
+        >
           {loading ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            <Loader2 className={`h-4 w-4 animate-spin ${iconOnly ? "" : "mr-2"}`} />
           ) : (
-            <FileDown className="h-4 w-4 mr-2" />
+            <FileDown className={`h-4 w-4 ${iconOnly ? "" : "mr-2"}`} />
           )}
-          {loading ? "Gerando..." : "PDF"}
+          {!iconOnly && (loading ? "Gerando..." : label)}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={handleSimple}>
+      <DropdownMenuContent align="end" className="z-50 bg-popover">
+        <DropdownMenuItem onClick={handleSimple} disabled={loading}>
           <FileDown className="h-4 w-4 mr-2" />
           PDF padrão
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleWithAI}>
+        <DropdownMenuItem onClick={handleWithAI} disabled={loading}>
           <Sparkles className="h-4 w-4 mr-2 text-accent" />
           PDF + Resumo IA
         </DropdownMenuItem>

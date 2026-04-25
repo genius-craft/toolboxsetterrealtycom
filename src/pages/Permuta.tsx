@@ -23,6 +23,7 @@ import { useSaveProject, useProjects, useProject, ProjectType } from "@/hooks/us
 import { HistoryButton } from '@/components/tools/HistoryButton';
 import { AutoFillButton } from "@/components/ai/AutoFillButton";
 import { AIAnalysisCard } from "@/components/ai/AIAnalysisCard";
+import { PDFExportWithAIButton } from "@/components/ai/PDFExportWithAIButton";
 import { applyAIFields } from "@/lib/applyAIFields";
 import { toast } from "sonner";
 
@@ -153,10 +154,11 @@ export default function Permuta() {
     }
   }, [projectFromUrl, loadingProjectFromUrl, hasLoadedFromUrl, handleLoadProject]);
 
-  const handleExportPDF = async () => {
+  const handleExportPDF = async (aiSummary?: string) => {
     setIsExportingPDF(true);
     try {
       await generatePermutaPDF({
+        aiSummary,
         assetName: assetName || 'Terreno sem nome',
         googleMapsLink: showAddress ? googleMapsLink : undefined,
         observations: observations.trim() || undefined,
@@ -346,10 +348,18 @@ export default function Permuta() {
           <Button variant="outline" size="sm" onClick={handleReset}><RefreshCcw className="h-4 w-4 mr-2" />Limpar</Button>
           <Button variant="outline" size="sm" onClick={handleSave} disabled={isLocked}><Save className="h-4 w-4 mr-2" />Salvar</Button>
           <HistoryButton loadedProjectId={loadedProjectId} onRestore={handleRestoreVersion} />
-          <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={isLocked || isExportingPDF}>
-            {isExportingPDF ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileDown className="h-4 w-4 mr-2" />}
-            {isExportingPDF ? 'Gerando...' : 'PDF'}
-          </Button>
+          <PDFExportWithAIButton
+            tool="permuta"
+            projectName={assetName}
+            inputs={{
+              vendaOferta, valorImovelParceria, percentualUnidades,
+              aprovacaoMeses, construcaoMeses, vendaMeses, taxaDesconto,
+              precoUnidade, custoMensalUnidade,
+            }}
+            results={calculations as unknown as Record<string, unknown>}
+            onExport={handleExportPDF}
+            disabled={isLocked || isExportingPDF}
+          />
         </div>
       </div>
 

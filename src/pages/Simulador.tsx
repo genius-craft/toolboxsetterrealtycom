@@ -17,6 +17,7 @@ import { ProjectVersionsSheet } from '@/components/tools/ProjectVersionsSheet';
 import { RentalUnitsCard, RentalUnit } from '@/components/tools/RentalUnitsCard';
 import { AutoFillButton } from '@/components/ai/AutoFillButton';
 import { AIAnalysisCard } from '@/components/ai/AIAnalysisCard';
+import { PDFExportWithAIButton } from '@/components/ai/PDFExportWithAIButton';
 import { applyAIFields } from '@/lib/applyAIFields';
 import { GlossaryTooltip } from '@/components/tools/InfoTooltip';
 import { Button } from '@/components/ui/button';
@@ -361,7 +362,7 @@ export default function Simulador() {
     applyAIFields(aiSetters, fields);
   };
 
-  const handleExportPDF = async () => {
+  const handleExportPDF = async (aiSummary?: string) => {
     setIsExportingPDF(true);
     try {
       const closingCostsAmount = purchasePrice * closingCosts;
@@ -374,6 +375,7 @@ export default function Simulador() {
       const monthlyCapRate = (calculations.noi / 12) / calculations.totalInvestment;
       
       await generateSimuladorPDF({
+        aiSummary,
         projectName: projectName || 'Projeto sem nome',
         googleMapsLink: showAddress ? googleMapsLink : undefined,
         observations: observations.trim() || undefined,
@@ -588,18 +590,30 @@ export default function Simulador() {
             <span className="hidden sm:inline">{(saveProject.isPending || updateProject.isPending) ? 'Salvando...' : 'Salvar'}</span>
           </Button>
         </div>
-        <Button 
-          className="w-full bg-[#E85D3D] hover:bg-[#D14D2D] text-white shadow-lg touch-target"
+        <PDFExportWithAIButton
+          tool="simulador"
+          projectName={projectName}
+          inputs={{
+            purchasePrice, closingCosts, builtArea, costPerSqm,
+            hasTurnkey, turnkeyCost, rentalUnits, vacancyRate,
+            propertyTax, condoFee, managementFee,
+            holdingPeriod, exitCapRate, discountRate,
+          }}
+          results={{
+            totalInvestment: calculations.totalInvestment,
+            noi: calculations.noi,
+            entryCapRate: calculations.entryCapRate,
+            irr: calculations.irr,
+            npv: calculations.npv,
+            verdict: calculations.verdict,
+          }}
+          onExport={handleExportPDF}
           disabled={!user || isExportingPDF}
-          onClick={handleExportPDF}
-        >
-          {isExportingPDF ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <FileText className="h-4 w-4 mr-2" />
-          )}
-          {isExportingPDF ? 'Gerando...' : 'Exportar PDF'}
-        </Button>
+          className="w-full bg-[#E85D3D] hover:bg-[#D14D2D] text-white shadow-lg touch-target"
+          variant="default"
+          size="default"
+          label={isExportingPDF ? 'Gerando...' : 'Exportar PDF'}
+        />
       </div>
 
       {/* Open Project Dialog */}
