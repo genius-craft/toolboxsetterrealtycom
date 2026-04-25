@@ -549,6 +549,8 @@ export async function generateSimuladorPDF(data: SimuladorPDFData): Promise<void
  * Generate PDF for Decisor Go/No-Go
  */
 export interface DecisorPDFData {
+  /** Resumo executivo opcional gerado pela IA. Quando presente, abre o relatório. */
+  aiSummary?: string;
   assetName: string;
   googleMapsLink?: string;
   observations?: string;
