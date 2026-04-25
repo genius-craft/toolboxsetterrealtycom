@@ -675,6 +675,8 @@ export async function generateDecisorPDF(data: DecisorPDFData): Promise<void> {
  * Generate PDF for Calculadora de Permuta
  */
 export interface PermutaPDFData {
+  /** Resumo executivo opcional gerado pela IA. */
+  aiSummary?: string;
   assetName: string;
   googleMapsLink?: string;
   observations?: string;
