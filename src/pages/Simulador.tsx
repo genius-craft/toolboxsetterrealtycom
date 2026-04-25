@@ -15,6 +15,9 @@ import { HistoryButton } from '@/components/tools/HistoryButton';
 import { ProjectVersion } from '@/hooks/useProjectVersions';
 import { ProjectVersionsSheet } from '@/components/tools/ProjectVersionsSheet';
 import { RentalUnitsCard, RentalUnit } from '@/components/tools/RentalUnitsCard';
+import { AutoFillButton } from '@/components/ai/AutoFillButton';
+import { AIAnalysisCard } from '@/components/ai/AIAnalysisCard';
+import { applyAIFields } from '@/lib/applyAIFields';
 import { GlossaryTooltip } from '@/components/tools/InfoTooltip';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -335,6 +338,29 @@ export default function Simulador() {
     }
   };
 
+  // Setters expostos para o auto-preenchimento por IA
+  const aiSetters = {
+    projectName: setProjectName,
+    purchasePrice: setPurchasePrice,
+    closingCosts: setClosingCosts,
+    builtArea: setBuiltArea,
+    costPerSqm: setCostPerSqm,
+    hasTurnkey: setHasTurnkey,
+    turnkeyCost: setTurnkeyCost,
+    rentalUnits: setRentalUnits,
+    vacancyRate: setVacancyRate,
+    propertyTax: setPropertyTax,
+    condoFee: setCondoFee,
+    managementFee: setManagementFee,
+    holdingPeriod: setHoldingPeriod,
+    exitCapRate: setExitCapRate,
+    discountRate: setDiscountRate,
+  } as Record<string, ((value: never) => void) | undefined>;
+
+  const handleAIFill = (fields: Record<string, unknown>) => {
+    applyAIFields(aiSetters, fields);
+  };
+
   const handleExportPDF = async () => {
     setIsExportingPDF(true);
     try {
@@ -474,6 +500,29 @@ export default function Simulador() {
         </div>
       </div>
 
+      {/* AI Analysis */}
+      <AIAnalysisCard
+        tool="simulador"
+        projectName={projectName}
+        inputs={{
+          purchasePrice, closingCosts, builtArea, costPerSqm,
+          hasTurnkey, turnkeyCost, rentalUnits, vacancyRate,
+          propertyTax, condoFee, managementFee,
+          holdingPeriod, exitCapRate, discountRate,
+        }}
+        results={{
+          totalInvestment: calculations.totalInvestment,
+          noi: calculations.noi,
+          entryCapRate: calculations.entryCapRate,
+          monthlyCapRate: (calculations.noi / 12) / calculations.totalInvestment,
+          irr: calculations.irr,
+          npv: calculations.npv,
+          equityMultiple: calculations.equityMultiple,
+          verdict: calculations.verdict,
+        }}
+        resetKey={`${purchasePrice}-${totalMonthlyRent}-${holdingPeriod}`}
+      />
+
       {/* Cash Flow Chart */}
       <div className="bg-card rounded-lg border border-border p-4 shadow-card">
         <div className="flex items-center gap-2 mb-4">
@@ -586,6 +635,11 @@ export default function Simulador() {
 
   return (
     <ToolLayout title="Simulador de Viabilidade" rightPanel={Dashboard}>
+      {/* AI Auto-fill */}
+      <div className="flex justify-end -mb-2">
+        <AutoFillButton tool="simulador" onFill={handleAIFill} />
+      </div>
+
       {/* Project Header */}
       <ProjectHeader
         projectName={projectName}
