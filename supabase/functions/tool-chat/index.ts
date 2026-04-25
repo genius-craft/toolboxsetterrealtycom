@@ -420,6 +420,54 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // ─────────────────────────────────────────────────────────
+    // [1] Validar JWT do usuário
+    // ─────────────────────────────────────────────────────────
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Não autorizado." }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const admin = createClient(supabaseUrl, serviceKey);
+
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(
+        JSON.stringify({ error: "Sessão inválida. Faça login novamente." }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    const userId = claimsData.claims.sub as string;
+
+    // ─────────────────────────────────────────────────────────
+    // [2] Verificar se usuário está aprovado
+    // ─────────────────────────────────────────────────────────
+    const { data: profileRow } = await admin
+      .from("profiles")
+      .select("approved")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!profileRow?.approved) {
+      return new Response(
+        JSON.stringify({ error: "Sua conta ainda não foi aprovada para usar a TOOL." }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // [3] Parse + validação do body
+    // ─────────────────────────────────────────────────────────
     const json = await req.json();
     const parsed = BodySchema.safeParse(json);
     if (!parsed.success) {
@@ -429,11 +477,6 @@ Deno.serve(async (req) => {
       );
     }
     const { messages, attachedDocuments } = parsed.data;
-
-    // RAG simples: full-text search dos chunks usando service role (bypass RLS)
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const admin = createClient(supabaseUrl, serviceKey);
 
     const lastUser = [...messages].reverse().find((m) => m.role === "user");
     let extraKnowledge = "";
