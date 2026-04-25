@@ -250,6 +250,15 @@ export async function callLovableAI(opts: CallAIOptions): Promise<
         ),
       };
     }
+    if (resp.status === 503 || resp.status === 504) {
+      return {
+        ok: false,
+        response: jsonResponse(
+          { error: "O serviço de IA está sobrecarregado no momento. Aguarde alguns segundos e tente novamente." },
+          503,
+        ),
+      };
+    }
     const txt = await resp.text().catch(() => "");
     console.error("Lovable AI erro:", resp.status, txt);
     return { ok: false, response: jsonResponse({ error: "Erro no provedor de IA." }, 502) };
