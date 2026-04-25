@@ -338,6 +338,29 @@ export default function Simulador() {
     }
   };
 
+  // Setters expostos para o auto-preenchimento por IA
+  const aiSetters = {
+    projectName: setProjectName,
+    purchasePrice: setPurchasePrice,
+    closingCosts: setClosingCosts,
+    builtArea: setBuiltArea,
+    costPerSqm: setCostPerSqm,
+    hasTurnkey: setHasTurnkey,
+    turnkeyCost: setTurnkeyCost,
+    rentalUnits: setRentalUnits,
+    vacancyRate: setVacancyRate,
+    propertyTax: setPropertyTax,
+    condoFee: setCondoFee,
+    managementFee: setManagementFee,
+    holdingPeriod: setHoldingPeriod,
+    exitCapRate: setExitCapRate,
+    discountRate: setDiscountRate,
+  } as Record<string, ((value: never) => void) | undefined>;
+
+  const handleAIFill = (fields: Record<string, unknown>) => {
+    applyAIFields(aiSetters, fields);
+  };
+
   const handleExportPDF = async () => {
     setIsExportingPDF(true);
     try {
