@@ -320,6 +320,13 @@ export default function AdminProjects() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Vitrine Publish Dialog (with AI copy generator) */}
+      <VitrinePublishDialog
+        project={vitrineProject}
+        open={!!vitrineProject}
+        onOpenChange={(open) => !open && setVitrineProject(null)}
+      />
     </div>
   );
 }
