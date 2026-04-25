@@ -9,6 +9,8 @@ import { ToolboxProject, ProjectType } from '@/hooks/useProjects';
 import { formatCompactCurrency, formatPercentage, formatCurrency } from '@/lib/formatters';
 import { ArrowLeft, BarChart3, TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { AICompareInsight } from '@/components/ai/AICompareInsight';
+import type { AutoFillTool } from '@/components/ai/AutoFillButton';
 
 type Metric = {
   label: string;
