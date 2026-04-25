@@ -397,6 +397,8 @@ export interface ScenarioData {
 }
 
 export interface SimuladorPDFData {
+  /** Resumo executivo opcional gerado pela IA. Quando presente, abre o relatório. */
+  aiSummary?: string;
   projectName: string;
   googleMapsLink?: string;
   observations?: string;
