@@ -500,6 +500,29 @@ export default function Simulador() {
         </div>
       </div>
 
+      {/* AI Analysis */}
+      <AIAnalysisCard
+        tool="simulador"
+        projectName={projectName}
+        inputs={{
+          purchasePrice, closingCosts, builtArea, costPerSqm,
+          hasTurnkey, turnkeyCost, rentalUnits, vacancyRate,
+          propertyTax, condoFee, managementFee,
+          holdingPeriod, exitCapRate, discountRate,
+        }}
+        results={{
+          totalInvestment: calculations.totalInvestment,
+          noi: calculations.noi,
+          entryCapRate: calculations.entryCapRate,
+          monthlyCapRate: (calculations.noi / 12) / calculations.totalInvestment,
+          irr: calculations.irr,
+          npv: calculations.npv,
+          equityMultiple: calculations.equityMultiple,
+          verdict: calculations.verdict,
+        }}
+        resetKey={`${purchasePrice}-${totalMonthlyRent}-${holdingPeriod}`}
+      />
+
       {/* Cash Flow Chart */}
       <div className="bg-card rounded-lg border border-border p-4 shadow-card">
         <div className="flex items-center gap-2 mb-4">
