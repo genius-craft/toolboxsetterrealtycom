@@ -44,7 +44,7 @@ export function useVitrineProjects(options: UseVitrineProjectsOptions = {}) {
       const { data, error } = await query;
 
       if (error) throw error;
-      return data as VitrineProject[];
+      return (data as unknown) as VitrineProject[];
     },
   });
 }
