@@ -307,6 +307,28 @@ export default function PrecoTeto() {
     }
   };
 
+  // Setters expostos para o auto-preenchimento por IA
+  const aiSetters = {
+    projectName: setProjectName,
+    monthlyRent: setMonthlyRent,
+    rentGrowth: setRentGrowth,
+    vacancyRate: setVacancyRate,
+    closingCosts: setClosingCosts,
+    constructionCost: setConstructionCost,
+    propertyTax: setPropertyTax,
+    condoFee: setCondoFee,
+    managementFee: setManagementFee,
+    targetCapRate: setTargetCapRate,
+    targetIRR: setTargetIRR,
+    holdingPeriod: setHoldingPeriod,
+    exitCapRate: setExitCapRate,
+    referencePrice: setReferencePrice,
+  } as Record<string, ((value: never) => void) | undefined>;
+
+  const handleAIFill = (fields: Record<string, unknown>) => {
+    applyAIFields(aiSetters, fields);
+  };
+
   // Right panel (Dashboard)
   const Dashboard = (
     <div className="space-y-6">
