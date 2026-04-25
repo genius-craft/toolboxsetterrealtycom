@@ -485,6 +485,14 @@ export async function generateSimuladorPDF(data: SimuladorPDFData): Promise<void
     observations: data.observations,
     date: new Date().toLocaleDateString('pt-BR'),
     sections: [
+      // Resumo Executivo IA (opcional)
+      ...(data.aiSummary
+        ? [{
+            title: 'Resumo Executivo (IA)',
+            type: 'text' as const,
+            data: data.aiSummary,
+          }]
+        : []),
       // Único KPI - Cap Rate Mensal (Estimado) centralizado
       {
         title: 'Rentabilidade Estimada',
