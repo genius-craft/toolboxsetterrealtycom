@@ -9,6 +9,8 @@ import { ToolboxProject, ProjectType } from '@/hooks/useProjects';
 import { formatCompactCurrency, formatPercentage, formatCurrency } from '@/lib/formatters';
 import { ArrowLeft, BarChart3, TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { AICompareInsight } from '@/components/ai/AICompareInsight';
+import type { AutoFillTool } from '@/components/ai/AutoFillButton';
 
 type Metric = {
   label: string;
@@ -137,6 +139,15 @@ export default function CompareProjects() {
           {projects.length} projetos · Tipo: <span className="capitalize">{type.replace('_', ' ')}</span>
         </p>
       </div>
+
+      <AICompareInsight
+        tool={type as AutoFillTool}
+        projects={projects.map((p) => ({
+          name: p.name,
+          inputs: (p.inputs as Record<string, unknown>) ?? {},
+          results: (p.results as Record<string, unknown>) ?? {},
+        }))}
+      />
 
       <div className="bg-card border border-border rounded-lg overflow-hidden shadow-card">
         <Table>

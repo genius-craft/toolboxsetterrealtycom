@@ -17,6 +17,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/contexts/AuthContext';
 import { useSaveProject, useProject } from '@/hooks/useProjects';
 import { HistoryButton } from '@/components/tools/HistoryButton';
+import { AutoFillButton } from '@/components/ai/AutoFillButton';
+import { AIAnalysisCard } from '@/components/ai/AIAnalysisCard';
+import { applyAIFields } from '@/lib/applyAIFields';
 import { calculateHBUv3, HBUv3Params } from '@/lib/calculations';
 import { formatArea, formatPercentage } from '@/lib/formatters';
 import { generateHBUPDF } from '@/lib/pdfExport';
@@ -214,6 +217,28 @@ export default function HighestBestUse() {
     }
   };
 
+  // Setters expostos para o auto-preenchimento por IA
+  const aiSetters = {
+    landArea: setLandArea,
+    far: setFar,
+    occupancyRate: setOccupancyRate,
+    location: setLocation,
+    zoning: setZoning,
+    residencialPricePerSqm: setResidencialPricePerSqm,
+    residencialCostPerSqm: setResidencialCostPerSqm,
+    residencialAbsorptionMonths: setResidencialAbsorptionMonths,
+    comercialPricePerSqm: setComercialPricePerSqm,
+    comercialCostPerSqm: setComercialCostPerSqm,
+    comercialAbsorptionMonths: setComercialAbsorptionMonths,
+    discountRate: setDiscountRate,
+    constructionMonths: setConstructionMonths,
+    landCostPremissa: setLandCostPremissa,
+  } as Record<string, ((value: never) => void) | undefined>;
+
+  const handleAIFill = (fields: Record<string, unknown>) => {
+    applyAIFields(aiSetters, fields);
+  };
+
   const Dashboard = (
     <div className="space-y-6">
       {/* Educational Banner */}
@@ -271,6 +296,25 @@ export default function HighestBestUse() {
         />
       </div>
 
+      {/* AI Analysis */}
+      <AIAnalysisCard
+        tool="hbu"
+        inputs={{
+          landArea, far, occupancyRate, location, zoning,
+          residencialPricePerSqm, residencialCostPerSqm, residencialAbsorptionMonths,
+          comercialPricePerSqm, comercialCostPerSqm, comercialAbsorptionMonths,
+          discountRate, constructionMonths, landCostPremissa,
+        }}
+        results={{
+          residencial: results.residencial,
+          comercial: results.comercial,
+          misto: results.misto,
+          winner: results.winner,
+          justification: results.justification,
+        }}
+        resetKey={`${landArea}-${far}-${location}-${results.winner}`}
+      />
+
       {/* Action Buttons */}
       <div className="flex gap-3">
         <HistoryButton loadedProjectId={loadedProjectId} onRestore={handleRestoreVersion} />
@@ -299,6 +343,9 @@ export default function HighestBestUse() {
 
   return (
     <ToolLayout title="Highest & Best Use" rightPanel={Dashboard}>
+      <div className="flex justify-end mb-2">
+        <AutoFillButton tool="hbu" onFill={handleAIFill} />
+      </div>
       {/* Address Toggle */}
       <div className="bg-card rounded-lg border border-border p-4 shadow-card space-y-2 mb-4">
         <div className="flex items-center justify-between">

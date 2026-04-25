@@ -21,6 +21,9 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useSaveProject, useUpdateProject, useProjects, useProject, ProjectType } from '@/hooks/useProjects';
 import { HistoryButton } from '@/components/tools/HistoryButton';
+import { AutoFillButton } from '@/components/ai/AutoFillButton';
+import { AIAnalysisCard } from '@/components/ai/AIAnalysisCard';
+import { applyAIFields } from '@/lib/applyAIFields';
 import { useToast } from '@/hooks/use-toast';
 import {
   calculateMaxPriceByCapRate,
@@ -304,6 +307,28 @@ export default function PrecoTeto() {
     }
   };
 
+  // Setters expostos para o auto-preenchimento por IA
+  const aiSetters = {
+    projectName: setProjectName,
+    monthlyRent: setMonthlyRent,
+    rentGrowth: setRentGrowth,
+    vacancyRate: setVacancyRate,
+    closingCosts: setClosingCosts,
+    constructionCost: setConstructionCost,
+    propertyTax: setPropertyTax,
+    condoFee: setCondoFee,
+    managementFee: setManagementFee,
+    targetCapRate: setTargetCapRate,
+    targetIRR: setTargetIRR,
+    holdingPeriod: setHoldingPeriod,
+    exitCapRate: setExitCapRate,
+    referencePrice: setReferencePrice,
+  } as Record<string, ((value: never) => void) | undefined>;
+
+  const handleAIFill = (fields: Record<string, unknown>) => {
+    applyAIFields(aiSetters, fields);
+  };
+
   // Right panel (Dashboard)
   const Dashboard = (
     <div className="space-y-6">
@@ -422,6 +447,29 @@ export default function PrecoTeto() {
         </div>
       )}
 
+      {/* AI Analysis */}
+      <AIAnalysisCard
+        tool="preco_teto"
+        projectName={projectName}
+        inputs={{
+          monthlyRent, rentGrowth, vacancyRate, closingCosts,
+          constructionCost, propertyTax, condoFee, managementFee,
+          targetCapRate, targetIRR, holdingPeriod, exitCapRate, referencePrice,
+          calculationMode,
+        }}
+        results={{
+          maxPrice: calculations.maxPrice,
+          noi: calculations.noi,
+          totalInvestment: calculations.totalInvestment,
+          resultingCapRate: calculations.resultingCapRate,
+          resultingIRR: calculations.resultingIRR,
+          metricsAtReference: calculations.metricsAtReference,
+          negotiationMargin: calculations.negotiationMargin,
+          negotiationMarginPercent: calculations.negotiationMarginPercent,
+        }}
+        resetKey={`${monthlyRent}-${targetCapRate}-${targetIRR}-${calculationMode}-${calculations.maxPrice}`}
+      />
+
       {/* Action Buttons */}
       <div className="flex gap-3 flex-wrap">
         <HistoryButton loadedProjectId={loadedProjectId} onRestore={handleRestoreVersion} />
@@ -469,6 +517,9 @@ export default function PrecoTeto() {
   // Left panel (Inputs)
   const Inputs = (
     <div className="space-y-4">
+      <div className="flex justify-end -mb-2">
+        <AutoFillButton tool="preco_teto" onFill={handleAIFill} />
+      </div>
       {/* Simple Project Name Input */}
       <div className="bg-card rounded-lg border border-border p-4 shadow-card space-y-4">
         <div className="space-y-2">

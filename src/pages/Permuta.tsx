@@ -21,6 +21,9 @@ import { generatePermutaPDF } from "@/lib/pdfExport";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSaveProject, useProjects, useProject, ProjectType } from "@/hooks/useProjects";
 import { HistoryButton } from '@/components/tools/HistoryButton';
+import { AutoFillButton } from "@/components/ai/AutoFillButton";
+import { AIAnalysisCard } from "@/components/ai/AIAnalysisCard";
+import { applyAIFields } from "@/lib/applyAIFields";
 import { toast } from "sonner";
 
 export default function Permuta() {
@@ -175,8 +178,29 @@ export default function Permuta() {
     }
   };
 
+  // Setters expostos para o auto-preenchimento por IA
+  const aiSetters = {
+    assetName: setAssetName,
+    vendaOferta: setVendaOferta,
+    valorImovelParceria: setValorImovelParceria,
+    percentualUnidades: setPercentualUnidades,
+    aprovacaoMeses: setAprovacaoMeses,
+    construcaoMeses: setConstrucaoMeses,
+    vendaMeses: setVendaMeses,
+    taxaDesconto: setTaxaDesconto,
+    precoUnidade: setPrecoUnidade,
+    custoMensalUnidade: setCustoMensalUnidade,
+  } as Record<string, ((value: never) => void) | undefined>;
+
+  const handleAIFill = (fields: Record<string, unknown>) => {
+    applyAIFields(aiSetters, fields);
+  };
+
   const InputsPanel = (
     <div className="space-y-6">
+      <div className="flex justify-end -mb-2">
+        <AutoFillButton tool="permuta" onFill={handleAIFill} />
+      </div>
       {/* Nome do Ativo */}
       <div className="bg-card rounded-lg border border-border p-4 shadow-card space-y-4">
         <div className="space-y-2">
@@ -339,6 +363,19 @@ export default function Permuta() {
       </CardContent></Card>
 
       <PermutaVerdict vendaValor={vendaOferta} parceriaValor={calculations.totalParceria} locked={isLocked} />
+
+      <AIAnalysisCard
+        tool="permuta"
+        projectName={assetName}
+        inputs={{
+          vendaOferta, valorImovelParceria, percentualUnidades,
+          aprovacaoMeses, construcaoMeses, vendaMeses, taxaDesconto,
+          precoUnidade, custoMensalUnidade,
+        }}
+        results={calculations}
+        resetKey={`${vendaOferta}-${valorImovelParceria}-${percentualUnidades}-${taxaDesconto}`}
+      />
+
     </div>
   );
 

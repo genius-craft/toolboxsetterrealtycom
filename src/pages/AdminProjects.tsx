@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react';
 import { FolderKanban, Search, Eye, Download, Filter, Loader2, Globe, EyeOff } from 'lucide-react';
-import { useAdminProjects, useToggleVitrineStatus, ProjectType } from '@/hooks/useAdminProjects';
+import { useAdminProjects, ProjectType, AdminProject } from '@/hooks/useAdminProjects';
+import { VitrinePublishDialog } from '@/components/admin/VitrinePublishDialog';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
+
 import {
   Select,
   SelectContent,
@@ -62,9 +63,9 @@ export default function AdminProjects() {
   const [selectedType, setSelectedType] = useState<ProjectType | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [viewingProject, setViewingProject] = useState<Record<string, unknown> | null>(null);
+  const [vitrineProject, setVitrineProject] = useState<AdminProject | null>(null);
 
   const { data: projects, isLoading, error } = useAdminProjects(selectedType);
-  const toggleVitrine = useToggleVitrineStatus();
 
   const filteredProjects = useMemo(() => {
     if (!projects) return [];
@@ -87,21 +88,6 @@ export default function AdminProjects() {
     });
   };
 
-  const handleToggleVitrine = async (projectId: string, currentStatus: boolean) => {
-    try {
-      await toggleVitrine.mutateAsync({
-        projectId,
-        showInVitrine: !currentStatus,
-      });
-      toast.success(
-        !currentStatus 
-          ? 'Projeto publicado na vitrine!' 
-          : 'Projeto removido da vitrine'
-      );
-    } catch {
-      toast.error('Erro ao atualizar status da vitrine');
-    }
-  };
 
   const exportToCSV = () => {
     if (!filteredProjects.length) return;
@@ -249,23 +235,24 @@ export default function AdminProjects() {
                   <TableCell className="text-center">
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div className="flex items-center justify-center gap-2">
-                          <Switch
-                            checked={project.show_in_vitrine}
-                            onCheckedChange={() => handleToggleVitrine(project.id, project.show_in_vitrine)}
-                            disabled={toggleVitrine.isPending}
-                          />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setVitrineProject(project)}
+                          className="h-8 px-2 gap-1.5"
+                        >
                           {project.show_in_vitrine ? (
                             <Globe className="h-4 w-4 text-green-500" />
                           ) : (
                             <EyeOff className="h-4 w-4 text-muted-foreground" />
                           )}
-                        </div>
+                          <span className="text-xs">
+                            {project.show_in_vitrine ? 'Publicado' : 'Publicar'}
+                          </span>
+                        </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        {project.show_in_vitrine 
-                          ? 'Visível na vitrine pública' 
-                          : 'Clique para publicar na vitrine'}
+                        Editar título, descrição e status na vitrine (com IA opcional)
                       </TooltipContent>
                     </Tooltip>
                   </TableCell>
@@ -317,6 +304,13 @@ export default function AdminProjects() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Vitrine Publish Dialog (with AI copy generator) */}
+      <VitrinePublishDialog
+        project={vitrineProject}
+        open={!!vitrineProject}
+        onOpenChange={(open) => !open && setVitrineProject(null)}
+      />
     </div>
   );
 }

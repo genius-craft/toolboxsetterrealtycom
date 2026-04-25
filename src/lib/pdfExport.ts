@@ -397,6 +397,8 @@ export interface ScenarioData {
 }
 
 export interface SimuladorPDFData {
+  /** Resumo executivo opcional gerado pela IA. Quando presente, abre o relatório. */
+  aiSummary?: string;
   projectName: string;
   googleMapsLink?: string;
   observations?: string;
@@ -483,6 +485,14 @@ export async function generateSimuladorPDF(data: SimuladorPDFData): Promise<void
     observations: data.observations,
     date: new Date().toLocaleDateString('pt-BR'),
     sections: [
+      // Resumo Executivo IA (opcional)
+      ...(data.aiSummary
+        ? [{
+            title: 'Resumo Executivo (IA)',
+            type: 'text' as const,
+            data: data.aiSummary,
+          }]
+        : []),
       // Único KPI - Cap Rate Mensal (Estimado) centralizado
       {
         title: 'Rentabilidade Estimada',
@@ -539,6 +549,8 @@ export async function generateSimuladorPDF(data: SimuladorPDFData): Promise<void
  * Generate PDF for Decisor Go/No-Go
  */
 export interface DecisorPDFData {
+  /** Resumo executivo opcional gerado pela IA. Quando presente, abre o relatório. */
+  aiSummary?: string;
   assetName: string;
   googleMapsLink?: string;
   observations?: string;
@@ -584,6 +596,13 @@ export async function generateDecisorPDF(data: DecisorPDFData): Promise<void> {
 
   // Build sections array
   const sections: PDFSection[] = [
+    ...(data.aiSummary
+      ? [{
+          title: 'Resumo Executivo (IA)',
+          type: 'text' as const,
+          data: data.aiSummary,
+        }]
+      : []),
     {
       title: 'Veredicto',
       type: 'verdict',
@@ -656,6 +675,8 @@ export async function generateDecisorPDF(data: DecisorPDFData): Promise<void> {
  * Generate PDF for Calculadora de Permuta
  */
 export interface PermutaPDFData {
+  /** Resumo executivo opcional gerado pela IA. */
+  aiSummary?: string;
   assetName: string;
   googleMapsLink?: string;
   observations?: string;
@@ -695,6 +716,13 @@ export async function generatePermutaPDF(data: PermutaPDFData): Promise<void> {
     googleMapsLink: data.googleMapsLink,
     date: new Date().toLocaleDateString('pt-BR'),
     sections: [
+      ...(data.aiSummary
+        ? [{
+            title: 'Resumo Executivo (IA)',
+            type: 'text' as const,
+            data: data.aiSummary,
+          }]
+        : []),
       {
         title: 'Veredicto',
         type: 'verdict',
@@ -745,6 +773,8 @@ export async function generatePermutaPDF(data: PermutaPDFData): Promise<void> {
  * Generate PDF for Highest & Best Use
  */
 export interface HBUPDFData {
+  /** Resumo executivo opcional gerado pela IA. */
+  aiSummary?: string;
   googleMapsLink?: string;
   observations?: string;
   landParams: {
@@ -776,6 +806,13 @@ export async function generateHBUPDF(data: HBUPDFData): Promise<void> {
     observations: data.observations,
     date: new Date().toLocaleDateString('pt-BR'),
     sections: [
+      ...(data.aiSummary
+        ? [{
+            title: 'Resumo Executivo (IA)',
+            type: 'text' as const,
+            data: data.aiSummary,
+          }]
+        : []),
       {
         title: 'Recomendação',
         type: 'verdict',
@@ -823,6 +860,8 @@ export async function generateHBUPDF(data: HBUPDFData): Promise<void> {
  * Generate PDF for Preço Teto
  */
 export interface PrecoTetoPDFData {
+  /** Resumo executivo opcional gerado pela IA. */
+  aiSummary?: string;
   projectName: string;
   googleMapsLink?: string;
   observations?: string;
@@ -852,6 +891,13 @@ export async function generatePrecoTetoPDF(data: PrecoTetoPDFData): Promise<void
   const modeLabel = data.calculationMode === 'irr' ? 'TIR' : 'Cap Rate';
   
   const sections: PDFSection[] = [
+    ...(data.aiSummary
+      ? [{
+          title: 'Resumo Executivo (IA)',
+          type: 'text' as const,
+          data: data.aiSummary,
+        }]
+      : []),
     {
       title: 'Resultado Principal',
       type: 'kpi-grid',

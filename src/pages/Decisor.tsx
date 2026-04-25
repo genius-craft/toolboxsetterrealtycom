@@ -14,6 +14,9 @@ import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSaveProject, useProject } from '@/hooks/useProjects';
 import { HistoryButton } from '@/components/tools/HistoryButton';
+import { AutoFillButton } from '@/components/ai/AutoFillButton';
+import { AIAnalysisCard } from '@/components/ai/AIAnalysisCard';
+import { applyAIFields } from '@/lib/applyAIFields';
 import { calculateGoNoGo } from '@/lib/calculations';
 import { formatCurrency, formatCompactCurrency, formatPercentage } from '@/lib/formatters';
 import { generateDecisorPDF } from '@/lib/pdfExport';
@@ -254,6 +257,26 @@ export default function Decisor() {
     }
   };
 
+  // Setters expostos para o auto-preenchimento por IA
+  const aiSetters = {
+    assetName: setAssetName,
+    askingPrice: setAskingPrice,
+    monthlyRent: setMonthlyRent,
+    targetMonthlyCapRate: setTargetMonthlyCapRate,
+    vacancyRate: setVacancyRate,
+    condoFee: setCondoFee,
+    propertyTax: setPropertyTax,
+    managementFee: setManagementFee,
+    locationQuality: setLocationQuality,
+    tenantRisk: setTenantRisk,
+    futureLiquidity: setFutureLiquidity,
+    assetCondition: setAssetCondition,
+  } as Record<string, ((value: never) => void) | undefined>;
+
+  const handleAIFill = (fields: Record<string, unknown>) => {
+    applyAIFields(aiSetters, fields);
+  };
+
   const VerdictDisplay = () => {
     const config = {
       GO: {
@@ -436,6 +459,27 @@ export default function Decisor() {
         </div>
       </div>
 
+      {/* AI Analysis */}
+      <AIAnalysisCard
+        tool="decisor"
+        projectName={assetName}
+        inputs={{
+          askingPrice, monthlyRent, targetMonthlyCapRate,
+          vacancyRate, condoFee, propertyTax, managementFee,
+          locationQuality, tenantRisk, futureLiquidity, assetCondition,
+        }}
+        results={{
+          verdict: result.verdict,
+          impliedCapRate: result.impliedCapRate,
+          maxStrikePrice: result.maxStrikePrice,
+          priceGap: result.priceGap,
+          priceGapPercentage: result.priceGapPercentage,
+          qualityScore: result.qualityScore,
+          annualNOI,
+        }}
+        resetKey={`${askingPrice}-${monthlyRent}-${targetMonthlyCapRate}-${result.verdict}`}
+      />
+
       {/* Action Buttons */}
       <div className="flex gap-3">
         <HistoryButton loadedProjectId={loadedProjectId} onRestore={handleRestoreVersion} />
@@ -467,6 +511,9 @@ export default function Decisor() {
 
   return (
     <ToolLayout title="Decisor Go/No-Go" rightPanel={Dashboard}>
+      <div className="flex justify-end mb-2">
+        <AutoFillButton tool="decisor" onFill={handleAIFill} />
+      </div>
       {/* Asset Name */}
       <div className="bg-card rounded-lg border border-border p-4 shadow-card mb-4 space-y-4">
         <div className="space-y-2">
