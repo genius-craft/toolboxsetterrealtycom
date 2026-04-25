@@ -459,6 +459,27 @@ export default function Decisor() {
         </div>
       </div>
 
+      {/* AI Analysis */}
+      <AIAnalysisCard
+        tool="decisor"
+        projectName={assetName}
+        inputs={{
+          askingPrice, monthlyRent, targetMonthlyCapRate,
+          vacancyRate, condoFee, propertyTax, managementFee,
+          locationQuality, tenantRisk, futureLiquidity, assetCondition,
+        }}
+        results={{
+          verdict: result.verdict,
+          impliedCapRate: result.impliedCapRate,
+          maxStrikePrice: result.maxStrikePrice,
+          priceGap: result.priceGap,
+          priceGapPercentage: result.priceGapPercentage,
+          qualityScore: result.qualityScore,
+          annualNOI,
+        }}
+        resetKey={`${askingPrice}-${monthlyRent}-${targetMonthlyCapRate}-${result.verdict}`}
+      />
+
       {/* Action Buttons */}
       <div className="flex gap-3">
         <HistoryButton loadedProjectId={loadedProjectId} onRestore={handleRestoreVersion} />
