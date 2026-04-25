@@ -63,6 +63,7 @@ export default function AdminProjects() {
   const [selectedType, setSelectedType] = useState<ProjectType | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [viewingProject, setViewingProject] = useState<Record<string, unknown> | null>(null);
+  const [vitrineProject, setVitrineProject] = useState<AdminProject | null>(null);
 
   const { data: projects, isLoading, error } = useAdminProjects(selectedType);
   const toggleVitrine = useToggleVitrineStatus();
