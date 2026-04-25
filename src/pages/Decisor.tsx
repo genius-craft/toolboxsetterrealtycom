@@ -257,6 +257,26 @@ export default function Decisor() {
     }
   };
 
+  // Setters expostos para o auto-preenchimento por IA
+  const aiSetters = {
+    assetName: setAssetName,
+    askingPrice: setAskingPrice,
+    monthlyRent: setMonthlyRent,
+    targetMonthlyCapRate: setTargetMonthlyCapRate,
+    vacancyRate: setVacancyRate,
+    condoFee: setCondoFee,
+    propertyTax: setPropertyTax,
+    managementFee: setManagementFee,
+    locationQuality: setLocationQuality,
+    tenantRisk: setTenantRisk,
+    futureLiquidity: setFutureLiquidity,
+    assetCondition: setAssetCondition,
+  } as Record<string, ((value: never) => void) | undefined>;
+
+  const handleAIFill = (fields: Record<string, unknown>) => {
+    applyAIFields(aiSetters, fields);
+  };
+
   const VerdictDisplay = () => {
     const config = {
       GO: {
