@@ -494,19 +494,29 @@ export default function Decisor() {
           <Save className="h-4 w-4 mr-2" />
           {saveProject.isPending ? 'Salvando...' : 'Salvar'}
         </Button>
-        <Button 
-          variant="outline" 
-          className="flex-1" 
+        <PDFExportWithAIButton
+          tool="decisor"
+          projectName={assetName}
+          inputs={{
+            askingPrice, monthlyRent, targetMonthlyCapRate,
+            vacancyRate, condoFee, propertyTax, managementFee,
+            locationQuality, tenantRisk, futureLiquidity, assetCondition,
+          }}
+          results={{
+            verdict: result.verdict,
+            impliedCapRate: result.impliedCapRate,
+            maxStrikePrice: result.maxStrikePrice,
+            priceGap: result.priceGap,
+            priceGapPercentage: result.priceGapPercentage,
+            qualityScore: result.qualityScore,
+            annualNOI,
+          }}
+          onExport={handleExportPDF}
           disabled={!user || isExportingPDF}
-          onClick={handleExportPDF}
-        >
-          {isExportingPDF ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <Download className="h-4 w-4 mr-2" />
-          )}
-          {isExportingPDF ? 'Gerando...' : 'PDF'}
-        </Button>
+          variant="outline"
+          className="flex-1"
+          label={isExportingPDF ? 'Gerando...' : 'PDF'}
+        />
       </div>
     </div>
   );

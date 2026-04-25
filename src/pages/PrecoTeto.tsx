@@ -498,19 +498,28 @@ export default function PrecoTeto() {
           {loadedProjectId ? 'Atualizar' : 'Salvar'}
         </Button>
         <SoftLockOverlay featureName="exportar PDF">
-          <Button
+          <PDFExportWithAIButton
+            tool="preco_teto"
+            projectName={projectName}
+            inputs={{
+              monthlyRent, rentGrowth, vacancyRate, closingCosts,
+              constructionCost, propertyTax, condoFee, managementFee,
+              targetCapRate, targetIRR, holdingPeriod, exitCapRate, referencePrice,
+              calculationMode,
+            }}
+            results={{
+              maxPrice: calculations.maxPrice,
+              noi: calculations.noi,
+              totalInvestment: calculations.totalInvestment,
+              resultingCapRate: calculations.resultingCapRate,
+              resultingIRR: calculations.resultingIRR,
+            }}
+            onExport={handleExportPDF}
+            disabled={isExportingPDF}
             variant="gold"
             className="flex-1"
-            onClick={handleExportPDF}
-            disabled={isExportingPDF}
-          >
-            {isExportingPDF ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <FileText className="h-4 w-4 mr-2" />
-            )}
-            PDF
-          </Button>
+            size="default"
+          />
         </SoftLockOverlay>
       </div>
     </div>
