@@ -716,6 +716,13 @@ export async function generatePermutaPDF(data: PermutaPDFData): Promise<void> {
     googleMapsLink: data.googleMapsLink,
     date: new Date().toLocaleDateString('pt-BR'),
     sections: [
+      ...(data.aiSummary
+        ? [{
+            title: 'Resumo Executivo (IA)',
+            type: 'text' as const,
+            data: data.aiSummary,
+          }]
+        : []),
       {
         title: 'Veredicto',
         type: 'verdict',
