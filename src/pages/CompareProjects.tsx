@@ -140,6 +140,15 @@ export default function CompareProjects() {
         </p>
       </div>
 
+      <AICompareInsight
+        tool={type as AutoFillTool}
+        projects={projects.map((p) => ({
+          name: p.name,
+          inputs: (p.inputs as Record<string, unknown>) ?? {},
+          results: (p.results as Record<string, unknown>) ?? {},
+        }))}
+      />
+
       <div className="bg-card border border-border rounded-lg overflow-hidden shadow-card">
         <Table>
           <TableHeader>
