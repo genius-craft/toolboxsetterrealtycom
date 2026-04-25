@@ -21,6 +21,9 @@ import { generatePermutaPDF } from "@/lib/pdfExport";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSaveProject, useProjects, useProject, ProjectType } from "@/hooks/useProjects";
 import { HistoryButton } from '@/components/tools/HistoryButton';
+import { AutoFillButton } from "@/components/ai/AutoFillButton";
+import { AIAnalysisCard } from "@/components/ai/AIAnalysisCard";
+import { applyAIFields } from "@/lib/applyAIFields";
 import { toast } from "sonner";
 
 export default function Permuta() {
