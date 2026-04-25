@@ -511,6 +511,9 @@ export default function Decisor() {
 
   return (
     <ToolLayout title="Decisor Go/No-Go" rightPanel={Dashboard}>
+      <div className="flex justify-end mb-2">
+        <AutoFillButton tool="decisor" onFill={handleAIFill} />
+      </div>
       {/* Asset Name */}
       <div className="bg-card rounded-lg border border-border p-4 shadow-card mb-4 space-y-4">
         <div className="space-y-2">
