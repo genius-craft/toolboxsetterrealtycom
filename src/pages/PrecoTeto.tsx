@@ -459,8 +459,13 @@ export default function PrecoTeto() {
         }}
         results={{
           maxPrice: calculations.maxPrice,
-          metrics: calculations.metrics,
+          noi: calculations.noi,
+          totalInvestment: calculations.totalInvestment,
+          resultingCapRate: calculations.resultingCapRate,
+          resultingIRR: calculations.resultingIRR,
           metricsAtReference: calculations.metricsAtReference,
+          negotiationMargin: calculations.negotiationMargin,
+          negotiationMarginPercent: calculations.negotiationMarginPercent,
         }}
         resetKey={`${monthlyRent}-${targetCapRate}-${targetIRR}-${calculationMode}-${calculations.maxPrice}`}
       />
