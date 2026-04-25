@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { FolderKanban, Search, Eye, Download, Filter, Loader2, Globe, EyeOff } from 'lucide-react';
-import { useAdminProjects, useToggleVitrineStatus, ProjectType, AdminProject } from '@/hooks/useAdminProjects';
+import { useAdminProjects, ProjectType, AdminProject } from '@/hooks/useAdminProjects';
 import { VitrinePublishDialog } from '@/components/admin/VitrinePublishDialog';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { Input } from '@/components/ui/input';
