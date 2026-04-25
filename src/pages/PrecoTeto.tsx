@@ -517,6 +517,9 @@ export default function PrecoTeto() {
   // Left panel (Inputs)
   const Inputs = (
     <div className="space-y-4">
+      <div className="flex justify-end -mb-2">
+        <AutoFillButton tool="preco_teto" onFill={handleAIFill} />
+      </div>
       {/* Simple Project Name Input */}
       <div className="bg-card rounded-lg border border-border p-4 shadow-card space-y-4">
         <div className="space-y-2">
