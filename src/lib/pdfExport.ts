@@ -773,6 +773,8 @@ export async function generatePermutaPDF(data: PermutaPDFData): Promise<void> {
  * Generate PDF for Highest & Best Use
  */
 export interface HBUPDFData {
+  /** Resumo executivo opcional gerado pela IA. */
+  aiSummary?: string;
   googleMapsLink?: string;
   observations?: string;
   landParams: {
@@ -804,6 +806,13 @@ export async function generateHBUPDF(data: HBUPDFData): Promise<void> {
     observations: data.observations,
     date: new Date().toLocaleDateString('pt-BR'),
     sections: [
+      ...(data.aiSummary
+        ? [{
+            title: 'Resumo Executivo (IA)',
+            type: 'text' as const,
+            data: data.aiSummary,
+          }]
+        : []),
       {
         title: 'Recomendação',
         type: 'verdict',
@@ -851,6 +860,8 @@ export async function generateHBUPDF(data: HBUPDFData): Promise<void> {
  * Generate PDF for Preço Teto
  */
 export interface PrecoTetoPDFData {
+  /** Resumo executivo opcional gerado pela IA. */
+  aiSummary?: string;
   projectName: string;
   googleMapsLink?: string;
   observations?: string;
@@ -880,6 +891,13 @@ export async function generatePrecoTetoPDF(data: PrecoTetoPDFData): Promise<void
   const modeLabel = data.calculationMode === 'irr' ? 'TIR' : 'Cap Rate';
   
   const sections: PDFSection[] = [
+    ...(data.aiSummary
+      ? [{
+          title: 'Resumo Executivo (IA)',
+          type: 'text' as const,
+          data: data.aiSummary,
+        }]
+      : []),
     {
       title: 'Resultado Principal',
       type: 'kpi-grid',
