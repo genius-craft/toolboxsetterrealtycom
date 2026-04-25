@@ -612,6 +612,11 @@ export default function Simulador() {
 
   return (
     <ToolLayout title="Simulador de Viabilidade" rightPanel={Dashboard}>
+      {/* AI Auto-fill */}
+      <div className="flex justify-end -mb-2">
+        <AutoFillButton tool="simulador" onFill={handleAIFill} />
+      </div>
+
       {/* Project Header */}
       <ProjectHeader
         projectName={projectName}
