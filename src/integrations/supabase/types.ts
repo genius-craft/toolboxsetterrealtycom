@@ -179,6 +179,13 @@ export type Database = {
             referencedRelation: "toolbox_projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "project_versions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "vitrine_projects_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       properties: {
@@ -271,6 +278,27 @@ export type Database = {
           updated_at?: string
           vacancy_rate?: number | null
           zip_code?: string | null
+        }
+        Relationships: []
+      }
+      tool_chat_usage: {
+        Row: {
+          request_count: number
+          updated_at: string
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          request_count?: number
+          updated_at?: string
+          user_id: string
+          window_start: string
+        }
+        Update: {
+          request_count?: number
+          updated_at?: string
+          user_id?: string
+          window_start?: string
         }
         Relationships: []
       }
@@ -605,6 +633,45 @@ export type Database = {
           updated_at?: string | null
           vacancy_rate?: number | null
           zip_code?: string | null
+        }
+        Relationships: []
+      }
+      vitrine_projects_public: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          inputs: Json | null
+          name: string | null
+          project_type: string | null
+          results: Json | null
+          show_in_vitrine: boolean | null
+          updated_at: string | null
+          vitrine_description: string | null
+          vitrine_title: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          inputs?: Json | null
+          name?: string | null
+          project_type?: string | null
+          results?: Json | null
+          show_in_vitrine?: boolean | null
+          updated_at?: string | null
+          vitrine_description?: string | null
+          vitrine_title?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          inputs?: Json | null
+          name?: string | null
+          project_type?: string | null
+          results?: Json | null
+          show_in_vitrine?: boolean | null
+          updated_at?: string | null
+          vitrine_description?: string | null
+          vitrine_title?: string | null
         }
         Relationships: []
       }

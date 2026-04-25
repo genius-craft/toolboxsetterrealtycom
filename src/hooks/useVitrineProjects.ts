@@ -24,7 +24,7 @@ export function useVitrineProjects(options: UseVitrineProjectsOptions = {}) {
     queryKey: ['vitrine-projects', projectType],
     queryFn: async () => {
       let query = supabase
-        .from('toolbox_projects')
+        .from('vitrine_projects_public' as any)
         .select(`
           id,
           name,
@@ -35,7 +35,6 @@ export function useVitrineProjects(options: UseVitrineProjectsOptions = {}) {
           vitrine_title,
           vitrine_description
         `)
-        .eq('show_in_vitrine', true)
         .order('updated_at', { ascending: false });
 
       if (projectType && projectType !== 'all') {
@@ -45,7 +44,7 @@ export function useVitrineProjects(options: UseVitrineProjectsOptions = {}) {
       const { data, error } = await query;
 
       if (error) throw error;
-      return data as VitrineProject[];
+      return (data as unknown) as VitrineProject[];
     },
   });
 }
@@ -55,7 +54,7 @@ export function useVitrineProjectDetail(id: string) {
     queryKey: ['vitrine-project', id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('toolbox_projects')
+        .from('vitrine_projects_public' as any)
         .select(`
           id,
           name,
@@ -67,11 +66,10 @@ export function useVitrineProjectDetail(id: string) {
           vitrine_description
         `)
         .eq('id', id)
-        .eq('show_in_vitrine', true)
         .single();
 
       if (error) throw error;
-      return data as VitrineProject;
+      return (data as unknown) as VitrineProject;
     },
     enabled: !!id,
   });
