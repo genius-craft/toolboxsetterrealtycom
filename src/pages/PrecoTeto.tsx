@@ -447,6 +447,24 @@ export default function PrecoTeto() {
         </div>
       )}
 
+      {/* AI Analysis */}
+      <AIAnalysisCard
+        tool="preco_teto"
+        projectName={projectName}
+        inputs={{
+          monthlyRent, rentGrowth, vacancyRate, closingCosts,
+          constructionCost, propertyTax, condoFee, managementFee,
+          targetCapRate, targetIRR, holdingPeriod, exitCapRate, referencePrice,
+          calculationMode,
+        }}
+        results={{
+          maxPrice: calculations.maxPrice,
+          metrics: calculations.metrics,
+          metricsAtReference: calculations.metricsAtReference,
+        }}
+        resetKey={`${monthlyRent}-${targetCapRate}-${targetIRR}-${calculationMode}-${calculations.maxPrice}`}
+      />
+
       {/* Action Buttons */}
       <div className="flex gap-3 flex-wrap">
         <HistoryButton loadedProjectId={loadedProjectId} onRestore={handleRestoreVersion} />
