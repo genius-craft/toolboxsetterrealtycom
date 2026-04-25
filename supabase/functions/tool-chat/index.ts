@@ -508,28 +508,111 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Lê config (modelo + system prompt customizado) em paralelo
+    // Lê config (modelo + system prompt customizado + limites) em paralelo
     let openRouterModel = "google/gemma-3-27b-it:free";
     let customSystemPrompt: string | undefined;
+    let rateLimitUser = 30;
+    let rateLimitAdmin = 120;
+    let payloadMaxChars = 50000;
     try {
       const { data: cfgRows } = await admin
         .from("tool_config")
         .select("key,value")
-        .in("key", ["openrouter_model", "system_prompt"]);
+        .in("key", [
+          "openrouter_model",
+          "system_prompt",
+          "chat_rate_limit_user",
+          "chat_rate_limit_admin",
+          "chat_payload_max_chars",
+        ]);
       for (const row of cfgRows ?? []) {
         if (row.key === "openrouter_model" && typeof row.value === "string") {
           openRouterModel = row.value;
         } else if (row.key === "system_prompt") {
-          // value pode ser { content: "..." } ou string direta
           if (typeof row.value === "string") {
             customSystemPrompt = row.value;
           } else if (row.value && typeof row.value === "object" && typeof (row.value as any).content === "string") {
             customSystemPrompt = (row.value as any).content;
           }
+        } else if (row.key === "chat_rate_limit_user" && typeof row.value === "number") {
+          rateLimitUser = row.value;
+        } else if (row.key === "chat_rate_limit_admin" && typeof row.value === "number") {
+          rateLimitAdmin = row.value;
+        } else if (row.key === "chat_payload_max_chars" && typeof row.value === "number") {
+          payloadMaxChars = row.value;
         }
       }
     } catch (e) {
       console.warn("Não foi possível ler tool_config, usando defaults:", e);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // [4] Validar tamanho agregado do payload
+    // ─────────────────────────────────────────────────────────
+    const totalChars =
+      messages.reduce((sum, m) => sum + m.content.length, 0) +
+      (attachedDocuments?.reduce((sum, d) => sum + d.content.length, 0) ?? 0);
+    if (totalChars > payloadMaxChars) {
+      return new Response(
+        JSON.stringify({
+          error: `Mensagem muito grande (${totalChars} caracteres). Limite: ${payloadMaxChars}.`,
+        }),
+        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // [5] Rate limit por usuário (janela de 1 hora)
+    // ─────────────────────────────────────────────────────────
+    const { data: roleRows } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    const isAdmin = (roleRows ?? []).some(
+      (r: any) => r.role === "admin" || r.role === "super_admin",
+    );
+    const userLimit = isAdmin ? rateLimitAdmin : rateLimitUser;
+
+    // Janela horária truncada (top of the hour)
+    const now = new Date();
+    const windowStart = new Date(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      now.getUTCHours(),
+      0, 0, 0,
+    ).toISOString();
+
+    // UPSERT atômico via RPC ou SELECT/INSERT/UPDATE
+    const { data: usageRow } = await admin
+      .from("tool_chat_usage")
+      .select("request_count")
+      .eq("user_id", userId)
+      .eq("window_start", windowStart)
+      .maybeSingle();
+
+    const currentCount = usageRow?.request_count ?? 0;
+    if (currentCount >= userLimit) {
+      console.warn(`Rate limit hit: user=${userId} count=${currentCount} limit=${userLimit}`);
+      return new Response(
+        JSON.stringify({
+          error: `Você atingiu o limite de ${userLimit} mensagens por hora. Tente novamente em alguns minutos.`,
+        }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // Incrementa (upsert)
+    if (usageRow) {
+      await admin
+        .from("tool_chat_usage")
+        .update({ request_count: currentCount + 1, updated_at: new Date().toISOString() })
+        .eq("user_id", userId)
+        .eq("window_start", windowStart);
+    } else {
+      await admin
+        .from("tool_chat_usage")
+        .insert({ user_id: userId, window_start: windowStart, request_count: 1 });
     }
 
     const systemPrompt = buildSystemPrompt(extraKnowledge, attachedDocuments, customSystemPrompt);
@@ -537,6 +620,10 @@ Deno.serve(async (req) => {
       { role: "system", content: systemPrompt },
       ...messages,
     ];
+
+    console.log(
+      `tool-chat: user=${userId} admin=${isAdmin} chars=${totalChars} usage=${currentCount + 1}/${userLimit}`,
+    );
 
     // Tenta OpenRouter primeiro
     let provider = "openrouter";
