@@ -26,6 +26,8 @@ import VitrineDetail from "./pages/VitrineDetail";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
 import NotFound from "./pages/NotFound";
+import Investidores from "./pages/Investidores";
+import InvestidoresAdmin from "./pages/InvestidoresAdmin";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +46,12 @@ const App = () => (
             <Route path="/termos" element={<TermsOfUse />} />
             <Route path="/vitrine" element={<Vitrine />} />
             <Route path="/vitrine/:id" element={<VitrineDetail />} />
+            <Route path="/investidores" element={<Investidores />} />
+            <Route path="/investidores/admin" element={
+              <AppLayout title="Vitrine de Investidores">
+                <InvestidoresAdmin />
+              </AppLayout>
+            } />
             
             {/* Tool routes with sidebar */}
             <Route path="/simulador" element={
