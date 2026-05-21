@@ -192,6 +192,7 @@ export default function Dashboard() {
   const [compareMode, setCompareMode] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [tourOpen, setTourOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   const { data: projects, isLoading } = useProjects(filter === 'all' ? undefined : filter);
   const { data: allProjects } = useProjects();
@@ -202,6 +203,22 @@ export default function Dashboard() {
   useEffect(() => {
     if (user && !localStorage.getItem('onboarding_completed') && allProjects !== undefined) {
       const t = setTimeout(() => setTourOpen(true), 600);
+      return () => clearTimeout(t);
+    }
+  }, [user, allProjects]);
+
+  // Auto-open wizard for users with zero projects (only once)
+  useEffect(() => {
+    if (
+      user &&
+      allProjects !== undefined &&
+      allProjects.length === 0 &&
+      !localStorage.getItem('wizard_seen')
+    ) {
+      const t = setTimeout(() => {
+        setWizardOpen(true);
+        localStorage.setItem('wizard_seen', '1');
+      }, 1200);
       return () => clearTimeout(t);
     }
   }, [user, allProjects]);
