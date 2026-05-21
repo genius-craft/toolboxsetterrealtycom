@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notifications: {
+        Row: {
+          created_at: string
+          entity_id: string | null
+          id: string
+          link: string | null
+          message: string | null
+          read: boolean
+          read_at: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id?: string | null
+          id?: string
+          link?: string | null
+          message?: string | null
+          read?: boolean
+          read_at?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string | null
+          id?: string
+          link?: string | null
+          message?: string | null
+          read?: boolean
+          read_at?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       insight_authors: {
         Row: {
           avatar_url: string | null
@@ -95,6 +131,39 @@ export type Database = {
           tags?: Json | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      lgpd_requests: {
+        Row: {
+          completed_at: string | null
+          email: string
+          id: string
+          metadata: Json | null
+          request_type: string
+          requested_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          email: string
+          id?: string
+          metadata?: Json | null
+          request_type?: string
+          requested_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          email?: string
+          id?: string
+          metadata?: Json | null
+          request_type?: string
+          requested_at?: string
+          status?: string
+          user_id?: string
         }
         Relationships: []
       }
