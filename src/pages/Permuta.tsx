@@ -341,11 +341,15 @@ export default function Permuta() {
           vendaMeses={vendaMeses} setVendaMeses={setVendaMeses} taxaDesconto={taxaDesconto} setTaxaDesconto={setTaxaDesconto} />
       </CardContent></Card>
 
-      <Card><CardContent className="pt-6">
-        <PermutaCarryingCosts numeroUnidades={calculations.numeroUnidades} precoUnidade={precoUnidade}
-          setPrecoUnidade={setPrecoUnidade} custoMensalUnidade={custoMensalUnidade}
-          setCustoMensalUnidade={setCustoMensalUnidade} mesesCarrego={calculations.mesesCarrego} />
-      </CardContent></Card>
+      <AdvancedHint hiddenCount={1} />
+
+      <AdvancedSection label="Custos detalhados">
+        <Card><CardContent className="pt-6">
+          <PermutaCarryingCosts numeroUnidades={calculations.numeroUnidades} precoUnidade={precoUnidade}
+            setPrecoUnidade={setPrecoUnidade} custoMensalUnidade={custoMensalUnidade}
+            setCustoMensalUnidade={setCustoMensalUnidade} mesesCarrego={calculations.mesesCarrego} />
+        </CardContent></Card>
+      </AdvancedSection>
     </div>
   );
 
