@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
 import { ShieldCheck, TrendingUp, FileText, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { InvestorUnlockProvider } from "@/contexts/InvestorUnlockContext";
