@@ -531,22 +531,19 @@ export default function Decisor() {
       </div>
       {/* Asset Name */}
       <div className="bg-card rounded-lg border border-border p-4 shadow-card mb-4 space-y-4">
-        <div className="flex items-center justify-between gap-2">
-          <Label htmlFor="assetName" className="text-sm font-medium">
-            Nome do Ativo
-          </Label>
-          <DemoExampleButton
-            description={demoExamples.decisor.description}
-            onLoad={() => {
-              handleLoadProject(demoExamples.decisor, false);
-              toast.success('Exemplo carregado! Explore os campos.');
-            }}
-          />
-        </div>
         <div className="space-y-2">
-          <Label htmlFor="assetName" className="text-sm font-medium">
-            Nome do Ativo
-          </Label>
+          <div className="flex items-center justify-between gap-2">
+            <Label htmlFor="assetName" className="text-sm font-medium">
+              Nome do Ativo
+            </Label>
+            <DemoExampleButton
+              description={demoExamples.decisor.description}
+              onLoad={() => {
+                handleLoadProject(demoExamples.decisor, false);
+                toast.success('Exemplo carregado! Explore os campos.');
+              }}
+            />
+          </div>
           <Input
             id="assetName"
             placeholder="Ex: Galpão Logístico ABC"
