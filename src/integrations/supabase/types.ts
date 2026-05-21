@@ -173,39 +173,48 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           avatar_url: string | null
+          business_interests: Json
           category: string | null
           created_at: string
+          ecosystem_member: boolean
           id: string
           name: string | null
           phone: string | null
           updated_at: string
           user_id: string
+          whatsapp: string | null
         }
         Insert: {
           approved?: boolean
           approved_at?: string | null
           approved_by?: string | null
           avatar_url?: string | null
+          business_interests?: Json
           category?: string | null
           created_at?: string
+          ecosystem_member?: boolean
           id?: string
           name?: string | null
           phone?: string | null
           updated_at?: string
           user_id: string
+          whatsapp?: string | null
         }
         Update: {
           approved?: boolean
           approved_at?: string | null
           approved_by?: string | null
           avatar_url?: string | null
+          business_interests?: Json
           category?: string | null
           created_at?: string
+          ecosystem_member?: boolean
           id?: string
           name?: string | null
           phone?: string | null
           updated_at?: string
           user_id?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }
@@ -474,6 +483,7 @@ export type Database = {
           name: string
           project_type: string
           results: Json | null
+          share_state: Database["public"]["Enums"]["share_state"]
           show_in_vitrine: boolean
           updated_at: string
           user_id: string
@@ -487,6 +497,7 @@ export type Database = {
           name: string
           project_type: string
           results?: Json | null
+          share_state?: Database["public"]["Enums"]["share_state"]
           show_in_vitrine?: boolean
           updated_at?: string
           user_id: string
@@ -500,6 +511,7 @@ export type Database = {
           name?: string
           project_type?: string
           results?: Json | null
+          share_state?: Database["public"]["Enums"]["share_state"]
           show_in_vitrine?: boolean
           updated_at?: string
           user_id?: string
@@ -756,6 +768,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user" | "super_admin" | "hunter"
+      share_state: "private" | "shared_with_setter" | "published"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -884,6 +897,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user", "super_admin", "hunter"],
+      share_state: ["private", "shared_with_setter", "published"],
     },
   },
 } as const
