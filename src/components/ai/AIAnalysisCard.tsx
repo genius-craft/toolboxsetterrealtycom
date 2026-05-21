@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useUserRole } from "@/hooks/useUserRole";
 import type { AutoFillTool } from "./AutoFillButton";
 
 interface AIAnalysisCardProps {
@@ -24,8 +25,11 @@ export function AIAnalysisCard({
   results,
   resetKey,
 }: AIAnalysisCardProps) {
+  const { isAdmin } = useUserRole();
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  if (!isAdmin) return null;
+
 
   // Limpa análise quando inputs/resultados mudam significativamente
   useEffect(() => {
