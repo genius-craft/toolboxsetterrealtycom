@@ -13,6 +13,9 @@ const AUTH_ERROR_MAP: Record<string, string> = {
   'User not found': 'Usuário não encontrado.',
   'Email rate limit exceeded': 'Muitas tentativas. Aguarde alguns minutos.',
   'For security purposes, you can only request this after': 'Aguarde antes de tentar novamente.',
+  'Password is known to be weak': 'Esta senha foi exposta em vazamentos públicos. Escolha uma senha mais forte (use letras maiúsculas, números e símbolos).',
+  'weak_password': 'Esta senha foi exposta em vazamentos públicos. Escolha uma senha mais forte (use letras maiúsculas, números e símbolos).',
+  'pwned': 'Esta senha foi exposta em vazamentos públicos. Escolha uma senha mais forte.',
 };
 
 // Check if error message is an auth-related error (safe to show)
