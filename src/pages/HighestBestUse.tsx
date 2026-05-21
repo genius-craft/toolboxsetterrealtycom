@@ -606,7 +606,8 @@ export default function HighestBestUse() {
             Premissa de mercado para custo do terreno
           </p>
         </div>
-      </CollapsibleInputCard>
+        </CollapsibleInputCard>
+      </AdvancedSection>
     </ToolLayout>
   );
 }
