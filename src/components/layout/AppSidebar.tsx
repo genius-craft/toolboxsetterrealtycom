@@ -210,6 +210,52 @@ export function AppSidebar() {
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                {isSuperAdmin && (
+                  <>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive('/admin/settings')}
+                        tooltip="Configurações"
+                        className={cn(
+                          'transition-all duration-200 relative',
+                          isActive('/admin/settings')
+                            ? 'bg-sidebar-accent text-sidebar-foreground font-medium'
+                            : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent'
+                        )}
+                      >
+                        <Link to="/admin/settings" className="flex items-center gap-3">
+                          {isActive('/admin/settings') && (
+                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-accent" />
+                          )}
+                          <Settings className={cn('h-4 w-4 shrink-0', isActive('/admin/settings') && 'text-accent')} />
+                          <span>Configurações</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive('/admin/lgpd')}
+                        tooltip="Solicitações LGPD"
+                        className={cn(
+                          'transition-all duration-200 relative',
+                          isActive('/admin/lgpd')
+                            ? 'bg-sidebar-accent text-sidebar-foreground font-medium'
+                            : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent'
+                        )}
+                      >
+                        <Link to="/admin/lgpd" className="flex items-center gap-3">
+                          {isActive('/admin/lgpd') && (
+                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-accent" />
+                          )}
+                          <Shield className={cn('h-4 w-4 shrink-0', isActive('/admin/lgpd') && 'text-accent')} />
+                          <span>LGPD</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </>
+                )}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
