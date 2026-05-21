@@ -758,6 +758,8 @@ export default function Dashboard() {
         open={tourOpen}
         onClose={() => setTourOpen(false)}
       />
+
+      <StarterWizard open={wizardOpen} onOpenChange={setWizardOpen} />
     </div>
   );
 }
