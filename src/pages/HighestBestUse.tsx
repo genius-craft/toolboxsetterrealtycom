@@ -554,8 +554,11 @@ export default function HighestBestUse() {
         </div>
       </CollapsibleInputCard>
 
-      {/* Premissas Gerais */}
-      <CollapsibleInputCard title="Premissas Gerais" icon={Settings}>
+      <AdvancedHint hiddenCount={1} />
+
+      {/* Premissas Gerais — Advanced only */}
+      <AdvancedSection label="Premissas">
+        <CollapsibleInputCard title="Premissas Gerais" icon={Settings}>
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
