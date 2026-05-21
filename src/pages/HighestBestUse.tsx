@@ -24,6 +24,9 @@ import { applyAIFields } from '@/lib/applyAIFields';
 import { calculateHBUv3, HBUv3Params } from '@/lib/calculations';
 import { formatArea, formatPercentage } from '@/lib/formatters';
 import { generateHBUPDF } from '@/lib/pdfExport';
+import { DemoExampleButton } from '@/components/tools/DemoExampleButton';
+import { AdvancedSection, AdvancedHint } from '@/components/tools/AdvancedSection';
+import { demoExamples } from '@/lib/demoExamples';
 import {
   Map,
   Building,
