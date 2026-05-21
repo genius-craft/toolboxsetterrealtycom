@@ -44,8 +44,8 @@ function InvestidoresInner() {
       {/* Header */}
       <header className="border-b border-white/5">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link to="/investidores" className="flex items-center gap-2">
-            <img src={setterLogo} alt="Setter" className="h-7 w-auto" />
+          <Link to="/investidores" className="flex items-baseline gap-2">
+            <span className="text-lg font-semibold tracking-tight">SETTER</span>
             <span className="text-xs uppercase tracking-[0.2em] text-white/50">Investimentos</span>
           </Link>
           <a
