@@ -73,9 +73,11 @@ export function DealFormDialog({ open, onOpenChange, deal, onSaved }: Props) {
   const onSubmit = async (values: DealInput) => {
     const payload = {
       ...values,
+      titulo: values.titulo,
+      status: values.status,
       imagem_url: values.imagem_url || null,
       descricao: values.descricao || null,
-    };
+    } as any;
     const { error } = deal
       ? await supabase.from("deals").update(payload).eq("id", deal.id)
       : await supabase.from("deals").insert([payload]);
