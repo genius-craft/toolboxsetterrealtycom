@@ -78,7 +78,7 @@ export function DealFormDialog({ open, onOpenChange, deal, onSaved }: Props) {
     };
     const { error } = deal
       ? await supabase.from("deals").update(payload).eq("id", deal.id)
-      : await supabase.from("deals").insert(payload);
+      : await supabase.from("deals").insert([payload]);
     if (error) {
       toast.error(error.message);
       return;
