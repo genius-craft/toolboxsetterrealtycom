@@ -648,33 +648,37 @@ export default function Decisor() {
         />
       </CollapsibleInputCard>
 
-      {/* Qualitative Inputs */}
-      <CollapsibleInputCard title="Avaliação Qualitativa" icon={Star}>
-        <StarRating
-          label="Qualidade da Localização"
-          value={locationQuality}
-          onChange={setLocationQuality}
-          tooltip="locationQuality"
-        />
-        <StarRating
-          label="Risco do Inquilino"
-          value={tenantRisk}
-          onChange={setTenantRisk}
-          tooltip="tenantRisk"
-        />
-        <StarRating
-          label="Liquidez Futura"
-          value={futureLiquidity}
-          onChange={setFutureLiquidity}
-          tooltip="futureLiquidity"
-        />
-        <StarRating
-          label="Condição do Ativo"
-          value={assetCondition}
-          onChange={setAssetCondition}
-          tooltip="assetCondition"
-        />
-      </CollapsibleInputCard>
+      <AdvancedHint hiddenCount={1} />
+
+      {/* Qualitative Inputs — Advanced only */}
+      <AdvancedSection label="Qualitativo">
+        <CollapsibleInputCard title="Avaliação Qualitativa" icon={Star}>
+          <StarRating
+            label="Qualidade da Localização"
+            value={locationQuality}
+            onChange={setLocationQuality}
+            tooltip="locationQuality"
+          />
+          <StarRating
+            label="Risco do Inquilino"
+            value={tenantRisk}
+            onChange={setTenantRisk}
+            tooltip="tenantRisk"
+          />
+          <StarRating
+            label="Liquidez Futura"
+            value={futureLiquidity}
+            onChange={setFutureLiquidity}
+            tooltip="futureLiquidity"
+          />
+          <StarRating
+            label="Condição do Ativo"
+            value={assetCondition}
+            onChange={setAssetCondition}
+            tooltip="assetCondition"
+          />
+        </CollapsibleInputCard>
+      </AdvancedSection>
     </ToolLayout>
   );
 }
