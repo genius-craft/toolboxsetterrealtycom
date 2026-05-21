@@ -27,12 +27,14 @@ import {
   X,
   Sparkles,
   Percent,
+  Compass,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { OnboardingTour } from '@/components/OnboardingTour';
+import { StarterWizard } from '@/components/dashboard/StarterWizard';
 import {
   AlertDialog,
   AlertDialogAction,
