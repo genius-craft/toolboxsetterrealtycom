@@ -154,16 +154,19 @@
   }
 
   .gradient-hero { background: var(--gradient-hero); }
-  .gradient-orange { background: var(--gradient-orange); }
+  .gradient-orange,
+  .gradient-gold { background: var(--gradient-orange); }
   .gradient-card { background: var(--gradient-card); }
   .gradient-premium { background: var(--gradient-premium); }
 
   .shadow-card { box-shadow: var(--shadow-card); }
   .shadow-card-hover { box-shadow: var(--shadow-card-hover); }
-  .shadow-orange { box-shadow: var(--shadow-orange); }
+  .shadow-orange,
+  .shadow-gold { box-shadow: var(--shadow-orange); }
   .shadow-elegant { box-shadow: var(--shadow-elegant); }
 
-  .text-gradient-orange {
+  .text-gradient-orange,
+  .text-gradient-gold {
     background: var(--gradient-orange);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
