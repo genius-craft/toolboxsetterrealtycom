@@ -209,20 +209,31 @@ export default function Dashboard() {
   const aggregates = useMemo(() => {
     if (!allProjects || allProjects.length === 0) return null;
     let totalInvestment = 0;
-    let irrSum = 0;
-    let irrCount = 0;
-    let best: { name: string; metric: string; value: number } | null = null;
+    const irrs: number[] = [];
+    const capRates: number[] = [];
+    let best: { id: string; name: string; type: ProjectType; metric: string; value: number; display: string } | null = null;
+    const byType: Record<string, number> = {};
 
     for (const p of allProjects) {
+      byType[p.project_type] = (byType[p.project_type] || 0) + 1;
+
       const inv = Number(p.results?.totalInvestment || p.inputs?.askingPrice || p.inputs?.purchasePrice || 0);
       if (Number.isFinite(inv)) totalInvestment += inv;
+
       const irr = Number(p.results?.irr);
       if (Number.isFinite(irr)) {
-        irrSum += irr;
-        irrCount++;
+        irrs.push(irr);
         if (!best || irr > best.value) {
-          best = { name: p.name, metric: 'TIR', value: irr };
+          best = { id: p.id, name: p.name, type: p.project_type, metric: 'TIR', value: irr, display: formatPercentage(irr) };
         }
+      }
+
+      if (p.project_type === 'simulador') {
+        const cr = Number(
+          p.results?.monthlyCapRate ??
+            (p.results?.noi && p.results?.totalInvestment ? p.results.noi / 12 / p.results.totalInvestment : NaN)
+        );
+        if (Number.isFinite(cr)) capRates.push(cr);
       }
     }
 
@@ -239,12 +250,28 @@ export default function Dashboard() {
       months.push({ label, count });
     }
 
+    const thisMonth = months[months.length - 1]?.count || 0;
+    const prevMonth = months[months.length - 2]?.count || 0;
+    const monthDelta = prevMonth === 0 ? (thisMonth > 0 ? 100 : null) : ((thisMonth - prevMonth) / prevMonth) * 100;
+
+    const avgIrr = irrs.length ? irrs.reduce((a, b) => a + b, 0) / irrs.length : null;
+    const avgCapRate = capRates.length ? capRates.reduce((a, b) => a + b, 0) / capRates.length : null;
+
     return {
       total: allProjects.length,
       totalInvestment,
-      avgIrr: irrCount > 0 ? irrSum / irrCount : null,
+      avgTicket: allProjects.length ? totalInvestment / allProjects.length : 0,
+      avgIrr,
+      irrMin: irrs.length ? Math.min(...irrs) : null,
+      irrMax: irrs.length ? Math.max(...irrs) : null,
+      irrCount: irrs.length,
+      avgCapRate,
+      capCount: capRates.length,
       best,
+      byType,
       months,
+      thisMonth,
+      monthDelta,
     };
   }, [allProjects]);
 
