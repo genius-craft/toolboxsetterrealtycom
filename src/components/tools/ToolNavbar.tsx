@@ -4,6 +4,7 @@ import { ArrowLeft, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthModal } from '@/components/auth/AuthModal';
+import { AdvancedModeToggle } from '@/components/tools/AdvancedModeToggle';
 import {
   DropdownMenu,
   DropdownMenuContent,
