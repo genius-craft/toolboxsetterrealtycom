@@ -25,6 +25,9 @@ import { AutoFillButton } from "@/components/ai/AutoFillButton";
 import { AIAnalysisCard } from "@/components/ai/AIAnalysisCard";
 import { PDFExportWithAIButton } from "@/components/ai/PDFExportWithAIButton";
 import { applyAIFields } from "@/lib/applyAIFields";
+import { DemoExampleButton } from "@/components/tools/DemoExampleButton";
+import { AdvancedSection, AdvancedHint } from "@/components/tools/AdvancedSection";
+import { demoExamples } from "@/lib/demoExamples";
 import { toast } from "sonner";
 
 export default function Permuta() {
@@ -206,9 +209,18 @@ export default function Permuta() {
       {/* Nome do Ativo */}
       <div className="bg-card rounded-lg border border-border p-4 shadow-card space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="assetName" className="text-sm font-medium">
-            Nome do Ativo
-          </Label>
+          <div className="flex items-center justify-between gap-2">
+            <Label htmlFor="assetName" className="text-sm font-medium">
+              Nome do Ativo
+            </Label>
+            <DemoExampleButton
+              description={demoExamples.permuta.description}
+              onLoad={() => {
+                handleLoadProject(demoExamples.permuta, false);
+                toast.success('Exemplo carregado! Explore os campos.');
+              }}
+            />
+          </div>
           <Input
             id="assetName"
             placeholder="Ex: Terreno Av. Paulista"
@@ -329,11 +341,15 @@ export default function Permuta() {
           vendaMeses={vendaMeses} setVendaMeses={setVendaMeses} taxaDesconto={taxaDesconto} setTaxaDesconto={setTaxaDesconto} />
       </CardContent></Card>
 
-      <Card><CardContent className="pt-6">
-        <PermutaCarryingCosts numeroUnidades={calculations.numeroUnidades} precoUnidade={precoUnidade}
-          setPrecoUnidade={setPrecoUnidade} custoMensalUnidade={custoMensalUnidade}
-          setCustoMensalUnidade={setCustoMensalUnidade} mesesCarrego={calculations.mesesCarrego} />
-      </CardContent></Card>
+      <AdvancedHint hiddenCount={1} />
+
+      <AdvancedSection label="Custos detalhados">
+        <Card><CardContent className="pt-6">
+          <PermutaCarryingCosts numeroUnidades={calculations.numeroUnidades} precoUnidade={precoUnidade}
+            setPrecoUnidade={setPrecoUnidade} custoMensalUnidade={custoMensalUnidade}
+            setCustoMensalUnidade={setCustoMensalUnidade} mesesCarrego={calculations.mesesCarrego} />
+        </CardContent></Card>
+      </AdvancedSection>
     </div>
   );
 

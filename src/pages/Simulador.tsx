@@ -11,6 +11,8 @@ import { SoftLockOverlay } from '@/components/tools/SoftLockOverlay';
 import { ScenarioMatrix } from '@/components/tools/ScenarioMatrix';
 import { SensitivityHeatmap } from '@/components/tools/SensitivityHeatmap';
 import { ProjectHeader } from '@/components/tools/ProjectHeader';
+import { DemoExampleButton } from '@/components/tools/DemoExampleButton';
+import { demoExamples } from '@/lib/demoExamples';
 import { HistoryButton } from '@/components/tools/HistoryButton';
 import { ProjectVersion } from '@/hooks/useProjectVersions';
 import { ProjectVersionsSheet } from '@/components/tools/ProjectVersionsSheet';
@@ -655,6 +657,15 @@ export default function Simulador() {
       </div>
 
       {/* Project Header */}
+      <div className="flex justify-end mb-2">
+        <DemoExampleButton
+          description={demoExamples.simulador.description}
+          onLoad={() => {
+            handleLoadProject(demoExamples.simulador as any, false);
+            toast({ title: 'Exemplo carregado!', description: 'Explore os campos preenchidos.' });
+          }}
+        />
+      </div>
       <ProjectHeader
         projectName={projectName}
         onProjectNameChange={setProjectName}

@@ -24,6 +24,9 @@ import { applyAIFields } from '@/lib/applyAIFields';
 import { calculateHBUv3, HBUv3Params } from '@/lib/calculations';
 import { formatArea, formatPercentage } from '@/lib/formatters';
 import { generateHBUPDF } from '@/lib/pdfExport';
+import { DemoExampleButton } from '@/components/tools/DemoExampleButton';
+import { AdvancedSection, AdvancedHint } from '@/components/tools/AdvancedSection';
+import { demoExamples } from '@/lib/demoExamples';
 import {
   Map,
   Building,
@@ -360,6 +363,16 @@ export default function HighestBestUse() {
       <div className="flex justify-end mb-2">
         <AutoFillButton tool="hbu" onFill={handleAIFill} />
       </div>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-serif text-lg text-muted-foreground">Inputs</h2>
+        <DemoExampleButton
+          description={demoExamples.hbu.description}
+          onLoad={() => {
+            handleLoadProject(demoExamples.hbu, false);
+            toast.success('Exemplo carregado! Explore os campos.');
+          }}
+        />
+      </div>
       {/* Address Toggle */}
       <div className="bg-card rounded-lg border border-border p-4 shadow-card space-y-2 mb-4">
         <div className="flex items-center justify-between">
@@ -541,8 +554,11 @@ export default function HighestBestUse() {
         </div>
       </CollapsibleInputCard>
 
-      {/* Premissas Gerais */}
-      <CollapsibleInputCard title="Premissas Gerais" icon={Settings}>
+      <AdvancedHint hiddenCount={1} />
+
+      {/* Premissas Gerais — Advanced only */}
+      <AdvancedSection label="Premissas">
+        <CollapsibleInputCard title="Premissas Gerais" icon={Settings}>
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
@@ -590,7 +606,8 @@ export default function HighestBestUse() {
             Premissa de mercado para custo do terreno
           </p>
         </div>
-      </CollapsibleInputCard>
+        </CollapsibleInputCard>
+      </AdvancedSection>
     </ToolLayout>
   );
 }

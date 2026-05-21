@@ -4,6 +4,7 @@ import { ArrowLeft, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthModal } from '@/components/auth/AuthModal';
+import { AdvancedModeToggle } from '@/components/tools/AdvancedModeToggle';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,8 +41,9 @@ export function ToolNavbar({ title }: ToolNavbarProps) {
             </h1>
           </div>
 
-          {/* Right - Auth button */}
-          <div>
+          {/* Right - Mode toggle + Auth button */}
+          <div className="flex items-center gap-2">
+            <AdvancedModeToggle />
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

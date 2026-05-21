@@ -27,12 +27,14 @@ import {
   X,
   Sparkles,
   Percent,
+  Compass,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { OnboardingTour } from '@/components/OnboardingTour';
+import { StarterWizard } from '@/components/dashboard/StarterWizard';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -192,6 +194,7 @@ export default function Dashboard() {
   const [compareMode, setCompareMode] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [tourOpen, setTourOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   const { data: projects, isLoading } = useProjects(filter === 'all' ? undefined : filter);
   const { data: allProjects } = useProjects();
@@ -202,6 +205,22 @@ export default function Dashboard() {
   useEffect(() => {
     if (user && !localStorage.getItem('onboarding_completed') && allProjects !== undefined) {
       const t = setTimeout(() => setTourOpen(true), 600);
+      return () => clearTimeout(t);
+    }
+  }, [user, allProjects]);
+
+  // Auto-open wizard for users with zero projects (only once)
+  useEffect(() => {
+    if (
+      user &&
+      allProjects !== undefined &&
+      allProjects.length === 0 &&
+      !localStorage.getItem('wizard_seen')
+    ) {
+      const t = setTimeout(() => {
+        setWizardOpen(true);
+        localStorage.setItem('wizard_seen', '1');
+      }, 1200);
       return () => clearTimeout(t);
     }
   }, [user, allProjects]);
@@ -338,6 +357,16 @@ export default function Dashboard() {
           </div>
 
           <div className="flex gap-2 flex-wrap items-center">
+            <Button
+              variant="gold"
+              size="sm"
+              onClick={() => setWizardOpen(true)}
+              className="shadow-card hover:shadow-card-hover active:scale-[0.97] transition-all"
+            >
+              <Compass className="h-4 w-4 mr-1.5" />
+              Por onde começar?
+            </Button>
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="sm" onClick={() => setTourOpen(true)} className="text-muted-foreground">
@@ -729,6 +758,8 @@ export default function Dashboard() {
         open={tourOpen}
         onClose={() => setTourOpen(false)}
       />
+
+      <StarterWizard open={wizardOpen} onOpenChange={setWizardOpen} />
     </div>
   );
 }

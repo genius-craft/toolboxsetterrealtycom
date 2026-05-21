@@ -21,6 +21,9 @@ import { applyAIFields } from '@/lib/applyAIFields';
 import { calculateGoNoGo } from '@/lib/calculations';
 import { formatCurrency, formatCompactCurrency, formatPercentage } from '@/lib/formatters';
 import { generateDecisorPDF } from '@/lib/pdfExport';
+import { DemoExampleButton } from '@/components/tools/DemoExampleButton';
+import { AdvancedSection, AdvancedHint } from '@/components/tools/AdvancedSection';
+import { demoExamples } from '@/lib/demoExamples';
 import { toast } from 'sonner';
 import {
   Calculator,
@@ -529,9 +532,18 @@ export default function Decisor() {
       {/* Asset Name */}
       <div className="bg-card rounded-lg border border-border p-4 shadow-card mb-4 space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="assetName" className="text-sm font-medium">
-            Nome do Ativo
-          </Label>
+          <div className="flex items-center justify-between gap-2">
+            <Label htmlFor="assetName" className="text-sm font-medium">
+              Nome do Ativo
+            </Label>
+            <DemoExampleButton
+              description={demoExamples.decisor.description}
+              onLoad={() => {
+                handleLoadProject(demoExamples.decisor, false);
+                toast.success('Exemplo carregado! Explore os campos.');
+              }}
+            />
+          </div>
           <Input
             id="assetName"
             placeholder="Ex: Galpão Logístico ABC"
@@ -636,33 +648,37 @@ export default function Decisor() {
         />
       </CollapsibleInputCard>
 
-      {/* Qualitative Inputs */}
-      <CollapsibleInputCard title="Avaliação Qualitativa" icon={Star}>
-        <StarRating
-          label="Qualidade da Localização"
-          value={locationQuality}
-          onChange={setLocationQuality}
-          tooltip="locationQuality"
-        />
-        <StarRating
-          label="Risco do Inquilino"
-          value={tenantRisk}
-          onChange={setTenantRisk}
-          tooltip="tenantRisk"
-        />
-        <StarRating
-          label="Liquidez Futura"
-          value={futureLiquidity}
-          onChange={setFutureLiquidity}
-          tooltip="futureLiquidity"
-        />
-        <StarRating
-          label="Condição do Ativo"
-          value={assetCondition}
-          onChange={setAssetCondition}
-          tooltip="assetCondition"
-        />
-      </CollapsibleInputCard>
+      <AdvancedHint hiddenCount={1} />
+
+      {/* Qualitative Inputs — Advanced only */}
+      <AdvancedSection label="Qualitativo">
+        <CollapsibleInputCard title="Avaliação Qualitativa" icon={Star}>
+          <StarRating
+            label="Qualidade da Localização"
+            value={locationQuality}
+            onChange={setLocationQuality}
+            tooltip="locationQuality"
+          />
+          <StarRating
+            label="Risco do Inquilino"
+            value={tenantRisk}
+            onChange={setTenantRisk}
+            tooltip="tenantRisk"
+          />
+          <StarRating
+            label="Liquidez Futura"
+            value={futureLiquidity}
+            onChange={setFutureLiquidity}
+            tooltip="futureLiquidity"
+          />
+          <StarRating
+            label="Condição do Ativo"
+            value={assetCondition}
+            onChange={setAssetCondition}
+            tooltip="assetCondition"
+          />
+        </CollapsibleInputCard>
+      </AdvancedSection>
     </ToolLayout>
   );
 }
