@@ -11,6 +11,8 @@ import { SoftLockOverlay } from '@/components/tools/SoftLockOverlay';
 import { ScenarioMatrix } from '@/components/tools/ScenarioMatrix';
 import { SensitivityHeatmap } from '@/components/tools/SensitivityHeatmap';
 import { ProjectHeader } from '@/components/tools/ProjectHeader';
+import { DemoExampleButton } from '@/components/tools/DemoExampleButton';
+import { demoExamples } from '@/lib/demoExamples';
 import { HistoryButton } from '@/components/tools/HistoryButton';
 import { ProjectVersion } from '@/hooks/useProjectVersions';
 import { ProjectVersionsSheet } from '@/components/tools/ProjectVersionsSheet';
