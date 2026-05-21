@@ -209,9 +209,18 @@ export default function Permuta() {
       {/* Nome do Ativo */}
       <div className="bg-card rounded-lg border border-border p-4 shadow-card space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="assetName" className="text-sm font-medium">
-            Nome do Ativo
-          </Label>
+          <div className="flex items-center justify-between gap-2">
+            <Label htmlFor="assetName" className="text-sm font-medium">
+              Nome do Ativo
+            </Label>
+            <DemoExampleButton
+              description={demoExamples.permuta.description}
+              onLoad={() => {
+                handleLoadProject(demoExamples.permuta, false);
+                toast.success('Exemplo carregado! Explore os campos.');
+              }}
+            />
+          </div>
           <Input
             id="assetName"
             placeholder="Ex: Terreno Av. Paulista"
