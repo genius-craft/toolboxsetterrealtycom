@@ -25,6 +25,9 @@ import { AutoFillButton } from "@/components/ai/AutoFillButton";
 import { AIAnalysisCard } from "@/components/ai/AIAnalysisCard";
 import { PDFExportWithAIButton } from "@/components/ai/PDFExportWithAIButton";
 import { applyAIFields } from "@/lib/applyAIFields";
+import { DemoExampleButton } from "@/components/tools/DemoExampleButton";
+import { AdvancedSection, AdvancedHint } from "@/components/tools/AdvancedSection";
+import { demoExamples } from "@/lib/demoExamples";
 import { toast } from "sonner";
 
 export default function Permuta() {
