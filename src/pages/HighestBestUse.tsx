@@ -363,6 +363,16 @@ export default function HighestBestUse() {
       <div className="flex justify-end mb-2">
         <AutoFillButton tool="hbu" onFill={handleAIFill} />
       </div>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-serif text-lg text-muted-foreground">Inputs</h2>
+        <DemoExampleButton
+          description={demoExamples.hbu.description}
+          onLoad={() => {
+            handleLoadProject(demoExamples.hbu, false);
+            toast.success('Exemplo carregado! Explore os campos.');
+          }}
+        />
+      </div>
       {/* Address Toggle */}
       <div className="bg-card rounded-lg border border-border p-4 shadow-card space-y-2 mb-4">
         <div className="flex items-center justify-between">
