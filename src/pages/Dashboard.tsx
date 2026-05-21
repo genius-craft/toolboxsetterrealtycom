@@ -16,6 +16,8 @@ import {
   Calendar,
   AlertCircle,
   ArrowRight,
+  ArrowUpRight,
+  ArrowDownRight,
   Copy,
   BarChart3,
   TrendingUp,
@@ -24,6 +26,7 @@ import {
   Trophy,
   X,
   Sparkles,
+  Percent,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AuthModal } from '@/components/auth/AuthModal';
