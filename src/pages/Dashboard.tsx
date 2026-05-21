@@ -16,6 +16,8 @@ import {
   Calendar,
   AlertCircle,
   ArrowRight,
+  ArrowUpRight,
+  ArrowDownRight,
   Copy,
   BarChart3,
   TrendingUp,
@@ -24,6 +26,7 @@ import {
   Trophy,
   X,
   Sparkles,
+  Percent,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AuthModal } from '@/components/auth/AuthModal';
@@ -97,15 +100,85 @@ function ProjectCardSkeleton({ index }: { index: number }) {
   );
 }
 
-function StatCard({ icon: Icon, label, value, hint, iconColor }: { icon: any; label: string; value: string; hint?: string; iconColor: string }) {
+// TODO: mover para tool_config (benchmark configurável pelo admin)
+const CDI_BENCHMARK = 0.12;
+
+function DeltaBadge({ value, suffix = '%' }: { value: number | null; suffix?: string }) {
+  if (value == null || !Number.isFinite(value)) return null;
+  const positive = value >= 0;
+  const Icon = positive ? ArrowUpRight : ArrowDownRight;
   return (
-    <div className="bg-card border border-border rounded-lg p-4 shadow-card">
-      <div className="flex items-start justify-between mb-2">
+    <span
+      className={cn(
+        'inline-flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-md',
+        positive ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/10 text-red-600 dark:text-red-400'
+      )}
+    >
+      <Icon className="h-3 w-3" />
+      {positive ? '+' : ''}{Math.round(value)}{suffix}
+    </span>
+  );
+}
+
+function KpiCard({
+  icon: Icon,
+  label,
+  value,
+  hint,
+  iconColor,
+  delta,
+  benchmark,
+  sparkline,
+}: {
+  icon: any;
+  label: string;
+  value: string;
+  hint?: string;
+  iconColor: string;
+  delta?: number | null;
+  benchmark?: { label: string; tone: 'positive' | 'neutral' | 'negative' };
+  sparkline?: { label: string; count: number }[];
+}) {
+  const benchmarkTone =
+    benchmark?.tone === 'positive'
+      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+      : benchmark?.tone === 'negative'
+      ? 'bg-red-500/10 text-red-600 dark:text-red-400'
+      : 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
+
+  return (
+    <div className="relative bg-card border border-border rounded-lg p-4 shadow-card overflow-hidden">
+      {sparkline && sparkline.length > 0 && (
+        <div className="absolute inset-y-0 right-0 w-20 opacity-30 pointer-events-none hidden sm:block">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={sparkline} margin={{ top: 8, right: 4, bottom: 8, left: 0 }}>
+              <Line
+                type="monotone"
+                dataKey="count"
+                stroke="hsl(var(--accent))"
+                strokeWidth={1.5}
+                dot={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+      <div className="relative flex items-start justify-between mb-2">
         <span className="text-xs text-muted-foreground uppercase tracking-wide">{label}</span>
         <Icon className={cn('h-4 w-4', iconColor)} />
       </div>
-      <div className="font-mono text-2xl font-medium">{value}</div>
-      {hint && <div className="text-xs text-muted-foreground mt-1 truncate">{hint}</div>}
+      <div className="relative flex items-baseline gap-2 flex-wrap">
+        <div className="font-mono text-2xl font-medium">{value}</div>
+        {delta != null && <DeltaBadge value={delta} />}
+      </div>
+      <div className="relative flex items-center gap-2 mt-1 min-h-[16px]">
+        {hint && <div className="text-xs text-muted-foreground truncate">{hint}</div>}
+        {benchmark && (
+          <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded-md whitespace-nowrap', benchmarkTone)}>
+            {benchmark.label}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -136,20 +209,31 @@ export default function Dashboard() {
   const aggregates = useMemo(() => {
     if (!allProjects || allProjects.length === 0) return null;
     let totalInvestment = 0;
-    let irrSum = 0;
-    let irrCount = 0;
-    let best: { name: string; metric: string; value: number } | null = null;
+    const irrs: number[] = [];
+    const capRates: number[] = [];
+    let best: { id: string; name: string; type: ProjectType; metric: string; value: number; display: string } | null = null;
+    const byType: Record<string, number> = {};
 
     for (const p of allProjects) {
+      byType[p.project_type] = (byType[p.project_type] || 0) + 1;
+
       const inv = Number(p.results?.totalInvestment || p.inputs?.askingPrice || p.inputs?.purchasePrice || 0);
       if (Number.isFinite(inv)) totalInvestment += inv;
+
       const irr = Number(p.results?.irr);
       if (Number.isFinite(irr)) {
-        irrSum += irr;
-        irrCount++;
+        irrs.push(irr);
         if (!best || irr > best.value) {
-          best = { name: p.name, metric: 'TIR', value: irr };
+          best = { id: p.id, name: p.name, type: p.project_type, metric: 'TIR', value: irr, display: formatPercentage(irr) };
         }
+      }
+
+      if (p.project_type === 'simulador') {
+        const cr = Number(
+          p.results?.monthlyCapRate ??
+            (p.results?.noi && p.results?.totalInvestment ? p.results.noi / 12 / p.results.totalInvestment : NaN)
+        );
+        if (Number.isFinite(cr)) capRates.push(cr);
       }
     }
 
@@ -166,12 +250,28 @@ export default function Dashboard() {
       months.push({ label, count });
     }
 
+    const thisMonth = months[months.length - 1]?.count || 0;
+    const prevMonth = months[months.length - 2]?.count || 0;
+    const monthDelta = prevMonth === 0 ? (thisMonth > 0 ? 100 : null) : ((thisMonth - prevMonth) / prevMonth) * 100;
+
+    const avgIrr = irrs.length ? irrs.reduce((a, b) => a + b, 0) / irrs.length : null;
+    const avgCapRate = capRates.length ? capRates.reduce((a, b) => a + b, 0) / capRates.length : null;
+
     return {
       total: allProjects.length,
       totalInvestment,
-      avgIrr: irrCount > 0 ? irrSum / irrCount : null,
+      avgTicket: allProjects.length ? totalInvestment / allProjects.length : 0,
+      avgIrr,
+      irrMin: irrs.length ? Math.min(...irrs) : null,
+      irrMax: irrs.length ? Math.max(...irrs) : null,
+      irrCount: irrs.length,
+      avgCapRate,
+      capCount: capRates.length,
       best,
+      byType,
       months,
+      thisMonth,
+      monthDelta,
     };
   }, [allProjects]);
 
@@ -277,58 +377,132 @@ export default function Dashboard() {
         </div>
 
         {/* Aggregates */}
-        {aggregates && aggregates.total > 0 && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6 animate-fade-up delay-75">
-            <StatCard
-              icon={ListChecks}
-              label="Análises"
-              value={String(aggregates.total)}
-              hint={`${allProjects?.filter((p) => new Date(p.created_at).getMonth() === new Date().getMonth()).length || 0} este mês`}
-              iconColor="text-blue-500"
-            />
-            <StatCard
-              icon={Wallet}
-              label="Investimento total"
-              value={formatCompactCurrency(aggregates.totalInvestment)}
-              hint="Soma de todos os projetos"
-              iconColor="text-emerald-500"
-            />
-            <StatCard
-              icon={TrendingUp}
-              label="TIR média"
-              value={aggregates.avgIrr != null ? formatPercentage(aggregates.avgIrr) : '—'}
-              hint={aggregates.avgIrr != null ? 'Em projetos com TIR' : 'Sem dados ainda'}
-              iconColor="text-amber-500"
-            />
-            <div className="bg-card border border-border rounded-lg p-4 shadow-card">
-              <div className="flex items-start justify-between mb-2">
-                <span className="text-xs text-muted-foreground uppercase tracking-wide">Atividade (6m)</span>
-                <Trophy className="h-4 w-4 text-rose-500" />
+        {aggregates && aggregates.total > 0 && (() => {
+          const irrBenchmark = aggregates.avgIrr != null
+            ? aggregates.avgIrr > CDI_BENCHMARK + 0.02
+              ? { label: `vs CDI ${formatPercentage(CDI_BENCHMARK)}`, tone: 'positive' as const }
+              : aggregates.avgIrr < CDI_BENCHMARK - 0.02
+              ? { label: `vs CDI ${formatPercentage(CDI_BENCHMARK)}`, tone: 'negative' as const }
+              : { label: `~ CDI ${formatPercentage(CDI_BENCHMARK)}`, tone: 'neutral' as const }
+            : undefined;
+
+          const maxTypeCount = Math.max(1, ...Object.values(aggregates.byType));
+          const topConfig = aggregates.best ? projectTypeConfig[aggregates.best.type] : null;
+
+          return (
+            <div className="space-y-3 mb-6 animate-fade-up delay-75">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <KpiCard
+                  icon={ListChecks}
+                  label="Análises"
+                  value={String(aggregates.total)}
+                  hint={`${aggregates.thisMonth} este mês`}
+                  iconColor="text-blue-500"
+                  delta={aggregates.monthDelta}
+                  sparkline={aggregates.months}
+                />
+                <KpiCard
+                  icon={Wallet}
+                  label="Investimento total"
+                  value={formatCompactCurrency(aggregates.totalInvestment)}
+                  hint={`Ticket médio: ${formatCompactCurrency(aggregates.avgTicket)}`}
+                  iconColor="text-emerald-500"
+                />
+                <KpiCard
+                  icon={TrendingUp}
+                  label="TIR média"
+                  value={aggregates.avgIrr != null ? formatPercentage(aggregates.avgIrr) : '—'}
+                  hint={
+                    aggregates.irrCount > 0 && aggregates.irrMin != null && aggregates.irrMax != null
+                      ? `Faixa: ${formatPercentage(aggregates.irrMin)}–${formatPercentage(aggregates.irrMax)}`
+                      : 'Sem dados ainda'
+                  }
+                  iconColor="text-amber-500"
+                  benchmark={irrBenchmark}
+                />
+                <KpiCard
+                  icon={Percent}
+                  label="Cap Rate mensal"
+                  value={aggregates.avgCapRate != null ? formatPercentage(aggregates.avgCapRate) : '—'}
+                  hint={
+                    aggregates.capCount > 0
+                      ? `${aggregates.capCount} ${aggregates.capCount === 1 ? 'simulação' : 'simulações'}`
+                      : 'Só no Simulador'
+                  }
+                  iconColor="text-rose-500"
+                />
               </div>
-              <div className="h-12">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={aggregates.months}>
-                    <XAxis dataKey="label" hide />
-                    <RTooltip
-                      contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 6, fontSize: 12 }}
-                      labelStyle={{ color: 'hsl(var(--foreground))' }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="count"
-                      stroke="hsl(var(--accent))"
-                      strokeWidth={2}
-                      dot={{ r: 2, fill: 'hsl(var(--accent))' }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="text-xs text-muted-foreground truncate mt-1">
-                {aggregates.best ? `Top: ${aggregates.best.name}` : '—'}
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                {/* Top projeto */}
+                <div className="lg:col-span-2 relative bg-gradient-to-br from-accent/10 via-card to-card border border-accent/30 rounded-lg p-4 shadow-card overflow-hidden">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Trophy className="h-4 w-4 text-accent" />
+                      <span className="text-xs text-muted-foreground uppercase tracking-wide">Top projeto</span>
+                    </div>
+                    {topConfig && (
+                      <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+                        {topConfig.label}
+                      </span>
+                    )}
+                  </div>
+                  {aggregates.best && topConfig ? (
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="p-2 bg-secondary rounded-lg shrink-0">
+                          <topConfig.icon className={cn('h-5 w-5', topConfig.color)} />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-serif text-lg font-medium truncate">{aggregates.best.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {aggregates.best.metric}: <span className="font-mono text-accent">{aggregates.best.display}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <Link to={`${topConfig.path}?id=${aggregates.best.id}`}>
+                        <Button variant="gold" size="sm" className="active:scale-[0.97] transition-all">
+                          Abrir
+                          <ArrowRight className="h-4 w-4 ml-1" />
+                        </Button>
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">Sem TIR calculada ainda. Crie uma simulação para ver o destaque.</div>
+                  )}
+                </div>
+
+                {/* Distribuição por tipo */}
+                <div className="bg-card border border-border rounded-lg p-4 shadow-card">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs text-muted-foreground uppercase tracking-wide">Por tipo</span>
+                    <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="space-y-2">
+                    {(Object.keys(projectTypeConfig) as ProjectType[]).map((t) => {
+                      const count = aggregates.byType[t] || 0;
+                      const cfg = projectTypeConfig[t];
+                      const pct = (count / maxTypeCount) * 100;
+                      return (
+                        <div key={t} className="flex items-center gap-2 text-xs">
+                          <cfg.icon className={cn('h-3 w-3 shrink-0', cfg.color)} />
+                          <span className="w-16 truncate text-muted-foreground">{cfg.label}</span>
+                          <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-accent/70 transition-all duration-500"
+                              style={{ width: count > 0 ? `${Math.max(6, pct)}%` : '0%' }}
+                            />
+                          </div>
+                          <span className="font-mono tabular-nums w-6 text-right">{count}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Compare bar */}
         {compareMode && (
