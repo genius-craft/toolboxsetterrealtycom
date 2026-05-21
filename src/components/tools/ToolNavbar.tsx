@@ -41,8 +41,9 @@ export function ToolNavbar({ title }: ToolNavbarProps) {
             </h1>
           </div>
 
-          {/* Right - Auth button */}
-          <div>
+          {/* Right - Mode toggle + Auth button */}
+          <div className="flex items-center gap-2">
+            <AdvancedModeToggle />
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
