@@ -357,6 +357,16 @@ export default function Dashboard() {
           </div>
 
           <div className="flex gap-2 flex-wrap items-center">
+            <Button
+              variant="gold"
+              size="sm"
+              onClick={() => setWizardOpen(true)}
+              className="shadow-card hover:shadow-card-hover active:scale-[0.97] transition-all"
+            >
+              <Compass className="h-4 w-4 mr-1.5" />
+              Por onde começar?
+            </Button>
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="sm" onClick={() => setTourOpen(true)} className="text-muted-foreground">
