@@ -61,26 +61,9 @@ export function AppSidebar() {
   const { user, signOut } = useAuth();
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { isAdmin, isSuperAdmin } = useUserRole();
 
   const isActive = (path: string) => location.pathname === path;
-
-  useEffect(() => {
-    const checkAdminRole = async () => {
-      if (user) {
-        const { data } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .in('role', ['admin', 'super_admin']);
-        
-        setIsAdmin(data && data.length > 0);
-      } else {
-        setIsAdmin(false);
-      }
-    };
-    checkAdminRole();
-  }, [user]);
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
