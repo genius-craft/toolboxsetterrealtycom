@@ -14,6 +14,7 @@ function InvestidoresInner() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    document.title = "Setter Investimentos | Ativos imobiliários corporativos";
     let cancelled = false;
     supabase
       .from("deals")
