@@ -46,6 +46,12 @@ const App = () => (
             <Route path="/termos" element={<TermsOfUse />} />
             <Route path="/vitrine" element={<Vitrine />} />
             <Route path="/vitrine/:id" element={<VitrineDetail />} />
+            <Route path="/investidores" element={<Investidores />} />
+            <Route path="/investidores/admin" element={
+              <AppLayout title="Vitrine de Investidores">
+                <InvestidoresAdmin />
+              </AppLayout>
+            } />
             
             {/* Tool routes with sidebar */}
             <Route path="/simulador" element={
