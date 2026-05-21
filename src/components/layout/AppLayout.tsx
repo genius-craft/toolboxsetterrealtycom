@@ -3,6 +3,7 @@ import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/s
 import { AppSidebar } from './AppSidebar';
 import { WhatsAppButton } from '@/components/WhatsAppButton';
 import { ToolAssistantButton } from '@/components/tool-assistant/ToolAssistantButton';
+import { NotificationBell } from '@/components/admin/NotificationBell';
 import { Menu } from 'lucide-react';
 
 interface AppLayoutProps {
@@ -16,25 +17,23 @@ export function AppLayout({ children, title }: AppLayoutProps) {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <SidebarInset className="flex-1">
-          {/* Header with trigger - visible on all screens */}
-          <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-border bg-background px-4">
-            <SidebarTrigger className="text-foreground hover:bg-accent rounded-md p-2 transition-colors">
+          <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-border bg-background/95 backdrop-blur px-4">
+            <SidebarTrigger className="text-foreground hover:bg-secondary rounded-md p-2 transition-colors">
               <Menu className="h-5 w-5" />
             </SidebarTrigger>
             {title && (
-              <h1 className="font-display text-lg text-foreground truncate">
+              <h1 className="font-display text-lg font-semibold text-foreground truncate">
                 {title}
               </h1>
             )}
+            <div className="ml-auto flex items-center gap-2">
+              <NotificationBell />
+            </div>
           </header>
-          
-          {/* Main content */}
-          <main className="flex-1">
-            {children}
-          </main>
+
+          <main className="flex-1">{children}</main>
         </SidebarInset>
-        
-        {/* Floating buttons */}
+
         <WhatsAppButton />
         <ToolAssistantButton />
       </div>
