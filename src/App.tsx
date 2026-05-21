@@ -16,6 +16,9 @@ import CompareProjects from "./pages/CompareProjects";
 import AdminUsers from "./pages/AdminUsers";
 import AdminProjects from "./pages/AdminProjects";
 import AdminToolKnowledge from "./pages/AdminToolKnowledge";
+import AdminSettings from "./pages/AdminSettings";
+import AdminLgpd from "./pages/AdminLgpd";
+import Perfil from "./pages/Perfil";
 import Vitrine from "./pages/Vitrine";
 import VitrineDetail from "./pages/VitrineDetail";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -90,7 +93,10 @@ const App = () => (
                 <AdminToolKnowledge />
               </AppLayout>
             } />
-            
+            <Route path="/admin/settings" element={<AdminSettings />} />
+            <Route path="/admin/lgpd" element={<AdminLgpd />} />
+            <Route path="/perfil" element={<Perfil />} />
+
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
