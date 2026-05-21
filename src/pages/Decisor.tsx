@@ -21,6 +21,9 @@ import { applyAIFields } from '@/lib/applyAIFields';
 import { calculateGoNoGo } from '@/lib/calculations';
 import { formatCurrency, formatCompactCurrency, formatPercentage } from '@/lib/formatters';
 import { generateDecisorPDF } from '@/lib/pdfExport';
+import { DemoExampleButton } from '@/components/tools/DemoExampleButton';
+import { AdvancedSection, AdvancedHint } from '@/components/tools/AdvancedSection';
+import { demoExamples } from '@/lib/demoExamples';
 import { toast } from 'sonner';
 import {
   Calculator,
