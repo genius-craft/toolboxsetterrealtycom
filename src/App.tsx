@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { EcosystemGate } from "@/components/auth/EcosystemGate";
 import { AppLayout } from "@/components/layout/AppLayout";
 import Index from "./pages/Index";
 import Simulador from "./pages/Simulador";
@@ -29,8 +31,9 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -50,12 +53,16 @@ const App = () => (
             } />
             <Route path="/permuta" element={
               <AppLayout title="Calculadora de Permuta">
-                <Permuta />
+                <EcosystemGate toolName="A Calculadora de Permuta">
+                  <Permuta />
+                </EcosystemGate>
               </AppLayout>
             } />
             <Route path="/highest-best-use" element={
               <AppLayout title="Highest & Best Use">
-                <HighestBestUse />
+                <EcosystemGate toolName="A análise Highest & Best Use">
+                  <HighestBestUse />
+                </EcosystemGate>
               </AppLayout>
             } />
             <Route path="/decisor" element={
@@ -65,7 +72,9 @@ const App = () => (
             } />
             <Route path="/preco-teto" element={
               <AppLayout title="Preço Teto">
-                <PrecoTeto />
+                <EcosystemGate toolName="A Calculadora de Preço Teto">
+                  <PrecoTeto />
+                </EcosystemGate>
               </AppLayout>
             } />
             <Route path="/dashboard" element={
@@ -75,7 +84,9 @@ const App = () => (
             } />
             <Route path="/comparar" element={
               <AppLayout title="Comparar Projetos">
-                <CompareProjects />
+                <EcosystemGate toolName="A comparação de projetos">
+                  <CompareProjects />
+                </EcosystemGate>
               </AppLayout>
             } />
             <Route path="/admin/users" element={
@@ -101,8 +112,9 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+        </TooltipProvider>
+      </AuthProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

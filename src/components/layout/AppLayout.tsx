@@ -4,6 +4,7 @@ import { AppSidebar } from './AppSidebar';
 import { WhatsAppButton } from '@/components/WhatsAppButton';
 import { ToolAssistantButton } from '@/components/tool-assistant/ToolAssistantButton';
 import { NotificationBell } from '@/components/admin/NotificationBell';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { Menu } from 'lucide-react';
 
 interface AppLayoutProps {
@@ -27,6 +28,7 @@ export function AppLayout({ children, title }: AppLayoutProps) {
               </h1>
             )}
             <div className="ml-auto flex items-center gap-2">
+              <ThemeToggle />
               <NotificationBell />
             </div>
           </header>

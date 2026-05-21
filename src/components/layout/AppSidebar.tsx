@@ -46,13 +46,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-const navItems = [
+const navItems: Array<{ title: string; url: string; icon: any; ecosystem?: boolean }> = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
   { title: 'Simulador', url: '/simulador', icon: Calculator },
-  { title: 'Permuta', url: '/permuta', icon: ArrowLeftRight },
-  { title: 'H&BU', url: '/highest-best-use', icon: BarChart3 },
   { title: 'Decisor', url: '/decisor', icon: CheckCircle },
-  { title: 'Preço Teto', url: '/preco-teto', icon: Target },
+  { title: 'Permuta', url: '/permuta', icon: ArrowLeftRight, ecosystem: true },
+  { title: 'H&BU', url: '/highest-best-use', icon: BarChart3, ecosystem: true },
+  { title: 'Preço Teto', url: '/preco-teto', icon: Target, ecosystem: true },
   { title: 'Vitrine', url: '/vitrine', icon: Store },
 ];
 
@@ -61,8 +61,9 @@ export function AppSidebar() {
   const { user, signOut } = useAuth();
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
-  const { isAdmin, isSuperAdmin } = useUserRole();
+  const { isAdmin, isSuperAdmin, hasEcosystemAccess } = useUserRole();
 
+  const visibleItems = navItems.filter((i) => !i.ecosystem || hasEcosystemAccess);
   const isActive = (path: string) => location.pathname === path;
 
   return (
@@ -98,7 +99,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent data-tour="sidebar">
             <SidebarMenu>
-              {navItems.map((item) => (
+              {visibleItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild

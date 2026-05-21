@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useUserRole } from "@/hooks/useUserRole";
 import type { AutoFillTool } from "./AutoFillButton";
 
 interface AICompareInsightProps {
@@ -17,8 +18,11 @@ interface AICompareInsightProps {
 }
 
 export function AICompareInsight({ tool, projects }: AICompareInsightProps) {
+  const { isAdmin } = useUserRole();
   const [insight, setInsight] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  if (!isAdmin) return null;
+
 
   const generate = async () => {
     setLoading(true);
