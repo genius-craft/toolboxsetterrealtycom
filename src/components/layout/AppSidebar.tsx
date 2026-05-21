@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+
 import { 
   LayoutDashboard, 
   Calculator, 
@@ -16,10 +16,13 @@ import {
   Store,
   ExternalLink,
   BookOpen,
-  Sparkles
+  Sparkles,
+  Settings,
+  Shield,
 } from 'lucide-react';
+import { useUserRole } from '@/hooks/useUserRole';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+
 import {
   Sidebar,
   SidebarContent,
@@ -58,26 +61,9 @@ export function AppSidebar() {
   const { user, signOut } = useAuth();
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { isAdmin, isSuperAdmin } = useUserRole();
 
   const isActive = (path: string) => location.pathname === path;
-
-  useEffect(() => {
-    const checkAdminRole = async () => {
-      if (user) {
-        const { data } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .in('role', ['admin', 'super_admin']);
-        
-        setIsAdmin(data && data.length > 0);
-      } else {
-        setIsAdmin(false);
-      }
-    };
-    checkAdminRole();
-  }, [user]);
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -224,6 +210,52 @@ export function AppSidebar() {
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                {isSuperAdmin && (
+                  <>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive('/admin/settings')}
+                        tooltip="Configurações"
+                        className={cn(
+                          'transition-all duration-200 relative',
+                          isActive('/admin/settings')
+                            ? 'bg-sidebar-accent text-sidebar-foreground font-medium'
+                            : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent'
+                        )}
+                      >
+                        <Link to="/admin/settings" className="flex items-center gap-3">
+                          {isActive('/admin/settings') && (
+                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-accent" />
+                          )}
+                          <Settings className={cn('h-4 w-4 shrink-0', isActive('/admin/settings') && 'text-accent')} />
+                          <span>Configurações</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive('/admin/lgpd')}
+                        tooltip="Solicitações LGPD"
+                        className={cn(
+                          'transition-all duration-200 relative',
+                          isActive('/admin/lgpd')
+                            ? 'bg-sidebar-accent text-sidebar-foreground font-medium'
+                            : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent'
+                        )}
+                      >
+                        <Link to="/admin/lgpd" className="flex items-center gap-3">
+                          {isActive('/admin/lgpd') && (
+                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-accent" />
+                          )}
+                          <Shield className={cn('h-4 w-4 shrink-0', isActive('/admin/lgpd') && 'text-accent')} />
+                          <span>LGPD</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </>
+                )}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -267,8 +299,14 @@ export function AppSidebar() {
                   Meus Projetos
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => signOut()} 
+              <DropdownMenuItem asChild>
+                <Link to="/perfil" className="cursor-pointer">
+                  <User className="h-4 w-4 mr-2" />
+                  Meu Perfil
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => signOut()}
                 className="cursor-pointer text-destructive focus:text-destructive"
               >
                 <LogOut className="h-4 w-4 mr-2" />
