@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { InvestorUnlockProvider } from "@/contexts/InvestorUnlockContext";
 import { DealCard, type Deal } from "@/components/investidores/DealCard";
 import { LeadQualificationDialog } from "@/components/investidores/LeadQualificationDialog";
-import setterLogo from "@/assets/setter-logo.png";
+
 
 function InvestidoresInner() {
   const [deals, setDeals] = useState<Deal[]>([]);
