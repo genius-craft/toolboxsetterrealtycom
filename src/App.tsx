@@ -26,6 +26,8 @@ import VitrineDetail from "./pages/VitrineDetail";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
 import NotFound from "./pages/NotFound";
+import Investidores from "./pages/Investidores";
+import InvestidoresAdmin from "./pages/InvestidoresAdmin";
 
 const queryClient = new QueryClient();
 
