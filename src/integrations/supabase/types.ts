@@ -50,6 +50,66 @@ export type Database = {
         }
         Relationships: []
       }
+      deals: {
+        Row: {
+          ativo: boolean
+          cap_rate: string | null
+          created_at: string
+          descricao: string | null
+          id: string
+          imagem_url: string | null
+          inquilino_perfil: string | null
+          investimento_total: string | null
+          localizacao: string | null
+          noi_anual: string | null
+          opex: string | null
+          ordem: number
+          receita_mensal: string | null
+          status: string
+          tipo_ativo: string | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cap_rate?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          imagem_url?: string | null
+          inquilino_perfil?: string | null
+          investimento_total?: string | null
+          localizacao?: string | null
+          noi_anual?: string | null
+          opex?: string | null
+          ordem?: number
+          receita_mensal?: string | null
+          status?: string
+          tipo_ativo?: string | null
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cap_rate?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          imagem_url?: string | null
+          inquilino_perfil?: string | null
+          investimento_total?: string | null
+          localizacao?: string | null
+          noi_anual?: string | null
+          opex?: string | null
+          ordem?: number
+          receita_mensal?: string | null
+          status?: string
+          tipo_ativo?: string | null
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       insight_authors: {
         Row: {
           avatar_url: string | null
@@ -131,6 +191,57 @@ export type Database = {
           tags?: Json | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      leads_investidores: {
+        Row: {
+          consentimento_at: string | null
+          consentimento_lgpd: boolean
+          created_at: string
+          deal_id: string | null
+          email: string
+          id: string
+          ip_hash: string | null
+          nome: string
+          perfil_alocacao: string
+          projeto_interesse: string | null
+          status: string
+          updated_at: string
+          user_agent: string | null
+          whatsapp: string
+        }
+        Insert: {
+          consentimento_at?: string | null
+          consentimento_lgpd?: boolean
+          created_at?: string
+          deal_id?: string | null
+          email: string
+          id?: string
+          ip_hash?: string | null
+          nome: string
+          perfil_alocacao: string
+          projeto_interesse?: string | null
+          status?: string
+          updated_at?: string
+          user_agent?: string | null
+          whatsapp: string
+        }
+        Update: {
+          consentimento_at?: string | null
+          consentimento_lgpd?: boolean
+          created_at?: string
+          deal_id?: string | null
+          email?: string
+          id?: string
+          ip_hash?: string | null
+          nome?: string
+          perfil_alocacao?: string
+          projeto_interesse?: string | null
+          status?: string
+          updated_at?: string
+          user_agent?: string | null
+          whatsapp?: string
         }
         Relationships: []
       }
