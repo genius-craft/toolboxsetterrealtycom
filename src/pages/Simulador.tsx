@@ -655,6 +655,15 @@ export default function Simulador() {
       </div>
 
       {/* Project Header */}
+      <div className="flex justify-end mb-2">
+        <DemoExampleButton
+          description={demoExamples.simulador.description}
+          onLoad={() => {
+            handleLoadProject(demoExamples.simulador as any, false);
+            toast({ title: 'Exemplo carregado!', description: 'Explore os campos preenchidos.' });
+          }}
+        />
+      </div>
       <ProjectHeader
         projectName={projectName}
         onProjectNameChange={setProjectName}
