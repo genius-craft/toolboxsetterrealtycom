@@ -100,15 +100,85 @@ function ProjectCardSkeleton({ index }: { index: number }) {
   );
 }
 
-function StatCard({ icon: Icon, label, value, hint, iconColor }: { icon: any; label: string; value: string; hint?: string; iconColor: string }) {
+// TODO: mover para tool_config (benchmark configurável pelo admin)
+const CDI_BENCHMARK = 0.12;
+
+function DeltaBadge({ value, suffix = '%' }: { value: number | null; suffix?: string }) {
+  if (value == null || !Number.isFinite(value)) return null;
+  const positive = value >= 0;
+  const Icon = positive ? ArrowUpRight : ArrowDownRight;
   return (
-    <div className="bg-card border border-border rounded-lg p-4 shadow-card">
-      <div className="flex items-start justify-between mb-2">
+    <span
+      className={cn(
+        'inline-flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-md',
+        positive ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/10 text-red-600 dark:text-red-400'
+      )}
+    >
+      <Icon className="h-3 w-3" />
+      {positive ? '+' : ''}{Math.round(value)}{suffix}
+    </span>
+  );
+}
+
+function KpiCard({
+  icon: Icon,
+  label,
+  value,
+  hint,
+  iconColor,
+  delta,
+  benchmark,
+  sparkline,
+}: {
+  icon: any;
+  label: string;
+  value: string;
+  hint?: string;
+  iconColor: string;
+  delta?: number | null;
+  benchmark?: { label: string; tone: 'positive' | 'neutral' | 'negative' };
+  sparkline?: { label: string; count: number }[];
+}) {
+  const benchmarkTone =
+    benchmark?.tone === 'positive'
+      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+      : benchmark?.tone === 'negative'
+      ? 'bg-red-500/10 text-red-600 dark:text-red-400'
+      : 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
+
+  return (
+    <div className="relative bg-card border border-border rounded-lg p-4 shadow-card overflow-hidden">
+      {sparkline && sparkline.length > 0 && (
+        <div className="absolute inset-y-0 right-0 w-20 opacity-30 pointer-events-none hidden sm:block">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={sparkline} margin={{ top: 8, right: 4, bottom: 8, left: 0 }}>
+              <Line
+                type="monotone"
+                dataKey="count"
+                stroke="hsl(var(--accent))"
+                strokeWidth={1.5}
+                dot={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+      <div className="relative flex items-start justify-between mb-2">
         <span className="text-xs text-muted-foreground uppercase tracking-wide">{label}</span>
         <Icon className={cn('h-4 w-4', iconColor)} />
       </div>
-      <div className="font-mono text-2xl font-medium">{value}</div>
-      {hint && <div className="text-xs text-muted-foreground mt-1 truncate">{hint}</div>}
+      <div className="relative flex items-baseline gap-2 flex-wrap">
+        <div className="font-mono text-2xl font-medium">{value}</div>
+        {delta != null && <DeltaBadge value={delta} />}
+      </div>
+      <div className="relative flex items-center gap-2 mt-1 min-h-[16px]">
+        {hint && <div className="text-xs text-muted-foreground truncate">{hint}</div>}
+        {benchmark && (
+          <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded-md whitespace-nowrap', benchmarkTone)}>
+            {benchmark.label}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
