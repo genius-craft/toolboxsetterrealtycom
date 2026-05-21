@@ -40,13 +40,6 @@ function InvestidoresInner() {
 
   return (
     <div className="min-h-screen bg-[#0F1216] text-white">
-      <Helmet>
-        <title>Setter Investimentos | Ativos imobiliários corporativos</title>
-        <meta
-          name="description"
-          content="Vitrine privada de ativos imobiliários corporativos estruturados pela Setter Realty para investidores qualificados e Family Offices."
-        />
-      </Helmet>
 
       {/* Header */}
       <header className="border-b border-white/5">
