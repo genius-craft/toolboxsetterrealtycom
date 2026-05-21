@@ -299,8 +299,14 @@ export function AppSidebar() {
                   Meus Projetos
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => signOut()} 
+              <DropdownMenuItem asChild>
+                <Link to="/perfil" className="cursor-pointer">
+                  <User className="h-4 w-4 mr-2" />
+                  Meu Perfil
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => signOut()}
                 className="cursor-pointer text-destructive focus:text-destructive"
               >
                 <LogOut className="h-4 w-4 mr-2" />
